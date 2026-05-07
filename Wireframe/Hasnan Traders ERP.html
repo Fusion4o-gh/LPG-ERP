@@ -1,0 +1,3146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hasnan Traders ERP — Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+/* =============================================================
+   Fusion4o Design Tokens
+   Calm corporate SaaS / Windows 11 Fluent influence
+   Light theme (Business Blue) as default; see [data-theme="..."]
+   overrides below for Cash & Counter, Charcoal Pro, High-Visibility.
+   ============================================================= */
+
+/* ---------- Font face (Inter, fallback to system) ---------- */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("fonts/Inter-Variable.woff2") format("woff2-variations"),
+       url("https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7.woff2") format("woff2");
+}
+
+:root {
+  /* ====== PRIMITIVE: Neutrals ====== */
+  --color-gray-0:  #F5F7FA;   /* app background */
+  --color-gray-1:  #FFFFFF;   /* cards, surfaces */
+  --color-gray-2:  #F3F4F6;
+  --color-gray-3:  #E5E7EB;
+  --color-gray-4:  #D1D5DB;
+  --color-gray-5:  #6B7280;   /* secondary text */
+  --color-gray-6:  #4B5563;
+  --color-gray-7:  #1F2933;   /* primary text */
+  --color-gray-8:  #0F172A;
+  --color-gray-9:  #0B1220;   /* deep sidebar */
+
+  /* ====== PRIMITIVE: Brand & Semantic hues ====== */
+  --color-accent-1:  #2563EB;  /* Business Blue primary */
+  --color-accent-2:  #1D4ED8;  /* hover */
+  --color-accent-3:  #DBEAFE;  /* tinted bg */
+
+  --color-success-1: #16A34A;
+  --color-success-2: #DCFCE7;
+  --color-success-3: #14532D;
+
+  --color-warning-1: #F59E0B;
+  --color-warning-2: #FEF9C3;
+  --color-warning-3: #854D0E;
+
+  --color-danger-1:  #DC2626;
+  --color-danger-2:  #FEE2E2;
+  --color-danger-3:  #991B1B;
+
+  --color-info-1:    #0EA5E9;
+  --color-info-2:    #E0F2FE;
+  --color-info-3:    #075985;
+
+  /* ====== SEMANTIC: Surfaces ====== */
+  --bg-app:        var(--color-gray-0);
+  --bg-card:       var(--color-gray-1);
+  --bg-sidebar:    var(--color-gray-9);
+  --bg-input:      #FFFFFF;
+  --bg-subtle:     var(--color-gray-2);
+  --bg-hover:      #EEF2F7;
+
+  /* Acrylic / frosted surfaces (Windows 11 style) */
+  --bg-acrylic:        rgba(255, 255, 255, 0.72);
+  --bg-acrylic-strong: rgba(255, 255, 255, 0.85);
+  --bg-acrylic-dark:   rgba(15, 23, 42, 0.60);
+  --backdrop-blur:     saturate(180%) blur(20px);
+
+  /* ====== SEMANTIC: Text ====== */
+  --text-primary:    var(--color-gray-7);
+  --text-secondary:  var(--color-gray-5);
+  --text-muted:      #9CA3AF;
+  --text-on-primary: #FFFFFF;
+  --text-on-danger:  #FFFFFF;
+  --text-link:       var(--color-accent-1);
+
+  /* ====== SEMANTIC: Borders ====== */
+  --border-subtle:   #E5E7EB;
+  --border-default:  #D1D5DB;
+  --border-strong:   #9CA3AF;
+  --border-focus:    var(--color-accent-1);
+
+  /* ====== SEMANTIC: Actions ====== */
+  --action-primary-bg:        var(--color-accent-1);
+  --action-primary-bg-hover:  var(--color-accent-2);
+  --action-primary-bg-active: #1E40AF;
+  --action-primary-border:    transparent;
+  --action-primary-text:      var(--text-on-primary);
+
+  --action-secondary-bg:        #E5E7EB;
+  --action-secondary-bg-hover:  #D1D5DB;
+  --action-secondary-text:      var(--text-primary);
+  --action-secondary-border:    transparent;
+
+  --action-ghost-bg:        transparent;
+  --action-ghost-bg-hover:  var(--bg-hover);
+  --action-ghost-text:      var(--text-primary);
+
+  --action-danger-bg:        var(--color-danger-1);
+  --action-danger-bg-hover:  #B91C1C;
+  --action-danger-text:      var(--text-on-danger);
+
+  /* ====== SEMANTIC: Status pills ====== */
+  --status-success-bg:   var(--color-success-2);
+  --status-success-text: var(--color-success-3);
+  --status-warning-bg:   var(--color-warning-2);
+  --status-warning-text: var(--color-warning-3);
+  --status-danger-bg:    var(--color-danger-2);
+  --status-danger-text:  var(--color-danger-3);
+  --status-info-bg:      var(--color-info-2);
+  --status-info-text:    var(--color-info-3);
+  --status-neutral-bg:   var(--color-gray-2);
+  --status-neutral-text: var(--color-gray-6);
+
+  /* ====== RADIUS (Windows 11-ish) ====== */
+  --radius-xs:   4px;
+  --radius-sm:   6px;
+  --radius-md:   8px;
+  --radius-lg:   12px;   /* cards, modals */
+  --radius-xl:   16px;
+  --radius-full: 999px;
+
+  /* ====== SPACING SCALE ====== */
+  --space-0:  0;
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ====== ELEVATION ====== */
+  --shadow-none: none;
+  --shadow-sm:   0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-md:   0 4px 12px rgba(15, 23, 42, 0.10);
+  --shadow-lg:   0 18px 40px rgba(15, 23, 42, 0.18);
+  --shadow-focus: 0 0 0 3px rgba(37, 99, 235, 0.25);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  /* ====== TYPOGRAPHY ====== */
+  --font-family-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+                      "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-family-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas,
+                      "Liberation Mono", monospace;
+
+  --font-size-xs: 11px;
+  --font-size-sm: 13px;
+  --font-size-md: 15px;
+  --font-size-lg: 17px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 32px;
+
+  --font-weight-regular: 400;
+  --font-weight-medium:  500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:    700;
+
+  --line-height-tight:   1.2;
+  --line-height-normal:  1.4;
+  --line-height-relaxed: 1.6;
+
+  /* Letter-spacing — Inter likes a tiny negative at display sizes */
+  --tracking-tight:   -0.01em;
+  --tracking-normal:  0;
+  --tracking-wide:    0.02em;
+
+  /* ====== MOTION ====== */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);      /* Fluent standard */
+  --ease-emph:     cubic-bezier(0.3, 0, 0.1, 1);    /* emphasized */
+  --ease-out:      cubic-bezier(0.1, 0.9, 0.2, 1);
+  --duration-fast:   120ms;
+  --duration-normal: 200ms;
+  --duration-slow:   320ms;
+}
+
+/* =============================================================
+   THEME: Cash & Counter
+   — brighter, higher-contrast retail counter look; green accent
+   ============================================================= */
+[data-theme="cash-counter"] {
+  --color-accent-1: #15803D;
+  --color-accent-2: #166534;
+  --color-accent-3: #DCFCE7;
+  --action-primary-bg:       var(--color-accent-1);
+  --action-primary-bg-hover: var(--color-accent-2);
+  --bg-app:  #F6FAF6;
+}
+
+/* =============================================================
+   THEME: Charcoal Pro (dark)
+   ============================================================= */
+[data-theme="charcoal-pro"] {
+  --bg-app:       #0F172A;
+  --bg-card:      #111827;
+  --bg-sidebar:   #0B1220;
+  --bg-input:     #1F2937;
+  --bg-subtle:    #1F2937;
+  --bg-hover:     #1E293B;
+  --bg-acrylic:        rgba(17, 24, 39, 0.72);
+  --bg-acrylic-strong: rgba(17, 24, 39, 0.90);
+
+  --text-primary:   #F3F4F6;
+  --text-secondary: #9CA3AF;
+  --text-muted:     #6B7280;
+
+  --border-subtle:  #1F2937;
+  --border-default: #374151;
+  --border-strong:  #4B5563;
+
+  --action-secondary-bg:       #1F2937;
+  --action-secondary-bg-hover: #374151;
+  --action-secondary-text:     #F3F4F6;
+
+  --status-success-bg: rgba(22, 163, 74, 0.18);
+  --status-success-text: #86EFAC;
+  --status-warning-bg: rgba(245, 158, 11, 0.18);
+  --status-warning-text: #FCD34D;
+  --status-danger-bg: rgba(220, 38, 38, 0.18);
+  --status-danger-text: #FCA5A5;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.55);
+}
+
+/* =============================================================
+   THEME: High Visibility
+   — large hit areas, stronger borders, high-contrast accent.
+   Pair with class .hv on root for sizing bumps.
+   ============================================================= */
+[data-theme="high-visibility"] {
+  --color-accent-1: #1D4ED8;
+  --border-subtle:  #9CA3AF;
+  --border-default: #4B5563;
+  --text-secondary: #374151;
+  --shadow-focus:   0 0 0 4px rgba(29, 78, 216, 0.45);
+  --font-size-md: 16px;
+  --font-size-lg: 19px;
+  --font-size-xl: 22px;
+}
+
+/* =============================================================
+   BASE ELEMENT STYLES (semantic type tokens)
+   Use these classes OR the CSS vars directly.
+   ============================================================= */
+html, body {
+  background: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.t-display   { font-size: var(--font-size-3xl); font-weight: 600; line-height: var(--line-height-tight); letter-spacing: var(--tracking-tight); }
+.t-h-page    { font-size: var(--font-size-xl); font-weight: 600; line-height: var(--line-height-tight); letter-spacing: var(--tracking-tight); }
+.t-h-section { font-size: var(--font-size-lg); font-weight: 600; line-height: var(--line-height-tight); }
+.t-body      { font-size: var(--font-size-md); font-weight: 400; line-height: var(--line-height-normal); }
+.t-body-strong { font-size: var(--font-size-md); font-weight: 600; line-height: var(--line-height-normal); }
+.t-caption   { font-size: var(--font-size-sm); font-weight: 400; line-height: var(--line-height-relaxed); color: var(--text-secondary); }
+.t-micro     { font-size: var(--font-size-xs); font-weight: 500; line-height: var(--line-height-normal); color: var(--text-muted); text-transform: uppercase; letter-spacing: var(--tracking-wide); }
+.t-mono      { font-family: var(--font-family-mono); font-size: var(--font-size-sm); }
+.t-number    { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+
+
+/* ─── Hasnan Traders ERP — App-level styles ───────────────────────────── */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, #root { height: 100%; }
+body {
+  background: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-md);
+  -webkit-font-smoothing: antialiased;
+  line-height: var(--line-height-normal);
+}
+
+/* ── App shell ──────────────────────────────────────────────────────────── */
+.erp-app {
+  display: grid;
+  grid-template-columns: 232px 1fr;
+  grid-template-rows: 48px 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+.erp-sidebar { grid-row: 1 / span 2; grid-column: 1; overflow-y: auto; }
+.erp-topbar  { grid-column: 2; grid-row: 1; }
+.erp-main    { grid-column: 2; grid-row: 2; overflow-y: auto; padding: 24px 28px 32px; }
+
+/* ── Sidebar (inherits from fusion_styles but needs overrides) ─────────── */
+.sidebar {
+  background: var(--bg-sidebar);
+  color: #CBD5E1;
+  display: flex;
+  flex-direction: column;
+  padding: 10px 8px 12px;
+  height: 100%;
+}
+.sidebar .section-label {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: #64748B; padding: 10px 12px 4px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px; border-radius: var(--radius-sm);
+  color: #CBD5E1; font-size: 13px; font-weight: 500;
+  cursor: pointer; user-select: none; position: relative;
+  transition: background 120ms;
+}
+.nav-item svg { opacity: 0.8; flex-shrink: 0; }
+.nav-item:hover { background: rgba(255,255,255,0.06); color: #F3F4F6; }
+.nav-item.active { background: rgba(245,158,11,0.15); color: #FDE68A; }
+.nav-item.active::before {
+  content: ""; position: absolute; left: -8px; top: 6px; bottom: 6px;
+  width: 3px; border-radius: 0 3px 3px 0; background: #F59E0B;
+}
+
+/* ── Topbar ─────────────────────────────────────────────────────────────── */
+.topbar {
+  background: var(--bg-acrylic-strong);
+  -webkit-backdrop-filter: var(--backdrop-blur);
+  backdrop-filter: var(--backdrop-blur);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex; align-items: center; gap: 12px; padding: 0 20px;
+}
+
+/* ── Buttons ────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 7px; padding: 0 14px; height: 36px;
+  border: 1px solid transparent; border-radius: var(--radius-sm);
+  font-family: inherit; font-size: 13px; font-weight: 500;
+  cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+.btn:focus-visible { outline: 0; box-shadow: var(--shadow-focus); border-color: var(--border-focus); }
+.btn svg { flex-shrink: 0; }
+.btn.primary   { background: var(--action-primary-bg); color: var(--action-primary-text); }
+.btn.primary:hover { background: var(--action-primary-bg-hover); }
+.btn.secondary { background: var(--action-secondary-bg); color: var(--action-secondary-text); }
+.btn.secondary:hover { background: var(--action-secondary-bg-hover); }
+.btn.ghost     { background: transparent; color: var(--text-primary); }
+.btn.ghost:hover { background: var(--bg-hover); }
+.btn.danger    { background: var(--action-danger-bg); color: var(--action-danger-text); }
+.btn.danger:hover { background: var(--action-danger-bg-hover); }
+.btn.sm { height: 28px; padding: 0 10px; font-size: 12px; border-radius: var(--radius-xs); gap: 5px; }
+.btn.lg { height: 40px; padding: 0 18px; font-size: 15px; border-radius: var(--radius-md); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+
+/* ── Card ───────────────────────────────────────────────────────────────── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+.card-padded { padding: 18px 20px; }
+
+/* ── Pills / Badges ─────────────────────────────────────────────────────── */
+.pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 9px; border-radius: 999px;
+  font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.pill .dot { width: 5px; height: 5px; border-radius: 999px; background: currentColor; flex-shrink: 0; }
+.pill.success { background: var(--status-success-bg); color: var(--status-success-text); }
+.pill.warning { background: var(--status-warning-bg); color: var(--status-warning-text); }
+.pill.danger  { background: var(--status-danger-bg);  color: var(--status-danger-text); }
+.pill.info    { background: var(--status-info-bg);    color: var(--status-info-text); }
+.pill.neutral { background: var(--status-neutral-bg); color: var(--status-neutral-text); }
+
+/* ── Data table ─────────────────────────────────────────────────────────── */
+.table { width: 100%; border-collapse: collapse; }
+.table th {
+  text-align: left; font-weight: 500; font-size: 11px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--text-muted); padding: 10px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: #FAFBFC; white-space: nowrap;
+}
+.table td {
+  padding: 11px 16px; border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary); font-size: 13px; font-variant-numeric: tabular-nums;
+}
+.table tr:last-child td { border-bottom: 0; }
+.table tbody tr:hover td { background: var(--bg-hover); }
+.table tfoot td { background: var(--bg-subtle); }
+
+/* ── Form inputs ────────────────────────────────────────────────────────── */
+.f4-input {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-input); border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm); padding: 0 10px; height: 36px;
+  transition: border-color 120ms, box-shadow 120ms;
+}
+.f4-input:focus-within {
+  border-color: var(--color-accent-1);
+  box-shadow: var(--shadow-focus);
+}
+.f4-input input {
+  border: 0; outline: 0; background: transparent;
+  font: inherit; font-size: 13px; flex: 1; min-width: 0;
+  color: var(--text-primary);
+}
+.f4-input input::placeholder { color: var(--text-muted); }
+
+/* ── Select wrapper ─────────────────────────────────────────────────────── */
+.f4-select {
+  display: flex; align-items: center; position: relative;
+  background: var(--bg-input); border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm); height: 36px;
+  overflow: hidden;
+  transition: border-color 120ms;
+}
+.f4-select:focus-within { border-color: var(--color-accent-1); box-shadow: var(--shadow-focus); }
+.f4-select select {
+  border: 0; outline: 0; background: transparent;
+  font: inherit; font-size: 13px; flex: 1; width: 100%;
+  padding: 0 28px 0 10px; height: 100%; cursor: pointer;
+  color: var(--text-primary); -webkit-appearance: none; appearance: none;
+}
+.f4-select svg {
+  position: absolute; right: 8px; pointer-events: none; flex-shrink: 0;
+}
+
+/* ── Table inline cell inputs ───────────────────────────────────────────── */
+.f4-cell-input {
+  width: 100%; border: 1px solid var(--border-default);
+  border-radius: var(--radius-xs); padding: 4px 8px;
+  font: inherit; font-size: 13px; background: var(--bg-input);
+  color: var(--text-primary); outline: none;
+  font-variant-numeric: tabular-nums;
+  transition: border-color 120ms;
+}
+.f4-cell-input:focus { border-color: var(--color-accent-1); box-shadow: var(--shadow-focus); }
+
+/* ── Toast ──────────────────────────────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 300;
+  background: var(--bg-card); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
+  padding: 12px 16px; display: flex; align-items: center; gap: 10px;
+  min-width: 280px; max-width: 380px;
+  animation: toastIn 200ms var(--ease-standard);
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.toast .t { font-size: 14px; font-weight: 500; }
+.toast .s { font-size: 12px; color: var(--text-secondary); margin-top: 1px; }
+
+/* ── Charcoal dark theme overrides ──────────────────────────────────────── */
+[data-theme="charcoal-pro"] .table th { background: #1A2332; }
+[data-theme="charcoal-pro"] .f4-input,
+[data-theme="charcoal-pro"] .f4-select,
+[data-theme="charcoal-pro"] .f4-cell-input { background: var(--bg-input); border-color: var(--border-default); }
+[data-theme="charcoal-pro"] .nav-item.active { background: rgba(245,158,11,0.12); color: #FDE68A; }
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+
+// ─── Hasnan Traders ERP — Shared Primitives ───────────────────────────────
+// Icons, Button, Pill, Card, Input, Modal — all window-exported.
+
+// React hooks used via React.* to avoid scope collisions with other babel scripts
+
+// ── Icon bank (Lucide paths) ──────────────────────────────────────────────
+const ICONS = {
+  dashboard:    <><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></>,
+  shoppingCart: <><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></>,
+  package:      <><path d="M21 8 12 3 3 8l9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></>,
+  arrowReturn:  <><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></>,
+  banknote:     <><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></>,
+  fileText:     <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></>,
+  settings:     <><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></>,
+  search:       <><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></>,
+  plus:         <><path d="M12 5v14M5 12h14"/></>,
+  chevDown:     <><path d="m6 9 6 6 6-6"/></>,
+  chevRight:    <><path d="m9 18 6-6-6-6"/></>,
+  chevLeft:     <><path d="m15 18-6-6 6-6"/></>,
+  x:            <><path d="M18 6 6 18M6 6l12 12"/></>,
+  check:        <><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></>,
+  warning:      <><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></>,
+  info:         <><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></>,
+  printer:      <><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></>,
+  download:     <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></>,
+  filter:       <><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></>,
+  calendar:     <><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>,
+  user:         <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>,
+  users:        <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></>,
+  building:     <><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>,
+  bank:         <><path d="M3 22V12l9-9 9 9v10"/><path d="M3 22h18"/><path d="M9 22v-6h6v6"/></>,
+  flame:        <><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></>,
+  trendUp:      <><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></>,
+  trendDown:    <><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></>,
+  receipt:      <><path d="M4 2v20l3-2 3 2 3-2 3 2 3-2V2z"/><path d="M8 7h8M8 11h8M8 15h5"/></>,
+  ellipsis:     <><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></>,
+  edit:         <><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></>,
+  trash:        <><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></>,
+  eye:          <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>,
+  bell:         <><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></>,
+  cloud:        <><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></>,
+  alert:        <><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>,
+  boxes:        <><path d="M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42z"/><path d="m7 16.5-4.74-2.85"/><path d="m7 16.5 5-3"/><path d="M7 16.5v5.17"/><path d="M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3z"/><path d="m17 16.5-5-3"/><path d="m17 16.5 4.74-2.85"/><path d="M17 16.5v5.17"/><path d="M7.97 4.42A2 2 0 0 0 7 6.13v4.37l5 3 5-3V6.13a2 2 0 0 0-.97-1.71l-3-1.8a2 2 0 0 0-2.06 0l-3 1.8z"/><path d="M12 8 7.26 5.15"/><path d="m12 8 4.74-2.85"/><path d="M12 13.5V8"/></>,
+  pieChart:     <><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></>,
+  book:         <><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></>,
+  chartBar:     <><path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="8"/><rect x="13" y="6" width="3" height="12"/></>,
+  arrowUp:      <><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></>,
+  arrowDown:    <><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></>,
+  creditCard:   <><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></>,
+  tag:          <><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></>,
+  cylinder:     <><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></>,
+  save:         <><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></>,
+  send:         <><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></>,
+  listCheck:    <><path d="M11 12H3"/><path d="M16 6H3"/><path d="M16 18H3"/><path d="m19 10-3.5 3.5L14 12"/></>,
+};
+
+function Icon({ name, size = 20, color, style = {} }) {
+  const path = ICONS[name];
+  if (!path) return <svg width={size} height={size} viewBox="0 0 24 24" style={{ stroke: "currentColor", fill: "none", strokeWidth: 1.75, strokeLinecap: "round", strokeLinejoin: "round", ...style }} />;
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24"
+      style={{ stroke: color || "currentColor", fill: "none", strokeWidth: 1.75, strokeLinecap: "round", strokeLinejoin: "round", flexShrink: 0, ...style }}>
+      {path}
+    </svg>
+  );
+}
+
+// ── Button ────────────────────────────────────────────────────────────────
+function Btn({ variant = "primary", size, icon, iconRight, children, style, ...rest }) {
+  const cls = ["btn", variant, size].filter(Boolean).join(" ");
+  return (
+    <button className={cls} style={style} {...rest}>
+      {icon && <Icon name={icon} size={size === "sm" ? 14 : 16} />}
+      {children}
+      {iconRight && <Icon name={iconRight} size={size === "sm" ? 14 : 16} />}
+    </button>
+  );
+}
+
+// ── Badge/Pill ─────────────────────────────────────────────────────────────
+function Badge({ tone = "neutral", children, dot = true }) {
+  return (
+    <span className={`pill ${tone}`}>
+      {dot && <span className="dot" />}
+      {children}
+    </span>
+  );
+}
+
+// ── Card ──────────────────────────────────────────────────────────────────
+function Card({ padded, children, style, className = "" }) {
+  return (
+    <div className={`card${padded ? " card-padded" : ""} ${className}`} style={style}>
+      {children}
+    </div>
+  );
+}
+
+// ── Input ─────────────────────────────────────────────────────────────────
+function Input({ icon, placeholder, value, onChange, type = "text", style, className = "" }) {
+  return (
+    <div className={`f4-input ${className}`} style={style}>
+      {icon && <Icon name={icon} size={15} color="var(--text-muted)" />}
+      <input type={type} placeholder={placeholder} value={value} onChange={onChange} />
+    </div>
+  );
+}
+
+// ── Select ────────────────────────────────────────────────────────────────
+function Select({ value, onChange, children, style }) {
+  return (
+    <div className="f4-select" style={style}>
+      <select value={value} onChange={onChange}>{children}</select>
+      <Icon name="chevDown" size={14} color="var(--text-muted)" />
+    </div>
+  );
+}
+
+// ── SearchableSelect ──────────────────────────────────────────────────────
+function SearchableSelect({ items, value, onChange, placeholder = "Search…", renderItem, renderLabel }) {
+  const [open, setOpen] = React.useState(false);
+  const [q, setQ] = React.useState("");
+  const ref = React.useRef();
+  const filtered = React.useMemo(() => items.filter(i =>
+    JSON.stringify(i).toLowerCase().includes(q.toLowerCase())
+  ), [items, q]);
+
+  React.useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const selected = items.find(i => i.id === value);
+
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      <div className="f4-input" style={{ cursor: "pointer" }} onClick={() => setOpen(!open)}>
+        <Icon name="search" size={15} color="var(--text-muted)" />
+        <input
+          readOnly={!open}
+          value={open ? q : (selected ? (renderLabel ? renderLabel(selected) : selected.name) : "")}
+          onChange={e => setQ(e.target.value)}
+          placeholder={placeholder}
+          style={{ cursor: "pointer" }}
+          onClick={e => { e.stopPropagation(); setOpen(true); setQ(""); }}
+        />
+        <Icon name="chevDown" size={14} color="var(--text-muted)" />
+      </div>
+      {open && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 100,
+          background: "var(--bg-card)", border: "1px solid var(--border-subtle)",
+          borderRadius: "var(--radius-md)", boxShadow: "var(--shadow-lg)",
+          maxHeight: 280, overflowY: "auto"
+        }}>
+          {filtered.length === 0 && (
+            <div style={{ padding: "12px 16px", color: "var(--text-muted)", fontSize: 13 }}>No results</div>
+          )}
+          {filtered.map(item => (
+            <div
+              key={item.id}
+              style={{
+                padding: "10px 14px", cursor: "pointer", fontSize: 13,
+                background: item.id === value ? "var(--color-accent-3)" : "transparent",
+                borderBottom: "1px solid var(--border-subtle)",
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = "var(--bg-hover)"}
+              onMouseLeave={e => e.currentTarget.style.background = item.id === value ? "var(--color-accent-3)" : "transparent"}
+              onClick={() => { onChange(item.id); setOpen(false); setQ(""); }}
+            >
+              {renderItem ? renderItem(item) : item.name}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────
+function Modal({ open, onClose, title, children, width = 520 }) {
+  if (!open) return null;
+  return (
+    <div style={{
+      position: "fixed", inset: 0, background: "rgba(15,23,42,0.4)",
+      display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200
+    }} onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={{
+        background: "var(--bg-card)", borderRadius: "var(--radius-lg)",
+        boxShadow: "var(--shadow-lg)", width, maxWidth: "90vw",
+        maxHeight: "90vh", overflow: "auto"
+      }}>
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "16px 20px", borderBottom: "1px solid var(--border-subtle)"
+        }}>
+          <div style={{ fontWeight: 600, fontSize: 16 }}>{title}</div>
+          <button onClick={onClose} style={{
+            border: 0, background: "transparent", cursor: "pointer",
+            color: "var(--text-muted)", padding: 4, borderRadius: 4
+          }}>
+            <Icon name="x" size={18} />
+          </button>
+        </div>
+        <div style={{ padding: 20 }}>{children}</div>
+      </div>
+    </div>
+  );
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────
+function Toast({ toast }) {
+  if (!toast) return null;
+  const colors = { success: "var(--color-success-1)", danger: "var(--color-danger-1)", warning: "var(--color-warning-1)", info: "var(--color-accent-1)" };
+  const icons = { success: "check", danger: "x", warning: "warning", info: "info" };
+  return (
+    <div className="toast" role="status">
+      <Icon name={icons[toast.kind] || "check"} size={18} color={colors[toast.kind] || colors.success} />
+      <div>
+        <div className="t">{toast.t}</div>
+        {toast.s && <div className="s">{toast.s}</div>}
+      </div>
+    </div>
+  );
+}
+
+// ── Stat / KPI Card ───────────────────────────────────────────────────────
+function KpiCard({ label, value, trend, trendUp, sub, accent }) {
+  return (
+    <Card>
+      <div style={{ padding: "16px 18px" }}>
+        <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text-muted)" }}>{label}</div>
+        <div style={{ marginTop: 6, fontSize: 26, fontWeight: 600, letterSpacing: "-0.02em", fontVariantNumeric: "tabular-nums", color: accent || "var(--text-primary)" }}>{value}</div>
+        {trend && (
+          <div style={{ marginTop: 4, fontSize: 12, fontWeight: 500, display: "inline-flex", alignItems: "center", gap: 4, color: trendUp ? "var(--color-success-1)" : "var(--color-danger-1)" }}>
+            <Icon name={trendUp ? "trendUp" : "trendDown"} size={12} />
+            {trend}
+          </div>
+        )}
+        {sub && <div style={{ marginTop: 2, fontSize: 12, color: "var(--text-muted)" }}>{sub}</div>}
+      </div>
+    </Card>
+  );
+}
+
+// ── Section Header ────────────────────────────────────────────────────────
+function SectionHeader({ title, sub, actions }) {
+  return (
+    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20, gap: 16 }}>
+      <div>
+        <h1 style={{ margin: 0, fontSize: 22, fontWeight: 600, letterSpacing: "-0.01em" }}>{title}</h1>
+        {sub && <div style={{ marginTop: 4, fontSize: 13, color: "var(--text-secondary)" }}>{sub}</div>}
+      </div>
+      {actions && <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>{actions}</div>}
+    </div>
+  );
+}
+
+// ── Table helpers ─────────────────────────────────────────────────────────
+function TableWrapper({ children }) {
+  return <div style={{ overflowX: "auto" }}><table className="table" style={{ minWidth: 600 }}>{children}</table></div>;
+}
+
+// ── Inline sparkline SVG ──────────────────────────────────────────────────
+function Sparkline({ data, color = "var(--color-accent-1)", width = 80, height = 30 }) {
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+  const range = max - min || 1;
+  const pts = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * width;
+    const y = height - ((v - min) / range) * height;
+    return `${x},${y}`;
+  }).join(" ");
+  return (
+    <svg width={width} height={height} style={{ display: "block" }}>
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+
+
+// ─── Hasnan Traders ERP — App Shell (Sidebar + Topbar) ───────────────────
+
+const NAV_ITEMS = [
+  { id: "dashboard", label: "Dashboard", icon: "dashboard" },
+  { group: "Sales" },
+  { id: "sale-new",    label: "New Single Sale",  icon: "receipt",      parent: "sales" },
+  { id: "sale-day",    label: "Day / Batch Sale",  icon: "listCheck",    parent: "sales" },
+  { id: "sale-list",   label: "Sale List",         icon: "fileText",     parent: "sales" },
+  { id: "sale-empty",  label: "Decanting / Empty",  icon: "flame",       parent: "sales" },
+  { group: "Purchases" },
+  { id: "purch-filled",  label: "Purchase Filled",  icon: "package",    parent: "purchases" },
+  { id: "purch-empty",   label: "Purchase Empty",   icon: "cylinder",   parent: "purchases" },
+  { id: "purch-other",   label: "Other Purchase",   icon: "shoppingCart",parent: "purchases" },
+  { id: "purch-list",    label: "Purchase List",    icon: "fileText",   parent: "purchases" },
+  { group: "Returns" },
+  { id: "ret-cust",   label: "Customer Returns",   icon: "arrowReturn", parent: "returns" },
+  { id: "ret-purch",  label: "Purchase Returns",   icon: "arrowReturn", parent: "returns" },
+  { group: "Payments & Receipts" },
+  { id: "pay-cash",    label: "Cash Payments",      icon: "banknote",   parent: "payments" },
+  { id: "rec-cash",    label: "Cash Receipts",      icon: "banknote",   parent: "payments" },
+  { id: "pay-bank",    label: "Bank Payments/Rcpts", icon: "bank",      parent: "payments" },
+  { id: "rec-sec",     label: "Security Receipts",  icon: "creditCard", parent: "payments" },
+  { id: "jv",          label: "Journal Vouchers",   icon: "book",       parent: "payments" },
+  { group: "Reports" },
+  { id: "rep-ledger",  label: "Customer Ledger",    icon: "book",       parent: "reports" },
+  { id: "rep-stock",   label: "Stock Report",       icon: "boxes",      parent: "reports" },
+  { id: "rep-cashbook", label: "Cash Book",         icon: "banknote",   parent: "reports" },
+  { id: "rep-daily",   label: "Daily Activity",     icon: "calendar",   parent: "reports" },
+  { id: "rep-pl",      label: "Profit / Loss",      icon: "chartBar",   parent: "reports" },
+  { id: "rep-more",    label: "More Reports",       icon: "pieChart",   parent: "reports" },
+  { group: "Settings" },
+  { id: "settings",   label: "Settings",            icon: "settings",   parent: "settings" },
+];
+
+// Collapsed group state
+function Sidebar({ active, onNavigate }) {
+  const [collapsed, setCollapsed] = React.useState({});
+
+  const toggleGroup = (g) => setCollapsed(c => ({ ...c, [g]: !c[g] }));
+  const isGroupCollapsed = (g) => collapsed[g];
+
+  // Track current group header
+  let currentGroup = null;
+
+  return (
+    <nav className="sidebar" style={{ width: 232, minWidth: 232, overflowY: "auto", overflowX: "hidden" }}>
+      {/* Brand */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px 16px" }}>
+        <div style={{
+          width: 30, height: 30, borderRadius: 8,
+          background: "linear-gradient(135deg,#F59E0B,#D97706)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: "#fff", fontWeight: 700, fontSize: 13, letterSpacing: "-0.02em", flexShrink: 0
+        }}>HT</div>
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 14, color: "#fff", letterSpacing: "-0.01em", lineHeight: 1.2 }}>Hasnan Traders</div>
+          <div style={{ fontSize: 10, color: "#64748B", letterSpacing: "0.04em", textTransform: "uppercase" }}>LPG ERP</div>
+        </div>
+      </div>
+
+      {/* Nav items */}
+      {NAV_ITEMS.map((item, i) => {
+        if (item.group) {
+          currentGroup = item.group;
+          const key = item.group;
+          return (
+            <div key={`g${i}`}
+              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", padding: "10px 10px 4px", userSelect: "none" }}
+              onClick={() => toggleGroup(key)}>
+              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#64748B" }}>{item.group}</div>
+              <Icon name={isGroupCollapsed(key) ? "chevRight" : "chevDown"} size={12} color="#64748B" />
+            </div>
+          );
+        }
+
+        const group = currentGroup;
+        if (isGroupCollapsed(group)) return null;
+
+        const isActive = active === item.id;
+        return (
+          <div key={item.id}
+            className={"nav-item" + (isActive ? " active" : "")}
+            onClick={() => onNavigate(item.id)}
+            style={{ paddingLeft: item.parent ? 14 : 10 }}>
+            <Icon name={item.icon} size={16} />
+            <span style={{ fontSize: 13 }}>{item.label}</span>
+          </div>
+        );
+      })}
+
+      <div style={{ flex: 1 }} />
+
+      {/* User */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px", borderTop: "1px solid rgba(255,255,255,0.08)", marginTop: 8 }}>
+        <div style={{
+          width: 32, height: 32, borderRadius: 999, flexShrink: 0,
+          background: "linear-gradient(135deg,#F59E0B,#D97706)",
+          color: "#fff", display: "flex", alignItems: "center",
+          justifyContent: "center", fontWeight: 600, fontSize: 12
+        }}>HA</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "#F3F4F6", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>Hasnan Ahmed</div>
+          <div style={{ fontSize: 11, color: "#64748B" }}>Admin · Karachi</div>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+// ── Topbar ────────────────────────────────────────────────────────────────
+function Topbar({ crumbs, theme, onTheme }) {
+  return (
+    <header className="topbar" style={{ display: "flex", alignItems: "center", gap: 12, padding: "0 20px", height: 48 }}>
+      {/* Breadcrumb */}
+      <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "var(--text-secondary)" }}>
+        {crumbs.map((c, i) => (
+          <React.Fragment key={i}>
+            {i > 0 && <span style={{ color: "var(--text-muted)" }}>/</span>}
+            {i === crumbs.length - 1
+              ? <span style={{ color: "var(--text-primary)", fontWeight: 600 }}>{c}</span>
+              : <span>{c}</span>}
+          </React.Fragment>
+        ))}
+      </div>
+
+      {/* Search */}
+      <div style={{ marginLeft: "auto" }} />
+      <div style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--bg-input)", border: "1px solid var(--border-default)", borderRadius: "var(--radius-sm)", padding: "0 10px", height: 30, width: 300 }}>
+        <Icon name="search" size={14} color="var(--text-muted)" />
+        <input placeholder="Search customers, invoices, cylinders…" style={{ border: 0, outline: 0, background: "transparent", font: "inherit", fontSize: 13, flex: 1 }} />
+        <span style={{ fontSize: 11, color: "var(--text-muted)", background: "var(--bg-subtle)", padding: "1px 5px", borderRadius: 3 }}>⌘K</span>
+      </div>
+
+      {/* Theme switcher */}
+      <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px", background: "var(--bg-subtle)", borderRadius: "var(--radius-sm)" }}>
+        {[["", "Light"], ["charcoal-pro", "Dark"]].map(([v, l]) => (
+          <button key={v} onClick={() => onTheme(v)} style={{
+            border: 0, font: "inherit", fontSize: 12, padding: "3px 10px",
+            borderRadius: 4, cursor: "pointer",
+            background: theme === v ? "var(--bg-card)" : "transparent",
+            color: theme === v ? "var(--text-primary)" : "var(--text-secondary)",
+            fontWeight: theme === v ? 500 : 400,
+            boxShadow: theme === v ? "var(--shadow-sm)" : "none"
+          }}>{l}</button>
+        ))}
+      </div>
+
+      {/* Date */}
+      <div style={{ fontSize: 12, color: "var(--text-muted)", whiteSpace: "nowrap" }}>
+        2 May 2026
+      </div>
+
+      {/* Bell */}
+      <div style={{ position: "relative", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "var(--radius-sm)", cursor: "pointer" }}
+        onMouseEnter={e => e.currentTarget.style.background = "var(--bg-hover)"}
+        onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+        <Icon name="bell" size={16} color="var(--text-secondary)" />
+        <span style={{ position: "absolute", top: 6, right: 7, width: 7, height: 7, borderRadius: 999, background: "var(--color-danger-1)", border: "1.5px solid var(--bg-card)" }} />
+      </div>
+    </header>
+  );
+}
+
+
+
+// ─── Dashboard Screen ────────────────────────────────────────────────────
+
+// Fake sparkline data for last 30 days
+const salesData = [42000,38000,55000,61000,47000,52000,68000,72000,59000,63000,78000,84000,69000,75000,91000,88000,76000,82000,95000,103000,89000,94000,108000,112000,98000,105000,118000,124500,115000,124500];
+const cashInData = [30000,25000,40000,45000,35000,38000,52000,58000,44000,49000,62000,68000,55000,60000,74000,70000,62000,66000,78000,86000,72000,76000,92000,96000,80000,88000,100000,108000,95000,106000];
+const cashOutData = [18000,15000,22000,28000,20000,24000,32000,38000,28000,31000,40000,46000,36000,42000,52000,50000,44000,48000,56000,64000,52000,58000,68000,72000,60000,66000,78000,82000,72000,80000];
+
+// Mini inline bar chart
+function BarChart({ data, labels, height = 160 }) {
+  const max = Math.max(...data.flat ? data : data) * 1.1;
+  const days = ['30','29','28','27','26','25','24','23','22','21','20','19','18','17','16','15','14','13','12','11','10','9','8','7','6','5','4','3','2','1'].reverse();
+  const showEvery = 5;
+  return (
+    <svg width="100%" viewBox={`0 0 ${data.length * 14} ${height + 20}`} preserveAspectRatio="none" style={{ display: "block", overflow: "visible" }}>
+      {data.map((v, i) => {
+        const barH = Math.max(2, (v / max) * height);
+        const x = i * 14 + 2;
+        const y = height - barH;
+        return (
+          <g key={i}>
+            <rect x={x} y={y} width={10} height={barH}
+              fill="var(--color-accent-1)" opacity={i === data.length - 1 ? 1 : 0.5}
+              rx={2} />
+            {i % showEvery === 0 && (
+              <text x={x + 5} y={height + 14} textAnchor="middle" fontSize={8} fill="var(--text-muted)">{days[i]}</text>
+            )}
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+// Dual bar chart (cash in vs out)
+function DualBarChart({ dataA, dataB, height = 120 }) {
+  const max = Math.max(...dataA, ...dataB) * 1.1;
+  const days = 30;
+  const step = 10;
+  return (
+    <svg width="100%" viewBox={`0 0 ${days * step * 2 + 10} ${height + 20}`} preserveAspectRatio="none" style={{ display: "block" }}>
+      {dataA.map((va, i) => {
+        const vb = dataB[i];
+        const hA = Math.max(2, (va / max) * height);
+        const hB = Math.max(2, (vb / max) * height);
+        const x = i * (step * 2) + 2;
+        return (
+          <g key={i}>
+            <rect x={x} y={height - hA} width={step - 2} height={hA} fill="var(--color-success-1)" opacity={0.7} rx={1} />
+            <rect x={x + step} y={height - hB} width={step - 2} height={hB} fill="var(--color-danger-1)" opacity={0.7} rx={1} />
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+// Horizontal bar for top customers
+function TopCustomerRow({ name, area, amount, max }) {
+  const pct = (amount / max) * 100;
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+        <div>
+          <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)" }}>{name}</span>
+          <span style={{ fontSize: 11, color: "var(--text-muted)", marginLeft: 6 }}>{area}</span>
+        </div>
+        <span style={{ fontSize: 13, fontWeight: 600, fontVariantNumeric: "tabular-nums", color: "var(--text-primary)" }}>PKR {amount.toLocaleString()}</span>
+      </div>
+      <div style={{ height: 6, background: "var(--bg-subtle)", borderRadius: 999, overflow: "hidden" }}>
+        <div style={{ width: `${pct}%`, height: "100%", background: "var(--color-accent-1)", borderRadius: 999 }} />
+      </div>
+    </div>
+  );
+}
+
+function DashboardScreen({ onNavigate }) {
+  const kpis = [
+    { label: "Today's Cash", value: "PKR 47,200", trend: "▲ 8.2% vs yesterday", trendUp: true, sub: "Net cash collected today" },
+    { label: "Cash Position", value: "PKR 2,84,650", trend: "▲ 3.1% this week", trendUp: true, sub: "All accounts combined" },
+    { label: "Payables", value: "PKR 1,12,400", trend: "▼ 5 vendors pending", trendUp: false, sub: "Outstanding to vendors" },
+    { label: "Receivables", value: "PKR 1,89,750", trend: "▲ 12 customers", trendUp: false, sub: "Outstanding from customers", accent: "var(--color-accent-1)" },
+    { label: "Today's Sales", value: "PKR 1,24,500", trend: "▲ 12.4% vs yesterday", trendUp: true, sub: "48 invoices raised" },
+    { label: "Monthly Expenses", value: "PKR 38,200", trend: "▼ 4.2% vs last month", trendUp: true, sub: "Apr 2026 total" },
+  ];
+
+  const banks = [
+    { name: "HBL Current A/C", number: "0123-xxxx-4567", balance: 128450, type: "Cr" },
+    { name: "MCB Business A/C", number: "7890-xxxx-1234", balance: -24800, type: "Dr" },
+    { name: "Meezan Bank",      number: "4567-xxxx-8901", balance: 98200, type: "Cr" },
+    { name: "Petty Cash",       number: "—",              balance: 47200, type: "Cr" },
+  ];
+
+  const recent = [
+    { ref: "SLE-2814", type: "Sale",    party: "Al-Barkat Gas",     amount: 18400, time: "11:42 AM", status: "success" },
+    { ref: "RCT-0492", type: "Receipt", party: "Noor Gas Agency",   amount: 25000, time: "11:15 AM", status: "success" },
+    { ref: "SLE-2813", type: "Sale",    party: "Karachi Gas Depot",  amount: 12600, time: "10:50 AM", status: "success" },
+    { ref: "PAY-0218", type: "Payment", party: "SSGCL",              amount: -45000, time: "10:30 AM", status: "warning" },
+    { ref: "SLE-2812", type: "Sale",    party: "Rauf Brothers",      amount: 9800,  time: "09:55 AM", status: "success" },
+    { ref: "RET-0087", type: "Return",  party: "Moon Gas",           amount: -3200, time: "09:20 AM", status: "danger" },
+  ];
+
+  const stockAlerts = [
+    { item: "11.8 kg Filled (PSO)", stock: 12, min: 20, tone: "danger" },
+    { item: "5.5 kg Filled (Hascol)", stock: 18, min: 25, tone: "warning" },
+    { item: "2.2 kg Filled (Shell)", stock: 8, min: 15, tone: "danger" },
+    { item: "45 kg Bulk Cylinder",  stock: 4, min: 5, tone: "warning" },
+  ];
+
+  const topCustomers = [
+    { name: "Al-Barkat Gas", area: "Korangi",   amount: 485000 },
+    { name: "Noor Gas Agency", area: "Gulshan",  amount: 372000 },
+    { name: "Rauf Brothers",  area: "SITE",     amount: 298000 },
+    { name: "Karachi Gas Depot", area: "Saddar", amount: 241000 },
+    { name: "Moon Gas",       area: "Orangi",   amount: 187000 },
+  ];
+  const maxCust = topCustomers[0].amount;
+
+  return (
+    <div style={{ paddingBottom: 32 }}>
+      <SectionHeader
+        title="Dashboard"
+        sub="2 May 2026 · Karachi · All accounts"
+        actions={<>
+          <Btn variant="secondary" icon="download" size="sm">Export</Btn>
+          <Btn variant="primary" icon="plus" onClick={() => onNavigate("sale-new")}>New Sale</Btn>
+        </>}
+      />
+
+      {/* KPI Grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
+        {kpis.map((k, i) => (
+          <KpiCard key={i} {...k} />
+        ))}
+      </div>
+
+      {/* Middle row: Sales chart + Top Customers */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 16, marginBottom: 16 }}>
+        {/* Sales Trend */}
+        <Card>
+          <div style={{ padding: "14px 18px 10px", borderBottom: "1px solid var(--border-subtle)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 15 }}>Sales trend</div>
+              <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>Last 30 days · PKR</div>
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 700, fontVariantNumeric: "tabular-nums", color: "var(--color-accent-1)" }}>1,24,500</div>
+          </div>
+          <div style={{ padding: "12px 18px 14px" }}>
+            <BarChart data={salesData} height={140} />
+          </div>
+        </Card>
+
+        {/* Top 5 Customers */}
+        <Card>
+          <div style={{ padding: "14px 18px 10px", borderBottom: "1px solid var(--border-subtle)" }}>
+            <div style={{ fontWeight: 600, fontSize: 15 }}>Top customers</div>
+            <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>By revenue · this month</div>
+          </div>
+          <div style={{ padding: "14px 18px" }}>
+            {topCustomers.map((c, i) => <TopCustomerRow key={i} {...c} max={maxCust} />)}
+          </div>
+        </Card>
+      </div>
+
+      {/* Bottom row: Cash In/Out + Banks + Recent Transactions + Stock Alerts */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+        {/* Cash In vs Out */}
+        <Card>
+          <div style={{ padding: "14px 18px 10px", borderBottom: "1px solid var(--border-subtle)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 15 }}>Cash in vs Cash out</div>
+              <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>Last 30 days</div>
+            </div>
+            <div style={{ display: "flex", gap: 12, fontSize: 12, fontWeight: 500 }}>
+              <span style={{ color: "var(--color-success-1)" }}>● In</span>
+              <span style={{ color: "var(--color-danger-1)" }}>● Out</span>
+            </div>
+          </div>
+          <div style={{ padding: "12px 18px 14px" }}>
+            <DualBarChart dataA={cashInData} dataB={cashOutData} height={110} />
+          </div>
+        </Card>
+
+        {/* Banks Position */}
+        <Card>
+          <div style={{ padding: "14px 18px 10px", borderBottom: "1px solid var(--border-subtle)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ fontWeight: 600, fontSize: 15 }}>Banks position</div>
+            <Btn variant="ghost" size="sm" iconRight="chevRight">All accounts</Btn>
+          </div>
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Account</th>
+                <th style={{ textAlign: "right" }}>Balance</th>
+                <th style={{ textAlign: "center" }}>Dr/Cr</th>
+              </tr>
+            </thead>
+            <tbody>
+              {banks.map((b, i) => (
+                <tr key={i}>
+                  <td>
+                    <div style={{ fontSize: 13, fontWeight: 500 }}>{b.name}</div>
+                    <div style={{ fontSize: 11, color: "var(--text-muted)", fontFamily: "var(--font-family-mono)" }}>{b.number}</div>
+                  </td>
+                  <td style={{ textAlign: "right", fontWeight: 600, fontVariantNumeric: "tabular-nums", fontSize: 14 }}>
+                    PKR {Math.abs(b.balance).toLocaleString()}
+                  </td>
+                  <td style={{ textAlign: "center" }}>
+                    <Badge tone={b.type === "Cr" ? "success" : "danger"} dot={false}>{b.type}</Badge>
+                  </td>
+                </tr>
+              ))}
+              <tr>
+                <td colSpan={2} style={{ textAlign: "right", fontWeight: 700, fontSize: 14 }}>Net Position</td>
+                <td style={{ textAlign: "right", fontWeight: 700, fontSize: 14, color: "var(--color-success-1)", fontVariantNumeric: "tabular-nums" }}>PKR 2,49,050</td>
+              </tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      {/* Recent Transactions + Stock Alerts */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 16 }}>
+        {/* Recent Transactions */}
+        <Card>
+          <div style={{ padding: "14px 18px 10px", borderBottom: "1px solid var(--border-subtle)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ fontWeight: 600, fontSize: 15 }}>Recent transactions</div>
+            <Btn variant="ghost" size="sm" iconRight="chevRight">View all</Btn>
+          </div>
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Ref</th>
+                <th>Type</th>
+                <th>Party</th>
+                <th>Time</th>
+                <th style={{ textAlign: "right" }}>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recent.map((r, i) => (
+                <tr key={i}>
+                  <td style={{ fontFamily: "var(--font-family-mono)", fontSize: 12, color: "var(--text-secondary)" }}>{r.ref}</td>
+                  <td><Badge tone={r.status} dot={false}>{r.type}</Badge></td>
+                  <td style={{ fontSize: 13, fontWeight: 500 }}>{r.party}</td>
+                  <td style={{ fontSize: 12, color: "var(--text-muted)" }}>{r.time}</td>
+                  <td style={{ textAlign: "right", fontWeight: 600, fontVariantNumeric: "tabular-nums", color: r.amount < 0 ? "var(--color-danger-1)" : "var(--text-primary)" }}>
+                    {r.amount < 0 ? "-" : ""}PKR {Math.abs(r.amount).toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+
+        {/* Stock Alerts */}
+        <Card padded>
+          <div style={{ fontSize: 11, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--text-muted)", marginBottom: 12 }}>Stock alerts</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {stockAlerts.map((a, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", background: "var(--bg-subtle)", borderRadius: "var(--radius-md)", border: `1px solid ${a.tone === "danger" ? "var(--color-danger-2)" : "var(--color-warning-2)"}` }}>
+                <Icon name="cylinder" size={18} color={a.tone === "danger" ? "var(--color-danger-1)" : "var(--color-warning-1)"} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 500 }}>{a.item}</div>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)" }}>Stock: {a.stock} · Min: {a.min}</div>
+                </div>
+                <Badge tone={a.tone} dot={false}>{a.tone === "danger" ? "Low" : "Alert"}</Badge>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop: 14 }}>
+            <Btn variant="secondary" size="sm" style={{ width: "100%" }} icon="boxes" onClick={() => onNavigate("rep-stock")}>View stock report</Btn>
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+
+
+// ─── New Single Sale Screen ───────────────────────────────────────────────
+
+const CUSTOMERS = [
+  { id: "c1", name: "Al-Barkat Gas", area: "Korangi",  phone: "0312-2341234", balance: -18400, creditLimit: 200000 },
+  { id: "c2", name: "Noor Gas Agency", area: "Gulshan", phone: "0333-7654321", balance: 12000,  creditLimit: 150000 },
+  { id: "c3", name: "Rauf Brothers",   area: "SITE",    phone: "0301-1122334", balance: 5000,   creditLimit: 100000 },
+  { id: "c4", name: "Karachi Gas Depot", area: "Saddar", phone: "0321-9988776", balance: -31200, creditLimit: 250000 },
+  { id: "c5", name: "Moon Gas",        area: "Orangi",  phone: "0345-4433221", balance: 8500,   creditLimit: 80000  },
+  { id: "c6", name: "Sunrise Petroleum", area: "DHA",  phone: "0311-5566778", balance: 0,       creditLimit: 120000 },
+];
+
+const ITEMS = [
+  { id: "i1", name: "11.8 kg LPG Cylinder (PSO)",    brand: "PSO",    category: "Filled", price: 2850, stock: 42 },
+  { id: "i2", name: "5.5 kg LPG Cylinder (Hascol)",  brand: "Hascol", category: "Filled", price: 1380, stock: 28 },
+  { id: "i3", name: "2.2 kg LPG Cylinder (Shell)",   brand: "Shell",  category: "Filled", price: 580,  stock: 35 },
+  { id: "i4", name: "45 kg Bulk Cylinder",            brand: "PSO",    category: "Bulk",   price: 11200, stock: 8 },
+  { id: "i5", name: "11.8 kg Empty Cylinder",         brand: "—",      category: "Empty",  price: 0,    stock: 60 },
+];
+
+function SaleItemRow({ row, idx, onUpdate, onRemove }) {
+  const item = ITEMS.find(i => i.id === row.itemId);
+  const qty = parseFloat(row.qty) || 0;
+  const price = parseFloat(row.price) || 0;
+  const gstPct = parseFloat(row.gst) || 0;
+  const security = parseFloat(row.security) || 0;
+  const returnQty = parseFloat(row.returnQty) || 0;
+  const subtotal = qty * price;
+  const gstAmt = subtotal * (gstPct / 100);
+  const total = subtotal + gstAmt + security;
+
+  return (
+    <tr>
+      <td style={{ minWidth: 200 }}>
+        <Select value={row.itemId} onChange={e => onUpdate(idx, { itemId: e.target.value, price: ITEMS.find(i => i.id === e.target.value)?.price || "" })} style={{ width: "100%" }}>
+          <option value="">Select item…</option>
+          {ITEMS.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
+        </Select>
+      </td>
+      <td>
+        <span style={{ fontSize: 12, color: "var(--text-muted)" }}>{item?.category || "—"}</span>
+      </td>
+      <td style={{ minWidth: 80 }}>
+        <input className="f4-cell-input" type="number" min="0" value={row.qty}
+          onChange={e => onUpdate(idx, { qty: e.target.value })} placeholder="0" />
+      </td>
+      <td style={{ minWidth: 90 }}>
+        <input className="f4-cell-input" type="number" min="0" value={row.price}
+          onChange={e => onUpdate(idx, { price: e.target.value })} placeholder="0.00" />
+      </td>
+      <td style={{ minWidth: 60 }}>
+        <input className="f4-cell-input" type="number" min="0" max="20" value={row.gst}
+          onChange={e => onUpdate(idx, { gst: e.target.value })} placeholder="0" />
+      </td>
+      <td style={{ color: "var(--text-secondary)", fontSize: 13, fontVariantNumeric: "tabular-nums" }}>
+        {gstAmt > 0 ? `PKR ${gstAmt.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : "—"}
+      </td>
+      <td style={{ minWidth: 80 }}>
+        <input className="f4-cell-input" type="number" min="0" value={row.security}
+          onChange={e => onUpdate(idx, { security: e.target.value })} placeholder="0" />
+      </td>
+      <td style={{ minWidth: 70 }}>
+        <input className="f4-cell-input" type="number" min="0" value={row.returnQty}
+          onChange={e => onUpdate(idx, { returnQty: e.target.value })} placeholder="0" />
+      </td>
+      <td>
+        <span style={{ fontSize: 12, color: "var(--text-secondary)", fontVariantNumeric: "tabular-nums" }}>
+          {item ? item.stock - qty : "—"}
+        </span>
+      </td>
+      <td style={{ textAlign: "right", fontWeight: 600, fontVariantNumeric: "tabular-nums", fontSize: 13, whiteSpace: "nowrap" }}>
+        {total > 0 ? `PKR ${total.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : "—"}
+      </td>
+      <td>
+        <button onClick={() => onRemove(idx)} style={{ border: 0, background: "transparent", cursor: "pointer", color: "var(--color-danger-1)", padding: 4, borderRadius: 4 }}>
+          <Icon name="trash" size={15} />
+        </button>
+      </td>
+    </tr>
+  );
+}
+
+function NewSingleSaleScreen({ onNavigate }) {
+  const [step, setStep] = React.useState(1);
+  const [custId, setCustId] = React.useState("");
+  const [rows, setRows] = React.useState([
+    { itemId: "i1", qty: "5", price: "2850", gst: "0", security: "1000", returnQty: "3" },
+    { itemId: "i2", qty: "10", price: "1380", gst: "0", security: "0", returnQty: "8" },
+  ]);
+  const [received, setReceived] = React.useState("25000");
+  const [payMode, setPayMode] = React.useState("cash");
+  const [saved, setSaved] = React.useState(false);
+
+  const customer = CUSTOMERS.find(c => c.id === custId);
+
+  const calcRow = (row) => {
+    const qty = parseFloat(row.qty) || 0;
+    const price = parseFloat(row.price) || 0;
+    const gstPct = parseFloat(row.gst) || 0;
+    const security = parseFloat(row.security) || 0;
+    const subtotal = qty * price;
+    const gstAmt = subtotal * (gstPct / 100);
+    return { subtotal, gstAmt, security, total: subtotal + gstAmt + security };
+  };
+
+  const totals = rows.reduce((acc, row) => {
+    const r = calcRow(row);
+    return { subtotal: acc.subtotal + r.subtotal, gst: acc.gst + r.gstAmt, security: acc.security + r.security, total: acc.total + r.total };
+  }, { subtotal: 0, gst: 0, security: 0, total: 0 });
+
+  const balance = totals.total - (parseFloat(received) || 0);
+
+  const addRow = () => setRows(r => [...r, { itemId: "", qty: "", price: "", gst: "0", security: "", returnQty: "" }]);
+  const updateRow = (idx, patch) => setRows(r => r.map((row, i) => i === idx ? { ...row, ...patch } : row));
+  const removeRow = (idx) => setRows(r => r.filter((_, i) => i !== idx));
+
+  const steps = [
+    { n: 1, label: "Select customer" },
+    { n: 2, label: "Add items" },
+    { n: 3, label: "Payment & submit" },
+  ];
+
+  return (
+    <div style={{ paddingBottom: 32 }}>
+      <SectionHeader
+        title="New single sale"
+        sub="Sales · New Single Sale"
+        actions={<>
+          <Btn variant="secondary" icon="x" onClick={() => onNavigate("sale-list")}>Discard</Btn>
+          <Btn variant="secondary" icon="save">Save draft</Btn>
+          <Btn variant="primary" icon="send">Submit</Btn>
+        </>}
+      />
+
+      {/* Step indicator */}
+      <div style={{ display: "flex", alignItems: "center", gap: 0, marginBottom: 24 }}>
+        {steps.map((s, i) => (
+          <React.Fragment key={s.n}>
+            <div
+              style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "8px 16px 8px 0" }}
+              onClick={() => setStep(s.n)}
+            >
+              <div style={{
+                width: 28, height: 28, borderRadius: 999, display: "flex", alignItems: "center",
+                justifyContent: "center", fontSize: 13, fontWeight: 600,
+                background: step > s.n ? "var(--color-success-1)" : step === s.n ? "var(--color-accent-1)" : "var(--bg-subtle)",
+                color: step >= s.n ? "#fff" : "var(--text-muted)",
+                border: step < s.n ? "1px solid var(--border-default)" : "none"
+              }}>
+                {step > s.n ? <Icon name="check" size={14} color="#fff" /> : s.n}
+              </div>
+              <span style={{ fontSize: 13, fontWeight: step === s.n ? 600 : 400, color: step === s.n ? "var(--text-primary)" : "var(--text-secondary)" }}>{s.label}</span>
+            </div>
+            {i < steps.length - 1 && (
+              <div style={{ flex: 1, height: 1, background: step > s.n ? "var(--color-success-1)" : "var(--border-default)", margin: "0 8px 0 0" }} />
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: 16, alignItems: "start" }}>
+        {/* Main panel */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+          {/* Step 1: Customer */}
+          {step === 1 && (
+            <Card padded>
+              <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 16 }}>Select customer</div>
+              <SearchableSelect
+                items={CUSTOMERS}
+                value={custId}
+                onChange={setCustId}
+                placeholder="Search by name, area, phone…"
+                renderItem={(c) => (
+                  <div>
+                    <div style={{ fontWeight: 500 }}>{c.name} <span style={{ fontSize: 11, color: "var(--text-muted)", marginLeft: 6 }}>{c.area}</span></div>
+                    <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>
+                      {c.phone} · Balance: <span style={{ color: c.balance < 0 ? "var(--color-danger-1)" : "var(--color-success-1)", fontWeight: 600 }}>
+                        PKR {Math.abs(c.balance).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                renderLabel={(c) => `${c.name} — ${c.area}`}
+              />
+              {customer && (
+                <div style={{ marginTop: 16, padding: "14px 16px", background: "var(--color-accent-3)", borderRadius: "var(--radius-md)", display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
+                  <div>
+                    <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Customer</div>
+                    <div style={{ fontWeight: 600, fontSize: 14, marginTop: 2 }}>{customer.name}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Area</div>
+                    <div style={{ fontWeight: 500, fontSize: 14, marginTop: 2 }}>{customer.area}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Outstanding</div>
+                    <div style={{ fontWeight: 700, fontSize: 14, marginTop: 2, color: customer.balance < 0 ? "var(--color-danger-1)" : "var(--color-success-1)" }}>
+                      PKR {Math.abs(customer.balance).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
+                <Btn variant="primary" iconRight="chevRight" onClick={() => custId && setStep(2)} style={{ opacity: custId ? 1 : 0.5 }}>Next: Add items</Btn>
+              </div>
+            </Card>
+          )}
+
+          {/* Step 2: Items */}
+          {step === 2 && (
+            <Card>
+              <div style={{ padding: "14px 18px 10px", borderBottom: "1px solid var(--border-subtle)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ fontWeight: 600, fontSize: 15 }}>Add items</div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <Btn variant="secondary" icon="plus" size="sm" onClick={addRow}>Add row</Btn>
+                  <Btn variant="ghost" size="sm" icon="chevLeft" onClick={() => setStep(1)}>Back</Btn>
+                </div>
+              </div>
+              <div style={{ overflowX: "auto" }}>
+                <table className="table" style={{ minWidth: 860 }}>
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      <th>Type</th>
+                      <th>Sale Qty</th>
+                      <th>Unit Price</th>
+                      <th>GST %</th>
+                      <th>GST Amt</th>
+                      <th>Security</th>
+                      <th>Ret. Qty</th>
+                      <th>Stock</th>
+                      <th style={{ textAlign: "right" }}>Total</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((row, i) => (
+                      <SaleItemRow key={i} row={row} idx={i} onUpdate={updateRow} onRemove={removeRow} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div style={{ display: "flex", justifyContent: "flex-end", padding: "12px 18px", borderTop: "1px solid var(--border-subtle)" }}>
+                <Btn variant="primary" iconRight="chevRight" onClick={() => setStep(3)}>Next: Payment</Btn>
+              </div>
+            </Card>
+          )}
+
+          {/* Step 3: Payment */}
+          {step === 3 && (
+            <Card padded>
+              <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 16 }}>Payment details</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 500, marginBottom: 4 }}>Payment mode</label>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {["cash", "credit", "bank"].map(m => (
+                      <button key={m} onClick={() => setPayMode(m)} style={{
+                        flex: 1, padding: "8px 0", border: `1px solid ${payMode === m ? "var(--color-accent-1)" : "var(--border-default)"}`,
+                        borderRadius: "var(--radius-sm)", background: payMode === m ? "var(--color-accent-3)" : "var(--bg-input)",
+                        color: payMode === m ? "var(--color-accent-1)" : "var(--text-secondary)",
+                        fontWeight: payMode === m ? 600 : 400, fontSize: 13, cursor: "pointer", fontFamily: "inherit"
+                      }}>
+                        {m.charAt(0).toUpperCase() + m.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 500, marginBottom: 4 }}>Amount received</label>
+                  <input
+                    type="number" value={received} onChange={e => setReceived(e.target.value)}
+                    className="f4-input" style={{ width: "100%", fontVariantNumeric: "tabular-nums", fontSize: 16, fontWeight: 600 }}
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+              <div style={{ marginTop: 16, display: "flex", gap: 8, justifyContent: "flex-start" }}>
+                <Btn variant="ghost" icon="chevLeft" onClick={() => setStep(2)}>Back</Btn>
+              </div>
+            </Card>
+          )}
+        </div>
+
+        {/* Summary sidebar */}
+        <div style={{ position: "sticky", top: 16 }}>
+          <Card>
+            <div style={{ padding: "14px 18px 10px", borderBottom: "1px solid var(--border-subtle)" }}>
+              <div style={{ fontWeight: 600, fontSize: 15 }}>Sale summary</div>
+              {customer && <div style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 2 }}>{customer.name}</div>}
+            </div>
+            <div style={{ padding: "14px 18px" }}>
+              {[
+                ["Subtotal", `PKR ${totals.subtotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}`],
+                ["GST", `PKR ${totals.gst.toLocaleString(undefined, { maximumFractionDigits: 0 })}`],
+                ["Security", `PKR ${totals.security.toLocaleString(undefined, { maximumFractionDigits: 0 })}`],
+              ].map(([k, v]) => (
+                <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", fontSize: 13, color: "var(--text-secondary)", borderBottom: "1px solid var(--border-subtle)" }}>
+                  <span>{k}</span><span style={{ fontVariantNumeric: "tabular-nums" }}>{v}</span>
+                </div>
+              ))}
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "10px 0 5px", fontSize: 15, fontWeight: 700, color: "var(--text-primary)" }}>
+                <span>Grand total</span>
+                <span style={{ fontVariantNumeric: "tabular-nums" }}>PKR {totals.total.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 0", fontSize: 13, color: "var(--text-secondary)" }}>
+                <span>Received</span>
+                <span style={{ fontVariantNumeric: "tabular-nums", color: "var(--color-success-1)", fontWeight: 600 }}>PKR {(parseFloat(received) || 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "5px 0 10px", fontSize: 14, fontWeight: 600 }}>
+                <span>Balance due</span>
+                <span style={{ fontVariantNumeric: "tabular-nums", color: balance > 0 ? "var(--color-danger-1)" : "var(--color-success-1)" }}>
+                  {balance > 0 ? `PKR ${balance.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : "Paid"}
+                </span>
+              </div>
+
+              {/* Prev balance */}
+              {customer && (
+                <div style={{ padding: "10px 0 0", borderTop: "1px solid var(--border-subtle)", fontSize: 12, color: "var(--text-muted)" }}>
+                  Previous balance: <span style={{ color: customer.balance < 0 ? "var(--color-danger-1)" : "var(--color-success-1)", fontWeight: 600 }}>
+                    PKR {Math.abs(customer.balance).toLocaleString()}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Action buttons */}
+            <div style={{ padding: "0 16px 16px", display: "flex", flexDirection: "column", gap: 8 }}>
+              <Btn variant="primary" icon="send" style={{ width: "100%" }}>Submit</Btn>
+              <Btn variant="secondary" icon="printer" style={{ width: "100%" }}>Submit &amp; print</Btn>
+              <Btn variant="ghost" icon="save" style={{ width: "100%" }}>Save draft</Btn>
+            </div>
+          </Card>
+
+          {/* Item count summary */}
+          {rows.length > 0 && (
+            <div style={{ marginTop: 10, padding: "10px 14px", background: "var(--bg-subtle)", borderRadius: "var(--radius-md)", fontSize: 12, color: "var(--text-secondary)" }}>
+              {rows.filter(r => r.itemId).length} item type(s) · {rows.reduce((a, r) => a + (parseFloat(r.qty) || 0), 0)} cylinders total
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+// ─── Day / Batch Sale Screen ──────────────────────────────────────────────
+
+const DAY_CUSTOMERS = [
+  { id: "c1", name: "Al-Barkat Gas",     area: "Korangi", balance: -18400 },
+  { id: "c2", name: "Noor Gas Agency",   area: "Gulshan", balance: 12000  },
+  { id: "c3", name: "Rauf Brothers",     area: "SITE",    balance: 5000   },
+  { id: "c4", name: "Karachi Gas Depot", area: "Saddar",  balance: -31200 },
+  { id: "c5", name: "Moon Gas",          area: "Orangi",  balance: 8500   },
+  { id: "c6", name: "Sunrise Petroleum", area: "DHA",     balance: 0      },
+  { id: "c7", name: "Pak Gas Centre",    area: "Landhi",  balance: -6200  },
+  { id: "c8", name: "City Gas Depot",    area: "North Nazimabad", balance: 15000 },
+];
+
+const DAY_ITEMS = [
+  { id: "i1", name: "11.8 kg (PSO)",   price: 2850 },
+  { id: "i2", name: "5.5 kg (Hascol)", price: 1380 },
+  { id: "i3", name: "2.2 kg (Shell)",  price: 580  },
+];
+
+function CustomerSaleCard({ cust, data, onChange }) {
+  const qty1 = parseFloat(data.qty1) || 0;
+  const qty2 = parseFloat(data.qty2) || 0;
+  const qty3 = parseFloat(data.qty3) || 0;
+  const received = parseFloat(data.received) || 0;
+  const total = qty1 * 2850 + qty2 * 1380 + qty3 * 580;
+  const balance = total - received;
+
+  const inputStyle = {
+    width: 60, textAlign: "center", padding: "4px 6px",
+    border: "1px solid var(--border-default)", borderRadius: "var(--radius-xs)",
+    fontFamily: "inherit", fontSize: 14, background: "var(--bg-input)",
+    fontVariantNumeric: "tabular-nums", outline: "none",
+    color: "var(--text-primary)"
+  };
+
+  return (
+    <Card style={{ overflow: "visible" }}>
+      <div style={{ padding: "12px 16px 10px" }}>
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: 14 }}>{cust.name}</div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 1 }}>{cust.area}</div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>Prev. balance</div>
+            <div style={{ fontSize: 13, fontWeight: 600, fontVariantNumeric: "tabular-nums", color: cust.balance < 0 ? "var(--color-danger-1)" : cust.balance > 0 ? "var(--color-success-1)" : "var(--text-muted)" }}>
+              {cust.balance === 0 ? "—" : `PKR ${Math.abs(cust.balance).toLocaleString()}`}
+            </div>
+          </div>
+        </div>
+
+        {/* Quantity inputs */}
+        <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+          {[
+            { key: "qty1", label: "11.8 kg", val: data.qty1 },
+            { key: "qty2", label: "5.5 kg",  val: data.qty2 },
+            { key: "qty3", label: "2.2 kg",  val: data.qty3 },
+          ].map(({ key, label, val }) => (
+            <div key={key} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+              <div style={{ fontSize: 10, color: "var(--text-muted)", whiteSpace: "nowrap" }}>{label}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <button onClick={() => onChange(key, Math.max(0, (parseFloat(val) || 0) - 1))}
+                  style={{ width: 24, height: 24, border: "1px solid var(--border-default)", background: "var(--bg-card)", borderRadius: 4, cursor: "pointer", fontSize: 14, color: "var(--text-secondary)" }}>−</button>
+                <input
+                  type="number" min="0" value={val}
+                  onChange={e => onChange(key, e.target.value)}
+                  style={inputStyle} />
+                <button onClick={() => onChange(key, (parseFloat(val) || 0) + 1)}
+                  style={{ width: 24, height: 24, border: "1px solid var(--border-default)", background: "var(--bg-card)", borderRadius: 4, cursor: "pointer", fontSize: 14, color: "var(--color-accent-1)" }}>+</button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Bottom row: Cash/Credit + Received + Total */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, paddingTop: 8, borderTop: "1px solid var(--border-subtle)" }}>
+          {/* Cash/Credit toggle */}
+          <div style={{ display: "flex", gap: 0, borderRadius: "var(--radius-xs)", overflow: "hidden", border: "1px solid var(--border-default)" }}>
+            {["cash", "credit"].map(m => (
+              <button key={m} onClick={() => onChange("mode", m)} style={{
+                padding: "4px 10px", border: 0, cursor: "pointer", fontFamily: "inherit",
+                fontSize: 12, fontWeight: data.mode === m ? 600 : 400,
+                background: data.mode === m ? "var(--color-accent-1)" : "var(--bg-input)",
+                color: data.mode === m ? "#fff" : "var(--text-secondary)"
+              }}>
+                {m.charAt(0).toUpperCase() + m.slice(1)}
+              </button>
+            ))}
+          </div>
+          <div style={{ fontSize: 11, color: "var(--text-muted)" }}>Rcvd:</div>
+          <input type="number" value={data.received} onChange={e => onChange("received", e.target.value)}
+            style={{ ...inputStyle, width: 80, textAlign: "right" }} placeholder="0" />
+          <div style={{ marginLeft: "auto", textAlign: "right" }}>
+            <div style={{ fontSize: 11, color: "var(--text-muted)" }}>Total</div>
+            <div style={{ fontSize: 15, fontWeight: 700, fontVariantNumeric: "tabular-nums", color: total > 0 ? "var(--text-primary)" : "var(--text-muted)" }}>
+              PKR {total.toLocaleString()}
+            </div>
+          </div>
+          {balance > 0 && (
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 11, color: "var(--text-muted)" }}>Due</div>
+              <div style={{ fontSize: 13, fontWeight: 600, fontVariantNumeric: "tabular-nums", color: "var(--color-danger-1)" }}>PKR {balance.toLocaleString()}</div>
+            </div>
+          )}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function DaySaleScreen({ onNavigate }) {
+  const [saleDate, setSaleDate] = React.useState("2026-05-02");
+  const [searchQ, setSearchQ] = React.useState("");
+  const [cardData, setCardData] = React.useState(
+    Object.fromEntries(DAY_CUSTOMERS.map(c => [c.id, { qty1: "", qty2: "", qty3: "", received: "", mode: "cash" }]))
+  );
+  const [submitted, setSubmitted] = React.useState(false);
+
+  const updateCard = (custId, key, value) => {
+    setCardData(d => ({ ...d, [custId]: { ...d[custId], [key]: value } }));
+  };
+
+  const filteredCustomers = DAY_CUSTOMERS.filter(c =>
+    c.name.toLowerCase().includes(searchQ.toLowerCase()) ||
+    c.area.toLowerCase().includes(searchQ.toLowerCase())
+  );
+
+  const runningTotal = DAY_CUSTOMERS.reduce((sum, c) => {
+    const d = cardData[c.id];
+    return sum + (parseFloat(d.qty1)||0)*2850 + (parseFloat(d.qty2)||0)*1380 + (parseFloat(d.qty3)||0)*580;
+  }, 0);
+  const runningReceived = DAY_CUSTOMERS.reduce((sum, c) => sum + (parseFloat(cardData[c.id].received)||0), 0);
+  const activeCusts = DAY_CUSTOMERS.filter(c => {
+    const d = cardData[c.id];
+    return (parseFloat(d.qty1)||0) + (parseFloat(d.qty2)||0) + (parseFloat(d.qty3)||0) > 0;
+  }).length;
+
+  return (
+    <div style={{ paddingBottom: 100 }}>
+      <SectionHeader
+        title="Day / Batch sale"
+        sub={`2 May 2026 · Enter all deliveries for today`}
+        actions={<>
+          <Btn variant="secondary" icon="filter" size="sm">Filters</Btn>
+          <Btn variant="primary" icon="send" onClick={() => setSubmitted(true)}>Submit all</Btn>
+        </>}
+      />
+
+      {submitted && (
+        <div style={{ marginBottom: 16, padding: "12px 16px", background: "var(--status-success-bg)", border: "1px solid var(--color-success-1)", borderRadius: "var(--radius-md)", display: "flex", alignItems: "center", gap: 10, color: "var(--color-success-3)" }}>
+          <Icon name="check" size={18} color="var(--color-success-1)" />
+          <span style={{ fontWeight: 500 }}>Batch sale submitted. {activeCusts} customer(s) · PKR {runningTotal.toLocaleString()}</span>
+          <button onClick={() => setSubmitted(false)} style={{ marginLeft: "auto", border: 0, background: "transparent", cursor: "pointer", color: "var(--color-success-1)" }}><Icon name="x" size={16} /></button>
+        </div>
+      )}
+
+      {/* Toolbar */}
+      <div style={{ display: "flex", gap: 12, marginBottom: 20, alignItems: "center" }}>
+        <Input icon="search" placeholder="Search customer or area…" value={searchQ} onChange={e => setSearchQ(e.target.value)} style={{ flex: 1, maxWidth: 340 }} />
+        <input type="date" value={saleDate} onChange={e => setSaleDate(e.target.value)}
+          style={{ border: "1px solid var(--border-default)", borderRadius: "var(--radius-sm)", padding: "0 10px", height: 36, fontFamily: "inherit", fontSize: 13, background: "var(--bg-input)", color: "var(--text-primary)", outline: "none" }} />
+        <div style={{ marginLeft: "auto", display: "flex", gap: 6, fontSize: 12, color: "var(--text-secondary)", alignItems: "center" }}>
+          <span style={{ padding: "4px 10px", background: "var(--bg-subtle)", borderRadius: "var(--radius-xs)" }}>11.8 kg: PKR 2,850</span>
+          <span style={{ padding: "4px 10px", background: "var(--bg-subtle)", borderRadius: "var(--radius-xs)" }}>5.5 kg: PKR 1,380</span>
+          <span style={{ padding: "4px 10px", background: "var(--bg-subtle)", borderRadius: "var(--radius-xs)" }}>2.2 kg: PKR 580</span>
+        </div>
+      </div>
+
+      {/* Cards grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: 12 }}>
+        {filteredCustomers.map(cust => (
+          <CustomerSaleCard
+            key={cust.id}
+            cust={cust}
+            data={cardData[cust.id]}
+            onChange={(key, val) => updateCard(cust.id, key, val)}
+          />
+        ))}
+      </div>
+
+      {/* Sticky bottom bar */}
+      <div style={{
+        position: "fixed", bottom: 0, left: 232, right: 0,
+        background: "var(--bg-acrylic-strong)", backdropFilter: "var(--backdrop-blur)",
+        borderTop: "1px solid var(--border-subtle)",
+        padding: "12px 28px", display: "flex", alignItems: "center", gap: 20, zIndex: 50
+      }}>
+        <div style={{ display: "flex", gap: 24 }}>
+          <div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Active customers</div>
+            <div style={{ fontSize: 20, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{activeCusts}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Total sale</div>
+            <div style={{ fontSize: 20, fontWeight: 700, fontVariantNumeric: "tabular-nums", color: "var(--color-accent-1)" }}>PKR {runningTotal.toLocaleString()}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Received</div>
+            <div style={{ fontSize: 20, fontWeight: 700, fontVariantNumeric: "tabular-nums", color: "var(--color-success-1)" }}>PKR {runningReceived.toLocaleString()}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Balance</div>
+            <div style={{ fontSize: 20, fontWeight: 700, fontVariantNumeric: "tabular-nums", color: runningTotal - runningReceived > 0 ? "var(--color-danger-1)" : "var(--color-success-1)" }}>
+              PKR {(runningTotal - runningReceived).toLocaleString()}
+            </div>
+          </div>
+        </div>
+        <div style={{ marginLeft: "auto", display: "flex", gap: 10 }}>
+          <Btn variant="secondary" icon="printer">Print summary</Btn>
+          <Btn variant="primary" icon="send" onClick={() => setSubmitted(true)}>Submit batch</Btn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+// ─── Sale List Screen ─────────────────────────────────────────────────────
+
+const SALE_LIST_DATA = [
+  { id: "SLE-2814", date: "2 May 2026",  customer: "Al-Barkat Gas",      area: "Korangi", items: 2, cylinders: 18, amount: 18400,  received: 18400,  status: "paid",    type: "Single" },
+  { id: "SLE-2813", date: "2 May 2026",  customer: "Karachi Gas Depot",  area: "Saddar",  items: 3, cylinders: 24, amount: 47200,  received: 30000,  status: "partial", type: "Single" },
+  { id: "SLE-2812", date: "2 May 2026",  customer: "Rauf Brothers",      area: "SITE",    items: 1, cylinders: 8,  amount: 9800,   received: 9800,   status: "paid",    type: "Single" },
+  { id: "SLE-2811", date: "1 May 2026",  customer: "Moon Gas",           area: "Orangi",  items: 2, cylinders: 12, amount: 15600,  received: 0,      status: "pending", type: "Single" },
+  { id: "SLE-2810", date: "1 May 2026",  customer: "Noor Gas Agency",    area: "Gulshan", items: 2, cylinders: 30, amount: 98400,  received: 98400,  status: "paid",    type: "Day" },
+  { id: "SLE-2809", date: "1 May 2026",  customer: "Sunrise Petroleum",  area: "DHA",     items: 1, cylinders: 6,  amount: 8280,   received: 5000,   status: "partial", type: "Single" },
+  { id: "SLE-2808", date: "30 Apr 2026", customer: "Al-Barkat Gas",      area: "Korangi", items: 3, cylinders: 40, amount: 124500, received: 124500, status: "paid",    type: "Day" },
+  { id: "SLE-2807", date: "30 Apr 2026", customer: "City Gas Depot",     area: "N. Nazimabad", items: 2, cylinders: 15, amount: 31500, received: 0, status: "pending", type: "Single" },
+  { id: "SLE-2806", date: "30 Apr 2026", customer: "Pak Gas Centre",     area: "Landhi",  items: 1, cylinders: 10, amount: 13800,  received: 13800,  status: "paid",    type: "Single" },
+  { id: "SLE-2805", date: "29 Apr 2026", customer: "Rauf Brothers",      area: "SITE",    items: 2, cylinders: 20, amount: 42400,  received: 40000,  status: "partial", type: "Day" },
+  { id: "SLE-2804", date: "29 Apr 2026", customer: "Noor Gas Agency",    area: "Gulshan", items: 1, cylinders: 5,  amount: 6900,   received: 6900,   status: "paid",    type: "Single" },
+  { id: "SLE-2803", date: "28 Apr 2026", customer: "Moon Gas",           area: "Orangi",  items: 2, cylinders: 22, amount: 34200,  received: 0,      status: "draft",   type: "Single" },
+];
+
+const STATUS_META = {
+  paid:    { tone: "success", label: "Paid" },
+  partial: { tone: "warning", label: "Partial" },
+  pending: { tone: "info",    label: "Pending" },
+  draft:   { tone: "neutral", label: "Draft" },
+};
+
+function SaleListScreen({ onNavigate }) {
+  const [search, setSearch] = React.useState("");
+  const [dateFrom, setDateFrom] = React.useState("");
+  const [dateTo, setDateTo] = React.useState("");
+  const [custFilter, setCustFilter] = React.useState("all");
+  const [statusFilter, setStatusFilter] = React.useState("all");
+  const [expandedId, setExpandedId] = React.useState(null);
+  const [exportOpen, setExportOpen] = React.useState(false);
+  const exportRef = React.useRef();
+
+  React.useEffect(() => {
+    const handler = (e) => { if (exportRef.current && !exportRef.current.contains(e.target)) setExportOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const filtered = SALE_LIST_DATA.filter(s => {
+    const q = search.toLowerCase();
+    const matchSearch = !q || s.id.toLowerCase().includes(q) || s.customer.toLowerCase().includes(q) || s.area.toLowerCase().includes(q);
+    const matchStatus = statusFilter === "all" || s.status === statusFilter;
+    const matchCust = custFilter === "all" || s.customer === custFilter;
+    return matchSearch && matchStatus && matchCust;
+  });
+
+  const uniqueCustomers = [...new Set(SALE_LIST_DATA.map(s => s.customer))];
+
+  const totals = filtered.reduce((acc, s) => ({
+    amount: acc.amount + s.amount,
+    received: acc.received + s.received,
+    cylinders: acc.cylinders + s.cylinders,
+  }), { amount: 0, received: 0, cylinders: 0 });
+
+  return (
+    <div style={{ paddingBottom: 32 }}>
+      <SectionHeader
+        title="Sale list"
+        sub="Sales · All sale transactions"
+        actions={<>
+          <div ref={exportRef} style={{ position: "relative" }}>
+            <Btn variant="secondary" icon="download" size="sm" onClick={() => setExportOpen(!exportOpen)}>Export</Btn>
+            {exportOpen && (
+              <div style={{
+                position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 100,
+                background: "var(--bg-card)", border: "1px solid var(--border-subtle)",
+                borderRadius: "var(--radius-md)", boxShadow: "var(--shadow-lg)", minWidth: 160
+              }}>
+                {["Excel (.xlsx)", "PDF", "CSV"].map(opt => (
+                  <div key={opt} style={{ padding: "10px 14px", cursor: "pointer", fontSize: 13, borderBottom: "1px solid var(--border-subtle)" }}
+                    onMouseEnter={e => e.currentTarget.style.background = "var(--bg-hover)"}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                    onClick={() => setExportOpen(false)}>
+                    {opt}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <Btn variant="primary" icon="plus" onClick={() => onNavigate("sale-new")}>New sale</Btn>
+        </>}
+      />
+
+      {/* Summary strip */}
+      <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
+        {[
+          { label: "Invoices shown", value: filtered.length },
+          { label: "Total sale", value: `PKR ${totals.amount.toLocaleString()}` },
+          { label: "Received", value: `PKR ${totals.received.toLocaleString()}` },
+          { label: "Balance", value: `PKR ${(totals.amount - totals.received).toLocaleString()}` },
+          { label: "Cylinders", value: totals.cylinders },
+        ].map(s => (
+          <div key={s.label} style={{ flex: 1, background: "var(--bg-card)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-md)", padding: "10px 14px" }}>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{s.label}</div>
+            <div style={{ fontSize: 16, fontWeight: 700, fontVariantNumeric: "tabular-nums", marginTop: 3 }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filters row */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 16, alignItems: "center", flexWrap: "wrap" }}>
+        <Input icon="search" placeholder="Search by ID, customer, area…" value={search} onChange={e => setSearch(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
+        <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
+          style={{ border: "1px solid var(--border-default)", borderRadius: "var(--radius-sm)", padding: "0 10px", height: 36, fontFamily: "inherit", fontSize: 13, background: "var(--bg-input)", color: "var(--text-primary)", outline: "none" }} />
+        <span style={{ color: "var(--text-muted)", fontSize: 13 }}>→</span>
+        <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
+          style={{ border: "1px solid var(--border-default)", borderRadius: "var(--radius-sm)", padding: "0 10px", height: 36, fontFamily: "inherit", fontSize: 13, background: "var(--bg-input)", color: "var(--text-primary)", outline: "none" }} />
+        <Select value={custFilter} onChange={e => setCustFilter(e.target.value)} style={{ minWidth: 160 }}>
+          <option value="all">All customers</option>
+          {uniqueCustomers.map(c => <option key={c} value={c}>{c}</option>)}
+        </Select>
+        <Select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ minWidth: 130 }}>
+          <option value="all">All statuses</option>
+          <option value="paid">Paid</option>
+          <option value="partial">Partial</option>
+          <option value="pending">Pending</option>
+          <option value="draft">Draft</option>
+        </Select>
+        {(search || dateFrom || dateTo || custFilter !== "all" || statusFilter !== "all") && (
+          <Btn variant="ghost" size="sm" icon="x" onClick={() => { setSearch(""); setDateFrom(""); setDateTo(""); setCustFilter("all"); setStatusFilter("all"); }}>Clear</Btn>
+        )}
+      </div>
+
+      {/* Table */}
+      <Card>
+        <table className="table">
+          <thead>
+            <tr>
+              <th style={{ width: 24 }}></th>
+              <th>Sale ID</th>
+              <th>Date</th>
+              <th>Customer</th>
+              <th>Type</th>
+              <th style={{ textAlign: "center" }}>Cylinders</th>
+              <th style={{ textAlign: "right" }}>Amount</th>
+              <th style={{ textAlign: "right" }}>Received</th>
+              <th style={{ textAlign: "right" }}>Balance</th>
+              <th>Status</th>
+              <th style={{ textAlign: "center" }}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map(s => {
+              const bal = s.amount - s.received;
+              const isExpanded = expandedId === s.id;
+              const meta = STATUS_META[s.status];
+              return (
+                <React.Fragment key={s.id}>
+                  <tr style={{ cursor: "default" }}>
+                    <td>
+                      <button onClick={() => setExpandedId(isExpanded ? null : s.id)}
+                        style={{ border: 0, background: "transparent", cursor: "pointer", color: "var(--text-muted)", padding: 0, display: "flex" }}>
+                        <Icon name={isExpanded ? "chevDown" : "chevRight"} size={14} />
+                      </button>
+                    </td>
+                    <td style={{ fontFamily: "var(--font-family-mono)", fontSize: 12.5, color: "var(--text-secondary)" }}>{s.id}</td>
+                    <td style={{ fontSize: 13 }}>{s.date}</td>
+                    <td>
+                      <div style={{ fontSize: 13, fontWeight: 500 }}>{s.customer}</div>
+                      <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{s.area}</div>
+                    </td>
+                    <td>
+                      <Badge tone={s.type === "Day" ? "info" : "neutral"} dot={false}>{s.type}</Badge>
+                    </td>
+                    <td style={{ textAlign: "center", fontVariantNumeric: "tabular-nums", fontSize: 14 }}>{s.cylinders}</td>
+                    <td style={{ textAlign: "right", fontWeight: 600, fontVariantNumeric: "tabular-nums" }}>PKR {s.amount.toLocaleString()}</td>
+                    <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums", color: "var(--color-success-1)", fontWeight: 500 }}>PKR {s.received.toLocaleString()}</td>
+                    <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 600, color: bal > 0 ? "var(--color-danger-1)" : "var(--text-muted)" }}>
+                      {bal > 0 ? `PKR ${bal.toLocaleString()}` : "—"}
+                    </td>
+                    <td><Badge tone={meta.tone}>{meta.label}</Badge></td>
+                    <td>
+                      <div style={{ display: "flex", gap: 2, justifyContent: "center" }}>
+                        {[
+                          { icon: "eye",    title: "View" },
+                          { icon: "edit",   title: "Edit" },
+                          { icon: "printer",title: "Print" },
+                          { icon: "trash",  title: "Delete" },
+                        ].map(({ icon, title }) => (
+                          <button key={icon} title={title} style={{
+                            width: 28, height: 28, border: 0, background: "transparent", cursor: "pointer",
+                            color: icon === "trash" ? "var(--color-danger-1)" : "var(--text-secondary)",
+                            borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center"
+                          }}
+                            onMouseEnter={e => e.currentTarget.style.background = "var(--bg-hover)"}
+                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                            <Icon name={icon} size={14} />
+                          </button>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                  {isExpanded && (
+                    <tr>
+                      <td colSpan={11} style={{ padding: 0, background: "var(--color-accent-3)" }}>
+                        <div style={{ padding: "12px 48px 14px", display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, fontSize: 13 }}>
+                          <div>
+                            <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Items sold</div>
+                            <div style={{ fontWeight: 500 }}>{s.items} item type(s) · {s.cylinders} cylinders</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Payment mode</div>
+                            <div style={{ fontWeight: 500 }}>{s.received === s.amount ? "Cash" : s.received > 0 ? "Partial cash" : "Credit"}</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>Posted by</div>
+                            <div style={{ fontWeight: 500 }}>Hasnan Ahmed</div>
+                          </div>
+                          <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+                            <Btn variant="secondary" size="sm" icon="eye">View full</Btn>
+                            <Btn variant="secondary" size="sm" icon="printer">Print</Btn>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </tbody>
+        </table>
+        {filtered.length === 0 && (
+          <div style={{ padding: "48px", textAlign: "center", color: "var(--text-muted)" }}>
+            <Icon name="fileText" size={32} color="var(--text-muted)" style={{ margin: "0 auto 10px", display: "block" }} />
+            <div style={{ fontWeight: 500, color: "var(--text-secondary)", fontSize: 14 }}>No sales found</div>
+            <div style={{ fontSize: 12, marginTop: 4 }}>Adjust your filters or create a new sale</div>
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+
+
+// ─── Customer Ledger Report ───────────────────────────────────────────────
+
+const LEDGER_ENTRIES = [
+  { date: "1 Apr 2026",  ref: "OB-001",   type: "Opening",  narration: "Opening balance",                    dr: 0,      cr: 0,      qty: 0,   balance: -45000 },
+  { date: "2 Apr 2026",  ref: "SLE-2741", type: "Sale",     narration: "Sale — 15× 11.8 kg, 5× 5.5 kg",     dr: 49650,  cr: 0,      qty: 20,  balance: 4650   },
+  { date: "3 Apr 2026",  ref: "RCT-0421", type: "Receipt",  narration: "Cash receipt",                       dr: 0,      cr: 49650,  qty: 0,   balance: -45000 },
+  { date: "5 Apr 2026",  ref: "SLE-2756", type: "Sale",     narration: "Sale — 20× 11.8 kg",                 dr: 57000,  cr: 0,      qty: 20,  balance: 12000  },
+  { date: "7 Apr 2026",  ref: "RCT-0435", type: "Receipt",  narration: "Cash receipt",                       dr: 0,      cr: 40000,  qty: 0,   balance: -28000 },
+  { date: "9 Apr 2026",  ref: "RET-0042", type: "Return",   narration: "Cylinder return — 3× 11.8 kg",       dr: 0,      cr: 8550,   qty: -3,  balance: -36550 },
+  { date: "12 Apr 2026", ref: "SLE-2773", type: "Sale",     narration: "Sale — 10× 11.8 kg, 8× 5.5 kg",     dr: 39540,  cr: 0,      qty: 18,  balance: 2990   },
+  { date: "15 Apr 2026", ref: "RCT-0461", type: "Receipt",  narration: "Bank transfer",                      dr: 0,      cr: 39540,  qty: 0,   balance: -36550 },
+  { date: "18 Apr 2026", ref: "SLE-2788", type: "Sale",     narration: "Sale — 25× 11.8 kg",                 dr: 71250,  cr: 0,      qty: 25,  balance: 34700  },
+  { date: "20 Apr 2026", ref: "RCT-0478", type: "Receipt",  narration: "Cash receipt — partial",             dr: 0,      cr: 50000,  qty: 0,   balance: -15300 },
+  { date: "22 Apr 2026", ref: "SLE-2799", type: "Sale",     narration: "Sale — 12× 11.8 kg, 10× 5.5 kg",    dr: 47940,  cr: 0,      qty: 22,  balance: 32640  },
+  { date: "25 Apr 2026", ref: "RCT-0490", type: "Receipt",  narration: "Cash receipt",                       dr: 0,      cr: 47940,  qty: 0,   balance: -15300 },
+  { date: "28 Apr 2026", ref: "SLE-2807", type: "Sale",     narration: "Sale — 18× 11.8 kg, 6× 5.5 kg",     dr: 59580,  cr: 0,      qty: 24,  balance: 44280  },
+  { date: "30 Apr 2026", ref: "SEC-0034", type: "Security", narration: "Security deposit received",           dr: 0,      cr: 5000,   qty: 0,   balance: 39280  },
+  { date: "2 May 2026",  ref: "SLE-2814", type: "Sale",     narration: "Sale — 10× 11.8 kg, 10× 5.5 kg",    dr: 42300,  cr: 0,      qty: 20,  balance: 81580  },
+];
+
+const TYPE_TONE = {
+  Opening: "neutral", Sale: "info", Receipt: "success", Return: "warning", Security: "info", Payment: "danger"
+};
+
+function CustomerLedgerScreen() {
+  const [custId, setCustId] = React.useState("c1");
+  const [dateFrom, setDateFrom] = React.useState("2026-04-01");
+  const [dateTo, setDateTo] = React.useState("2026-05-02");
+  const [hideQty, setHideQty] = React.useState(false);
+  const [typeFilter, setTypeFilter] = React.useState("all");
+  const [minAmt, setMinAmt] = React.useState("");
+  const [narrationQ, setNarrationQ] = React.useState("");
+  const [previewMode, setPreviewMode] = React.useState(false);
+
+  const filtered = LEDGER_ENTRIES.filter(e => {
+    if (typeFilter !== "all" && e.type !== typeFilter) return false;
+    if (minAmt && (e.dr + e.cr) < parseFloat(minAmt)) return false;
+    if (narrationQ && !e.narration.toLowerCase().includes(narrationQ.toLowerCase())) return false;
+    return true;
+  });
+
+  const totalDr = filtered.reduce((s, e) => s + e.dr, 0);
+  const totalCr = filtered.reduce((s, e) => s + e.cr, 0);
+  const totalQty = filtered.reduce((s, e) => s + e.qty, 0);
+  const closingBal = filtered.length > 0 ? filtered[filtered.length - 1].balance : 0;
+
+  const customer = CUSTOMERS.find(c => c.id === custId);
+
+  return (
+    <div style={{ paddingBottom: 32 }}>
+      <SectionHeader
+        title="Customer ledger"
+        sub="Reports · Customer Ledger"
+        actions={<>
+          <Btn variant="secondary" icon="printer" onClick={() => setPreviewMode(!previewMode)}>
+            {previewMode ? "Edit filters" : "Print preview"}
+          </Btn>
+          <Btn variant="secondary" icon="download">Export</Btn>
+        </>}
+      />
+
+      <div style={{ display: "grid", gridTemplateColumns: "280px 1fr", gap: 16, alignItems: "start" }}>
+
+        {/* Left filter panel */}
+        {!previewMode && (
+          <Card padded style={{ position: "sticky", top: 16 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--text-muted)", marginBottom: 14 }}>Report filters</div>
+
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 500, marginBottom: 4 }}>Customer</label>
+              <SearchableSelect
+                items={CUSTOMERS}
+                value={custId}
+                onChange={setCustId}
+                placeholder="Select customer…"
+                renderLabel={(c) => c.name}
+                renderItem={(c) => (
+                  <div>
+                    <div style={{ fontWeight: 500 }}>{c.name}</div>
+                    <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{c.area} · {c.phone}</div>
+                  </div>
+                )}
+              />
+            </div>
+
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 500, marginBottom: 4 }}>Date from</label>
+              <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
+                style={{ width: "100%", border: "1px solid var(--border-default)", borderRadius: "var(--radius-sm)", padding: "0 10px", height: 36, fontFamily: "inherit", fontSize: 13, background: "var(--bg-input)", color: "var(--text-primary)", outline: "none" }} />
+            </div>
+
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 500, marginBottom: 4 }}>Date to</label>
+              <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
+                style={{ width: "100%", border: "1px solid var(--border-default)", borderRadius: "var(--radius-sm)", padding: "0 10px", height: 36, fontFamily: "inherit", fontSize: 13, background: "var(--bg-input)", color: "var(--text-primary)", outline: "none" }} />
+            </div>
+
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 500, marginBottom: 4 }}>Transaction type</label>
+              <Select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} style={{ width: "100%" }}>
+                <option value="all">All types</option>
+                <option value="Sale">Sales</option>
+                <option value="Receipt">Receipts</option>
+                <option value="Return">Returns</option>
+                <option value="Security">Security</option>
+                <option value="Payment">Payments</option>
+              </Select>
+            </div>
+
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 500, marginBottom: 4 }}>Min. amount</label>
+              <Input placeholder="e.g. 10000" value={minAmt} onChange={e => setMinAmt(e.target.value)} style={{ width: "100%" }} />
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 500, marginBottom: 4 }}>Narration contains</label>
+              <Input icon="search" placeholder="Search narration…" value={narrationQ} onChange={e => setNarrationQ(e.target.value)} style={{ width: "100%" }} />
+            </div>
+
+            {/* Toggle */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 0", borderTop: "1px solid var(--border-subtle)" }}>
+              <span style={{ fontSize: 13 }}>Hide quantity column</span>
+              <button onClick={() => setHideQty(!hideQty)} style={{
+                width: 40, height: 22, borderRadius: 999, border: 0, cursor: "pointer",
+                background: hideQty ? "var(--color-accent-1)" : "var(--border-default)",
+                position: "relative", transition: "background 200ms"
+              }}>
+                <span style={{
+                  position: "absolute", top: 3, width: 16, height: 16, borderRadius: 999,
+                  background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                  left: hideQty ? 21 : 3, transition: "left 200ms"
+                }} />
+              </button>
+            </div>
+
+            <div style={{ marginTop: 16, display: "flex", gap: 8 }}>
+              <Btn variant="primary" style={{ flex: 1 }} icon="listCheck">Apply</Btn>
+              <Btn variant="secondary" icon="x" onClick={() => { setTypeFilter("all"); setMinAmt(""); setNarrationQ(""); }}>Reset</Btn>
+            </div>
+          </Card>
+        )}
+
+        {/* Right preview */}
+        <div>
+          {/* Customer header */}
+          {customer && (
+            <Card padded style={{ marginBottom: 16 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 16 }}>
+                <div>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Customer</div>
+                  <div style={{ fontWeight: 700, fontSize: 15, marginTop: 4 }}>{customer.name}</div>
+                  <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{customer.area} · {customer.phone}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Period</div>
+                  <div style={{ fontWeight: 500, fontSize: 13, marginTop: 4 }}>{dateFrom || "—"} → {dateTo || "—"}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Opening balance</div>
+                  <div style={{ fontWeight: 700, fontSize: 15, marginTop: 4, color: "var(--text-secondary)" }}>PKR 45,000 Dr</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Closing balance</div>
+                  <div style={{ fontWeight: 700, fontSize: 15, marginTop: 4, color: closingBal > 0 ? "var(--color-danger-1)" : "var(--color-success-1)" }}>
+                    PKR {Math.abs(closingBal).toLocaleString()} {closingBal > 0 ? "Dr" : "Cr"}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Ledger table */}
+          <Card>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Ref</th>
+                  <th>Type</th>
+                  <th>Narration</th>
+                  {!hideQty && <th style={{ textAlign: "right" }}>Qty</th>}
+                  <th style={{ textAlign: "right" }}>Debit (Dr)</th>
+                  <th style={{ textAlign: "right" }}>Credit (Cr)</th>
+                  <th style={{ textAlign: "right" }}>Balance</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((e, i) => (
+                  <tr key={i}>
+                    <td style={{ fontSize: 13, whiteSpace: "nowrap" }}>{e.date}</td>
+                    <td style={{ fontFamily: "var(--font-family-mono)", fontSize: 12, color: "var(--text-secondary)" }}>{e.ref}</td>
+                    <td><Badge tone={TYPE_TONE[e.type] || "neutral"} dot={false}>{e.type}</Badge></td>
+                    <td style={{ fontSize: 13, maxWidth: 280 }}>{e.narration}</td>
+                    {!hideQty && <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums", fontSize: 13, color: e.qty < 0 ? "var(--color-danger-1)" : e.qty > 0 ? "var(--text-primary)" : "var(--text-muted)" }}>{e.qty !== 0 ? e.qty : "—"}</td>}
+                    <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: e.dr > 0 ? 600 : 400, color: e.dr > 0 ? "var(--color-danger-1)" : "var(--text-muted)" }}>
+                      {e.dr > 0 ? `PKR ${e.dr.toLocaleString()}` : "—"}
+                    </td>
+                    <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: e.cr > 0 ? 600 : 400, color: e.cr > 0 ? "var(--color-success-1)" : "var(--text-muted)" }}>
+                      {e.cr > 0 ? `PKR ${e.cr.toLocaleString()}` : "—"}
+                    </td>
+                    <td style={{ textAlign: "right", fontWeight: 700, fontVariantNumeric: "tabular-nums", fontSize: 13, color: e.balance > 0 ? "var(--color-danger-1)" : e.balance < 0 ? "var(--color-success-1)" : "var(--text-muted)" }}>
+                      {e.balance !== 0 ? `PKR ${Math.abs(e.balance).toLocaleString()} ${e.balance > 0 ? "Dr" : "Cr"}` : "Nil"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr style={{ background: "var(--bg-subtle)", fontWeight: 700 }}>
+                  <td colSpan={hideQty ? 3 : 4} style={{ fontSize: 13, padding: "10px 16px" }}>Totals</td>
+                  {!hideQty && <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{totalQty}</td>}
+                  <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums", padding: "10px 16px", color: "var(--color-danger-1)" }}>PKR {totalDr.toLocaleString()}</td>
+                  <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums", padding: "10px 16px", color: "var(--color-success-1)" }}>PKR {totalCr.toLocaleString()}</td>
+                  <td style={{ textAlign: "right", fontWeight: 700, padding: "10px 16px", fontVariantNumeric: "tabular-nums", color: closingBal > 0 ? "var(--color-danger-1)" : "var(--color-success-1)" }}>
+                    PKR {Math.abs(closingBal).toLocaleString()} {closingBal > 0 ? "Dr" : "Cr"}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </Card>
+
+          {/* Export actions below table */}
+          <div style={{ display: "flex", gap: 10, marginTop: 12, justifyContent: "flex-end" }}>
+            <Btn variant="secondary" icon="download">Export Excel</Btn>
+            <Btn variant="secondary" icon="download">Export PDF</Btn>
+            <Btn variant="secondary" icon="printer">Print</Btn>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+// ─── Settings / Master Data Screen ───────────────────────────────────────
+
+const SETTINGS_GROUPS = [
+  {
+    title: "Master data",
+    cards: [
+      { icon: "users",    label: "Customers",       count: 48,  sub: "Active trading accounts",          tone: "info"    },
+      { icon: "building", label: "Vendors",          count: 12,  sub: "Suppliers & SSGCL",               tone: "neutral" },
+      { icon: "cylinder", label: "Items",            count: 24,  sub: "LPG items & cylinders",           tone: "warning" },
+      { icon: "bank",     label: "Banks",            count: 4,   sub: "HBL, MCB, Meezan + petty cash",   tone: "success" },
+    ],
+  },
+  {
+    title: "Organisation",
+    cards: [
+      { icon: "building", label: "Company info",     count: null, sub: "Name, address, NTN, logo",       tone: "neutral" },
+      { icon: "tag",      label: "Areas & cities",   count: 18,  sub: "Delivery areas & zones",          tone: "neutral" },
+      { icon: "flame",    label: "Brands",           count: 6,   sub: "PSO, Hascol, Shell, Total…",      tone: "warning" },
+      { icon: "boxes",    label: "Categories",       count: 8,   sub: "Filled, empty, bulk, other",      tone: "neutral" },
+    ],
+  },
+  {
+    title: "Finance",
+    cards: [
+      { icon: "book",     label: "Chart of accounts", count: 42, sub: "Assets, liabilities, income…",   tone: "info"    },
+      { icon: "banknote", label: "Opening balances",  count: null, sub: "Set period opening balances",  tone: "neutral" },
+      { icon: "tag",      label: "Expense types",     count: 14,  sub: "Fuel, rent, salaries, misc.",   tone: "neutral" },
+    ],
+  },
+  {
+    title: "Access & security",
+    cards: [
+      { icon: "users",    label: "Users & roles",    count: 5,   sub: "Admin, accountant, salesman",    tone: "danger"  },
+    ],
+  },
+];
+
+function SettingsCard({ icon, label, count, sub, tone, onOpen }) {
+  const [hover, setHover] = React.useState(false);
+  return (
+    <div
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      onClick={onOpen}
+      style={{
+        background: hover ? "var(--bg-hover)" : "var(--bg-card)",
+        border: `1px solid ${hover ? "var(--color-accent-1)" : "var(--border-subtle)"}`,
+        borderRadius: "var(--radius-lg)",
+        padding: "18px 20px",
+        cursor: "pointer",
+        transition: "all 150ms",
+        boxShadow: hover ? "var(--shadow-md)" : "var(--shadow-sm)",
+        display: "flex",
+        alignItems: "flex-start",
+        gap: 14,
+      }}
+    >
+      {/* Icon pill */}
+      <div style={{
+        width: 40, height: 40, borderRadius: "var(--radius-md)", flexShrink: 0,
+        background: `var(--status-${tone}-bg)`,
+        display: "flex", alignItems: "center", justifyContent: "center"
+      }}>
+        <Icon name={icon} size={20} color={`var(--status-${tone}-text)`} />
+      </div>
+
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 3 }}>
+          <div style={{ fontWeight: 600, fontSize: 14 }}>{label}</div>
+          {count != null && (
+            <span style={{
+              fontSize: 12, fontWeight: 600, fontVariantNumeric: "tabular-nums",
+              padding: "1px 8px", borderRadius: 999,
+              background: "var(--bg-subtle)", color: "var(--text-secondary)"
+            }}>{count}</span>
+          )}
+        </div>
+        <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{sub}</div>
+      </div>
+
+      <Icon name="chevRight" size={16} color={hover ? "var(--color-accent-1)" : "var(--text-muted)"} style={{ marginTop: 2, flexShrink: 0 }} />
+    </div>
+  );
+}
+
+function SettingsScreen() {
+  const [openModal, setOpenModal] = React.useState(null);
+  const [activeTab, setActiveTab] = React.useState("customers");
+
+  // Quick inline customer table for demo
+  const sampleCustomers = CUSTOMERS.concat([
+    { id: "c7", name: "Pak Gas Centre",    area: "Landhi",          phone: "0332-8877665", balance: -6200,  creditLimit: 60000 },
+    { id: "c8", name: "City Gas Depot",    area: "North Nazimabad", phone: "0344-2233445", balance: 15000,  creditLimit: 90000 },
+  ]);
+
+  return (
+    <div style={{ paddingBottom: 32 }}>
+      <SectionHeader
+        title="Settings"
+        sub="Master data, company, finance & access"
+      />
+
+      {/* Quick stats bar */}
+      <div style={{ display: "flex", gap: 12, marginBottom: 28, padding: "14px 20px", background: "var(--bg-card)", border: "1px solid var(--border-subtle)", borderRadius: "var(--radius-lg)", boxShadow: "var(--shadow-sm)" }}>
+        {[
+          { label: "Customers", v: 48, icon: "users" },
+          { label: "Vendors",   v: 12, icon: "building" },
+          { label: "Items",     v: 24, icon: "cylinder" },
+          { label: "Banks",     v: 4,  icon: "bank" },
+          { label: "Users",     v: 5,  icon: "user" },
+        ].map(s => (
+          <div key={s.label} style={{ flex: 1, display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 34, height: 34, borderRadius: "var(--radius-sm)", background: "var(--bg-subtle)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Icon name={s.icon} size={18} color="var(--color-accent-1)" />
+            </div>
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 700, fontVariantNumeric: "tabular-nums", lineHeight: 1 }}>{s.v}</div>
+              <div style={{ fontSize: 11, color: "var(--text-muted)" }}>{s.label}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Settings groups */}
+      {SETTINGS_GROUPS.map(group => (
+        <div key={group.title} style={{ marginBottom: 28 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 12 }}>{group.title}</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
+            {group.cards.map(card => (
+              <SettingsCard key={card.label} {...card} onOpen={() => setOpenModal(card.label)} />
+            ))}
+          </div>
+        </div>
+      ))}
+
+      {/* Inline master data quick-view */}
+      <div style={{ marginTop: 8, marginBottom: 28 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 12 }}>Quick data view</div>
+        {/* Tabs */}
+        <div style={{ display: "flex", gap: 0, borderBottom: "1px solid var(--border-subtle)", marginBottom: 0 }}>
+          {[
+            { id: "customers", label: "Customers" },
+            { id: "vendors",   label: "Vendors" },
+            { id: "items",     label: "Items" },
+            { id: "banks",     label: "Banks" },
+          ].map(tab => (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
+              padding: "8px 18px", border: 0, background: "transparent", fontFamily: "inherit",
+              fontSize: 13, fontWeight: activeTab === tab.id ? 600 : 400, cursor: "pointer",
+              color: activeTab === tab.id ? "var(--color-accent-1)" : "var(--text-secondary)",
+              borderBottom: activeTab === tab.id ? "2px solid var(--color-accent-1)" : "2px solid transparent",
+              marginBottom: -1
+            }}>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        <Card>
+          {activeTab === "customers" && (
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Area</th>
+                  <th>Phone</th>
+                  <th style={{ textAlign: "right" }}>Credit limit</th>
+                  <th style={{ textAlign: "right" }}>Balance</th>
+                  <th style={{ textAlign: "center" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sampleCustomers.map(c => (
+                  <tr key={c.id}>
+                    <td style={{ fontWeight: 500, fontSize: 13 }}>{c.name}</td>
+                    <td style={{ fontSize: 13, color: "var(--text-secondary)" }}>{c.area}</td>
+                    <td style={{ fontFamily: "var(--font-family-mono)", fontSize: 12, color: "var(--text-secondary)" }}>{c.phone}</td>
+                    <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums" }}>PKR {c.creditLimit.toLocaleString()}</td>
+                    <td style={{ textAlign: "right", fontWeight: 600, fontVariantNumeric: "tabular-nums", color: c.balance < 0 ? "var(--color-danger-1)" : c.balance > 0 ? "var(--color-success-1)" : "var(--text-muted)" }}>
+                      {c.balance === 0 ? "—" : `PKR ${Math.abs(c.balance).toLocaleString()}`}
+                    </td>
+                    <td>
+                      <div style={{ display: "flex", gap: 2, justifyContent: "center" }}>
+                        {["edit", "eye", "trash"].map(icon => (
+                          <button key={icon} style={{
+                            width: 28, height: 28, border: 0, background: "transparent", cursor: "pointer",
+                            color: icon === "trash" ? "var(--color-danger-1)" : "var(--text-secondary)",
+                            borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center"
+                          }}
+                            onMouseEnter={e => e.currentTarget.style.background = "var(--bg-hover)"}
+                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                            <Icon name={icon} size={14} />
+                          </button>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {activeTab === "vendors" && (
+            <table className="table">
+              <thead>
+                <tr><th>Vendor</th><th>Contact</th><th>Type</th><th style={{ textAlign: "right" }}>Payable</th><th style={{ textAlign: "center" }}>Actions</th></tr>
+              </thead>
+              <tbody>
+                {[
+                  { name: "SSGCL Karachi",       contact: "021-111-786-786", type: "Gas utility",     payable: 45000 },
+                  { name: "PSO Petroleum",        contact: "0800-00786",      type: "Cylinder supply", payable: 28400 },
+                  { name: "Hascol Petroleum",     contact: "021-34540260",    type: "Cylinder supply", payable: 12600 },
+                  { name: "Shell Pakistan",       contact: "0800-03725",      type: "Cylinder supply", payable: 18900 },
+                  { name: "Al-Razzaq Transport",  contact: "0333-1122334",    type: "Logistics",       payable: 7500  },
+                ].map((v, i) => (
+                  <tr key={i}>
+                    <td style={{ fontWeight: 500 }}>{v.name}</td>
+                    <td style={{ fontFamily: "var(--font-family-mono)", fontSize: 12, color: "var(--text-secondary)" }}>{v.contact}</td>
+                    <td><Badge tone="neutral" dot={false}>{v.type}</Badge></td>
+                    <td style={{ textAlign: "right", fontWeight: 600, fontVariantNumeric: "tabular-nums", color: "var(--color-danger-1)" }}>PKR {v.payable.toLocaleString()}</td>
+                    <td>
+                      <div style={{ display: "flex", gap: 2, justifyContent: "center" }}>
+                        {["edit", "eye", "trash"].map(icon => (
+                          <button key={icon} style={{ width: 28, height: 28, border: 0, background: "transparent", cursor: "pointer", color: icon === "trash" ? "var(--color-danger-1)" : "var(--text-secondary)", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center" }}
+                            onMouseEnter={e => e.currentTarget.style.background = "var(--bg-hover)"}
+                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                            <Icon name={icon} size={14} />
+                          </button>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {activeTab === "items" && (
+            <table className="table">
+              <thead>
+                <tr><th>Item name</th><th>Brand</th><th>Category</th><th style={{ textAlign: "right" }}>Sale price</th><th style={{ textAlign: "right" }}>Stock</th><th style={{ textAlign: "center" }}>Actions</th></tr>
+              </thead>
+              <tbody>
+                {ITEMS.concat([
+                  { id: "i6", name: "45 kg Empty Cylinder", brand: "—", category: "Empty", price: 0, stock: 15 },
+                ]).map(item => (
+                  <tr key={item.id}>
+                    <td style={{ fontWeight: 500 }}>{item.name}</td>
+                    <td style={{ fontSize: 13, color: "var(--text-secondary)" }}>{item.brand}</td>
+                    <td><Badge tone={item.category === "Filled" ? "success" : item.category === "Bulk" ? "warning" : "neutral"} dot={false}>{item.category}</Badge></td>
+                    <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{item.price > 0 ? `PKR ${item.price.toLocaleString()}` : "—"}</td>
+                    <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 600, color: item.stock < 15 ? "var(--color-danger-1)" : "var(--text-primary)" }}>{item.stock}</td>
+                    <td>
+                      <div style={{ display: "flex", gap: 2, justifyContent: "center" }}>
+                        {["edit", "eye", "trash"].map(icon => (
+                          <button key={icon} style={{ width: 28, height: 28, border: 0, background: "transparent", cursor: "pointer", color: icon === "trash" ? "var(--color-danger-1)" : "var(--text-secondary)", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center" }}
+                            onMouseEnter={e => e.currentTarget.style.background = "var(--bg-hover)"}
+                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                            <Icon name={icon} size={14} />
+                          </button>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {activeTab === "banks" && (
+            <table className="table">
+              <thead>
+                <tr><th>Account name</th><th>Account no.</th><th>Bank</th><th style={{ textAlign: "right" }}>Balance</th><th style={{ textAlign: "center" }}>Dr/Cr</th><th style={{ textAlign: "center" }}>Actions</th></tr>
+              </thead>
+              <tbody>
+                {[
+                  { name: "HBL Current A/C",  no: "0123-XXXX-4567", bank: "HBL",    balance: 128450, cr: true },
+                  { name: "MCB Business A/C", no: "7890-XXXX-1234", bank: "MCB",    balance: 24800,  cr: false },
+                  { name: "Meezan Bank",      no: "4567-XXXX-8901", bank: "Meezan", balance: 98200,  cr: true },
+                  { name: "Petty Cash",       no: "—",              bank: "Cash",   balance: 47200,  cr: true },
+                ].map((b, i) => (
+                  <tr key={i}>
+                    <td style={{ fontWeight: 500 }}>{b.name}</td>
+                    <td style={{ fontFamily: "var(--font-family-mono)", fontSize: 12, color: "var(--text-secondary)" }}>{b.no}</td>
+                    <td style={{ fontSize: 13, color: "var(--text-secondary)" }}>{b.bank}</td>
+                    <td style={{ textAlign: "right", fontVariantNumeric: "tabular-nums", fontWeight: 600 }}>PKR {b.balance.toLocaleString()}</td>
+                    <td style={{ textAlign: "center" }}><Badge tone={b.cr ? "success" : "danger"} dot={false}>{b.cr ? "Cr" : "Dr"}</Badge></td>
+                    <td>
+                      <div style={{ display: "flex", gap: 2, justifyContent: "center" }}>
+                        {["edit", "eye"].map(icon => (
+                          <button key={icon} style={{ width: 28, height: 28, border: 0, background: "transparent", cursor: "pointer", color: "var(--text-secondary)", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center" }}
+                            onMouseEnter={e => e.currentTarget.style.background = "var(--bg-hover)"}
+                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                            <Icon name={icon} size={14} />
+                          </button>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          {/* Add button row */}
+          <div style={{ padding: "12px 18px", borderTop: "1px solid var(--border-subtle)", display: "flex", gap: 8 }}>
+            <Btn variant="secondary" icon="plus" size="sm">
+              Add {activeTab === "customers" ? "customer" : activeTab === "vendors" ? "vendor" : activeTab === "items" ? "item" : "bank account"}
+            </Btn>
+            <Btn variant="ghost" size="sm" icon="download">Export</Btn>
+          </div>
+        </Card>
+      </div>
+
+      {/* Placeholder modals */}
+      <Modal open={!!openModal} onClose={() => setOpenModal(null)} title={openModal || ""}>
+        <div style={{ textAlign: "center", padding: "24px 0", color: "var(--text-muted)" }}>
+          <Icon name="settings" size={40} color="var(--text-muted)" style={{ display: "block", margin: "0 auto 12px" }} />
+          <div style={{ fontWeight: 500, color: "var(--text-secondary)", fontSize: 14 }}>{openModal} management</div>
+          <div style={{ fontSize: 12, marginTop: 4 }}>Full CRUD interface available in production</div>
+        </div>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 16 }}>
+          <Btn variant="secondary" onClick={() => setOpenModal(null)}>Close</Btn>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+
+
+
+// tweaks-panel.jsx
+// Reusable Tweaks shell + form-control helpers.
+//
+// Owns the host protocol (listens for __activate_edit_mode / __deactivate_edit_mode,
+// posts __edit_mode_available / __edit_mode_set_keys / __edit_mode_dismissed) so
+// individual prototypes don't re-roll it. Ships a consistent set of controls so you
+// don't hand-draw <input type="range">, segmented radios, steppers, etc.
+//
+// Usage (in an HTML file that loads React + Babel):
+//
+//   const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+//     "primaryColor": "#D97757",
+//     "fontSize": 16,
+//     "density": "regular",
+//     "dark": false
+//   }/*EDITMODE-END*/;
+//
+//   function App() {
+//     const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+//     return (
+//       <div style={{ fontSize: t.fontSize, color: t.primaryColor }}>
+//         Hello
+//         <TweaksPanel>
+//           <TweakSection label="Typography" />
+//           <TweakSlider label="Font size" value={t.fontSize} min={10} max={32} unit="px"
+//                        onChange={(v) => setTweak('fontSize', v)} />
+//           <TweakRadio  label="Density" value={t.density}
+//                        options={['compact', 'regular', 'comfy']}
+//                        onChange={(v) => setTweak('density', v)} />
+//           <TweakSection label="Theme" />
+//           <TweakColor  label="Primary" value={t.primaryColor}
+//                        onChange={(v) => setTweak('primaryColor', v)} />
+//           <TweakToggle label="Dark mode" value={t.dark}
+//                        onChange={(v) => setTweak('dark', v)} />
+//         </TweaksPanel>
+//       </div>
+//     );
+//   }
+//
+// ─────────────────────────────────────────────────────────────────────────────
+
+const __TWEAKS_STYLE = `
+  .twk-panel{position:fixed;right:16px;bottom:16px;z-index:2147483646;width:280px;
+    max-height:calc(100vh - 32px);display:flex;flex-direction:column;
+    background:rgba(250,249,247,.78);color:#29261b;
+    -webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);
+    border:.5px solid rgba(255,255,255,.6);border-radius:14px;
+    box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 12px 40px rgba(0,0,0,.18);
+    font:11.5px/1.4 ui-sans-serif,system-ui,-apple-system,sans-serif;overflow:hidden}
+  .twk-hd{display:flex;align-items:center;justify-content:space-between;
+    padding:10px 8px 10px 14px;cursor:move;user-select:none}
+  .twk-hd b{font-size:12px;font-weight:600;letter-spacing:.01em}
+  .twk-x{appearance:none;border:0;background:transparent;color:rgba(41,38,27,.55);
+    width:22px;height:22px;border-radius:6px;cursor:default;font-size:13px;line-height:1}
+  .twk-x:hover{background:rgba(0,0,0,.06);color:#29261b}
+  .twk-body{padding:2px 14px 14px;display:flex;flex-direction:column;gap:10px;
+    overflow-y:auto;overflow-x:hidden;min-height:0;
+    scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.15) transparent}
+  .twk-body::-webkit-scrollbar{width:8px}
+  .twk-body::-webkit-scrollbar-track{background:transparent;margin:2px}
+  .twk-body::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:4px;
+    border:2px solid transparent;background-clip:content-box}
+  .twk-body::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,.25);
+    border:2px solid transparent;background-clip:content-box}
+  .twk-row{display:flex;flex-direction:column;gap:5px}
+  .twk-row-h{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
+  .twk-lbl{display:flex;justify-content:space-between;align-items:baseline;
+    color:rgba(41,38,27,.72)}
+  .twk-lbl>span:first-child{font-weight:500}
+  .twk-val{color:rgba(41,38,27,.5);font-variant-numeric:tabular-nums}
+
+  .twk-sect{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    color:rgba(41,38,27,.45);padding:10px 0 0}
+  .twk-sect:first-child{padding-top:0}
+
+  .twk-field{appearance:none;width:100%;height:26px;padding:0 8px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:7px;
+    background:rgba(255,255,255,.6);color:inherit;font:inherit;outline:none}
+  .twk-field:focus{border-color:rgba(0,0,0,.25);background:rgba(255,255,255,.85)}
+  select.twk-field{padding-right:22px;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='rgba(0,0,0,.5)' d='M0 0h10L5 6z'/></svg>");
+    background-repeat:no-repeat;background-position:right 8px center}
+
+  .twk-slider{appearance:none;-webkit-appearance:none;width:100%;height:4px;margin:6px 0;
+    border-radius:999px;background:rgba(0,0,0,.12);outline:none}
+  .twk-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+    width:14px;height:14px;border-radius:50%;background:#fff;
+    border:.5px solid rgba(0,0,0,.12);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
+  .twk-slider::-moz-range-thumb{width:14px;height:14px;border-radius:50%;
+    background:#fff;border:.5px solid rgba(0,0,0,.12);box-shadow:0 1px 3px rgba(0,0,0,.2);cursor:default}
+
+  .twk-seg{position:relative;display:flex;padding:2px;border-radius:8px;
+    background:rgba(0,0,0,.06);user-select:none}
+  .twk-seg-thumb{position:absolute;top:2px;bottom:2px;border-radius:6px;
+    background:rgba(255,255,255,.9);box-shadow:0 1px 2px rgba(0,0,0,.12);
+    transition:left .15s cubic-bezier(.3,.7,.4,1),width .15s}
+  .twk-seg.dragging .twk-seg-thumb{transition:none}
+  .twk-seg button{appearance:none;position:relative;z-index:1;flex:1;border:0;
+    background:transparent;color:inherit;font:inherit;font-weight:500;min-height:22px;
+    border-radius:6px;cursor:default;padding:4px 6px;line-height:1.2;
+    overflow-wrap:anywhere}
+
+  .twk-toggle{position:relative;width:32px;height:18px;border:0;border-radius:999px;
+    background:rgba(0,0,0,.15);transition:background .15s;cursor:default;padding:0}
+  .twk-toggle[data-on="1"]{background:#34c759}
+  .twk-toggle i{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+  .twk-toggle[data-on="1"] i{transform:translateX(14px)}
+
+  .twk-num{display:flex;align-items:center;height:26px;padding:0 0 0 8px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:7px;background:rgba(255,255,255,.6)}
+  .twk-num-lbl{font-weight:500;color:rgba(41,38,27,.6);cursor:ew-resize;
+    user-select:none;padding-right:8px}
+  .twk-num input{flex:1;min-width:0;height:100%;border:0;background:transparent;
+    font:inherit;font-variant-numeric:tabular-nums;text-align:right;padding:0 8px 0 0;
+    outline:none;color:inherit;-moz-appearance:textfield}
+  .twk-num input::-webkit-inner-spin-button,.twk-num input::-webkit-outer-spin-button{
+    -webkit-appearance:none;margin:0}
+  .twk-num-unit{padding-right:8px;color:rgba(41,38,27,.45)}
+
+  .twk-btn{appearance:none;height:26px;padding:0 12px;border:0;border-radius:7px;
+    background:rgba(0,0,0,.78);color:#fff;font:inherit;font-weight:500;cursor:default}
+  .twk-btn:hover{background:rgba(0,0,0,.88)}
+  .twk-btn.secondary{background:rgba(0,0,0,.06);color:inherit}
+  .twk-btn.secondary:hover{background:rgba(0,0,0,.1)}
+
+  .twk-swatch{appearance:none;-webkit-appearance:none;width:56px;height:22px;
+    border:.5px solid rgba(0,0,0,.1);border-radius:6px;padding:0;cursor:default;
+    background:transparent;flex-shrink:0}
+  .twk-swatch::-webkit-color-swatch-wrapper{padding:0}
+  .twk-swatch::-webkit-color-swatch{border:0;border-radius:5.5px}
+  .twk-swatch::-moz-color-swatch{border:0;border-radius:5.5px}
+`;
+
+// ── useTweaks ───────────────────────────────────────────────────────────────
+// Single source of truth for tweak values. setTweak persists via the host
+// (__edit_mode_set_keys → host rewrites the EDITMODE block on disk).
+function useTweaks(defaults) {
+  const [values, setValues] = React.useState(defaults);
+  // Accepts either setTweak('key', value) or setTweak({ key: value, ... }) so a
+  // useState-style call doesn't write a "[object Object]" key into the persisted
+  // JSON block.
+  const setTweak = React.useCallback((keyOrEdits, val) => {
+    const edits = typeof keyOrEdits === 'object' && keyOrEdits !== null
+      ? keyOrEdits : { [keyOrEdits]: val };
+    setValues((prev) => ({ ...prev, ...edits }));
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*');
+  }, []);
+  return [values, setTweak];
+}
+
+// ── TweaksPanel ─────────────────────────────────────────────────────────────
+// Floating shell. Registers the protocol listener BEFORE announcing
+// availability — if the announce ran first, the host's activate could land
+// before our handler exists and the toolbar toggle would silently no-op.
+// The close button posts __edit_mode_dismissed so the host's toolbar toggle
+// flips off in lockstep; the host echoes __deactivate_edit_mode back which
+// is what actually hides the panel.
+function TweaksPanel({ title = 'Tweaks', children }) {
+  const [open, setOpen] = React.useState(false);
+  const dragRef = React.useRef(null);
+  const offsetRef = React.useRef({ x: 16, y: 16 });
+  const PAD = 16;
+
+  const clampToViewport = React.useCallback(() => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const w = panel.offsetWidth, h = panel.offsetHeight;
+    const maxRight = Math.max(PAD, window.innerWidth - w - PAD);
+    const maxBottom = Math.max(PAD, window.innerHeight - h - PAD);
+    offsetRef.current = {
+      x: Math.min(maxRight, Math.max(PAD, offsetRef.current.x)),
+      y: Math.min(maxBottom, Math.max(PAD, offsetRef.current.y)),
+    };
+    panel.style.right = offsetRef.current.x + 'px';
+    panel.style.bottom = offsetRef.current.y + 'px';
+  }, []);
+
+  React.useEffect(() => {
+    if (!open) return;
+    clampToViewport();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', clampToViewport);
+      return () => window.removeEventListener('resize', clampToViewport);
+    }
+    const ro = new ResizeObserver(clampToViewport);
+    ro.observe(document.documentElement);
+    return () => ro.disconnect();
+  }, [open, clampToViewport]);
+
+  React.useEffect(() => {
+    const onMsg = (e) => {
+      const t = e?.data?.type;
+      if (t === '__activate_edit_mode') setOpen(true);
+      else if (t === '__deactivate_edit_mode') setOpen(false);
+    };
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  const dismiss = () => {
+    setOpen(false);
+    window.parent.postMessage({ type: '__edit_mode_dismissed' }, '*');
+  };
+
+  const onDragStart = (e) => {
+    const panel = dragRef.current;
+    if (!panel) return;
+    const r = panel.getBoundingClientRect();
+    const sx = e.clientX, sy = e.clientY;
+    const startRight = window.innerWidth - r.right;
+    const startBottom = window.innerHeight - r.bottom;
+    const move = (ev) => {
+      offsetRef.current = {
+        x: startRight - (ev.clientX - sx),
+        y: startBottom - (ev.clientY - sy),
+      };
+      clampToViewport();
+    };
+    const up = () => {
+      window.removeEventListener('mousemove', move);
+      window.removeEventListener('mouseup', up);
+    };
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseup', up);
+  };
+
+  if (!open) return null;
+  return (
+    <>
+      <style>{__TWEAKS_STYLE}</style>
+      <div ref={dragRef} className="twk-panel" data-noncommentable=""
+           style={{ right: offsetRef.current.x, bottom: offsetRef.current.y }}>
+        <div className="twk-hd" onMouseDown={onDragStart}>
+          <b>{title}</b>
+          <button className="twk-x" aria-label="Close tweaks"
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={dismiss}>✕</button>
+        </div>
+        <div className="twk-body">{children}</div>
+      </div>
+    </>
+  );
+}
+
+// ── Layout helpers ──────────────────────────────────────────────────────────
+
+function TweakSection({ label, children }) {
+  return (
+    <>
+      <div className="twk-sect">{label}</div>
+      {children}
+    </>
+  );
+}
+
+function TweakRow({ label, value, children, inline = false }) {
+  return (
+    <div className={inline ? 'twk-row twk-row-h' : 'twk-row'}>
+      <div className="twk-lbl">
+        <span>{label}</span>
+        {value != null && <span className="twk-val">{value}</span>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// ── Controls ────────────────────────────────────────────────────────────────
+
+function TweakSlider({ label, value, min = 0, max = 100, step = 1, unit = '', onChange }) {
+  return (
+    <TweakRow label={label} value={`${value}${unit}`}>
+      <input type="range" className="twk-slider" min={min} max={max} step={step}
+             value={value} onChange={(e) => onChange(Number(e.target.value))} />
+    </TweakRow>
+  );
+}
+
+function TweakToggle({ label, value, onChange }) {
+  return (
+    <div className="twk-row twk-row-h">
+      <div className="twk-lbl"><span>{label}</span></div>
+      <button type="button" className="twk-toggle" data-on={value ? '1' : '0'}
+              role="switch" aria-checked={!!value}
+              onClick={() => onChange(!value)}><i /></button>
+    </div>
+  );
+}
+
+function TweakRadio({ label, value, options, onChange }) {
+  const trackRef = React.useRef(null);
+  const [dragging, setDragging] = React.useState(false);
+  const opts = options.map((o) => (typeof o === 'object' ? o : { value: o, label: o }));
+  const idx = Math.max(0, opts.findIndex((o) => o.value === value));
+  const n = opts.length;
+
+  // The active value is read by pointer-move handlers attached for the lifetime
+  // of a drag — ref it so a stale closure doesn't fire onChange for every move.
+  const valueRef = React.useRef(value);
+  valueRef.current = value;
+
+  const segAt = (clientX) => {
+    const r = trackRef.current.getBoundingClientRect();
+    const inner = r.width - 4;
+    const i = Math.floor(((clientX - r.left - 2) / inner) * n);
+    return opts[Math.max(0, Math.min(n - 1, i))].value;
+  };
+
+  const onPointerDown = (e) => {
+    setDragging(true);
+    const v0 = segAt(e.clientX);
+    if (v0 !== valueRef.current) onChange(v0);
+    const move = (ev) => {
+      if (!trackRef.current) return;
+      const v = segAt(ev.clientX);
+      if (v !== valueRef.current) onChange(v);
+    };
+    const up = () => {
+      setDragging(false);
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+
+  return (
+    <TweakRow label={label}>
+      <div ref={trackRef} role="radiogroup" onPointerDown={onPointerDown}
+           className={dragging ? 'twk-seg dragging' : 'twk-seg'}>
+        <div className="twk-seg-thumb"
+             style={{ left: `calc(2px + ${idx} * (100% - 4px) / ${n})`,
+                      width: `calc((100% - 4px) / ${n})` }} />
+        {opts.map((o) => (
+          <button key={o.value} type="button" role="radio" aria-checked={o.value === value}>
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </TweakRow>
+  );
+}
+
+function TweakSelect({ label, value, options, onChange }) {
+  return (
+    <TweakRow label={label}>
+      <select className="twk-field" value={value} onChange={(e) => onChange(e.target.value)}>
+        {options.map((o) => {
+          const v = typeof o === 'object' ? o.value : o;
+          const l = typeof o === 'object' ? o.label : o;
+          return <option key={v} value={v}>{l}</option>;
+        })}
+      </select>
+    </TweakRow>
+  );
+}
+
+function TweakText({ label, value, placeholder, onChange }) {
+  return (
+    <TweakRow label={label}>
+      <input className="twk-field" type="text" value={value} placeholder={placeholder}
+             onChange={(e) => onChange(e.target.value)} />
+    </TweakRow>
+  );
+}
+
+function TweakNumber({ label, value, min, max, step = 1, unit = '', onChange }) {
+  const clamp = (n) => {
+    if (min != null && n < min) return min;
+    if (max != null && n > max) return max;
+    return n;
+  };
+  const startRef = React.useRef({ x: 0, val: 0 });
+  const onScrubStart = (e) => {
+    e.preventDefault();
+    startRef.current = { x: e.clientX, val: value };
+    const decimals = (String(step).split('.')[1] || '').length;
+    const move = (ev) => {
+      const dx = ev.clientX - startRef.current.x;
+      const raw = startRef.current.val + dx * step;
+      const snapped = Math.round(raw / step) * step;
+      onChange(clamp(Number(snapped.toFixed(decimals))));
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+  return (
+    <div className="twk-num">
+      <span className="twk-num-lbl" onPointerDown={onScrubStart}>{label}</span>
+      <input type="number" value={value} min={min} max={max} step={step}
+             onChange={(e) => onChange(clamp(Number(e.target.value)))} />
+      {unit && <span className="twk-num-unit">{unit}</span>}
+    </div>
+  );
+}
+
+function TweakColor({ label, value, onChange }) {
+  return (
+    <div className="twk-row twk-row-h">
+      <div className="twk-lbl"><span>{label}</span></div>
+      <input type="color" className="twk-swatch" value={value}
+             onChange={(e) => onChange(e.target.value)} />
+    </div>
+  );
+}
+
+function TweakButton({ label, onClick, secondary = false }) {
+  return (
+    <button type="button" className={secondary ? 'twk-btn secondary' : 'twk-btn'}
+            onClick={onClick}>{label}</button>
+  );
+}
+
+
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "accentColor": "#F59E0B",
+  "compactMode": false,
+  "showStockAlerts": true
+}/*EDITMODE-END*/;
+
+const CRUMB_MAP = {
+  "dashboard":    ["Hasnan Traders", "Dashboard"],
+  "sale-new":     ["Sales", "New Single Sale"],
+  "sale-day":     ["Sales", "Day / Batch Sale"],
+  "sale-list":    ["Sales", "Sale List"],
+  "sale-empty":   ["Sales", "Decanting / Empty Sale"],
+  "purch-filled": ["Purchases", "Purchase Filled"],
+  "purch-empty":  ["Purchases", "Purchase Empty"],
+  "purch-other":  ["Purchases", "Other Purchase"],
+  "purch-list":   ["Purchases", "Purchase List"],
+  "ret-cust":     ["Returns", "Customer Returns"],
+  "ret-purch":    ["Returns", "Purchase Returns"],
+  "pay-cash":     ["Payments & Receipts", "Cash Payments"],
+  "rec-cash":     ["Payments & Receipts", "Cash Receipts"],
+  "pay-bank":     ["Payments & Receipts", "Bank Payments/Receipts"],
+  "rec-sec":      ["Payments & Receipts", "Security Receipts"],
+  "jv":           ["Payments & Receipts", "Journal Vouchers"],
+  "rep-ledger":   ["Reports", "Customer Ledger"],
+  "rep-stock":    ["Reports", "Stock Report"],
+  "rep-cashbook": ["Reports", "Cash Book"],
+  "rep-daily":    ["Reports", "Daily Activity"],
+  "rep-pl":       ["Reports", "Profit / Loss"],
+  "rep-more":     ["Reports", "More Reports"],
+  "settings":     ["Settings", "Master Data"],
+};
+
+function PlaceholderScreen({ route, onNavigate }) {
+  const label = CRUMB_MAP[route]?.[1] || route;
+  const shortcuts = [
+    { label: "New Single Sale", route: "sale-new",  icon: "receipt" },
+    { label: "Day Sale",        route: "sale-day",   icon: "listCheck" },
+    { label: "Sale List",       route: "sale-list",  icon: "fileText" },
+    { label: "Customer Ledger", route: "rep-ledger", icon: "book" },
+    { label: "Settings",        route: "settings",   icon: "settings" },
+  ];
+  return (
+    <div style={{ paddingBottom: 32 }}>
+      <SectionHeader title={label} sub={CRUMB_MAP[route]?.join(" · ") || label} />
+      <Card padded style={{ textAlign: "center", padding: "64px 48px" }}>
+        <div style={{ width: 56, height: 56, borderRadius: "var(--radius-lg)", background: "var(--bg-subtle)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+          <Icon name="fileText" size={28} color="var(--text-muted)" />
+        </div>
+        <div style={{ fontWeight: 600, fontSize: 16, color: "var(--text-secondary)", marginBottom: 6 }}>{label}</div>
+        <div style={{ fontSize: 13, color: "var(--text-muted)", maxWidth: 320, margin: "0 auto 24px" }}>
+          This screen is part of the full production build. The mockup showcases the 6 core screens.
+        </div>
+        <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+          {shortcuts.map(s => (
+            <Btn key={s.route} variant="secondary" icon={s.icon} size="sm" onClick={() => onNavigate(s.route)}>{s.label}</Btn>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function App() {
+  const [route, setRoute] = React.useState("dashboard");
+  const [theme, setTheme] = React.useState("");
+  const [toast, setToast] = React.useState(null);
+  const [tweakVals, setTweakValsRaw] = React.useState(TWEAK_DEFAULTS);
+
+  const setTweak = React.useCallback((keyOrEdits, val) => {
+    const edits = typeof keyOrEdits === 'object' && keyOrEdits !== null
+      ? keyOrEdits : { [keyOrEdits]: val };
+    setTweakValsRaw(prev => ({ ...prev, ...edits }));
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*');
+  }, []);
+
+  React.useEffect(() => {
+    if (theme) document.documentElement.setAttribute("data-theme", theme);
+    else document.documentElement.removeAttribute("data-theme");
+  }, [theme]);
+
+  React.useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  const navigate = (r) => { setRoute(r); };
+  const crumbs = CRUMB_MAP[route] || ["Hasnan Traders", route];
+  const MOCKED = ["dashboard", "sale-new", "sale-day", "sale-list", "rep-ledger", "settings"];
+
+  return (
+    <div className="erp-app">
+      <div className="erp-sidebar">
+        <Sidebar active={route} onNavigate={navigate} />
+      </div>
+      <div className="erp-topbar">
+        <Topbar crumbs={crumbs} theme={theme} onTheme={setTheme} />
+      </div>
+      <main className="erp-main">
+        {route === "dashboard"  && <DashboardScreen onNavigate={navigate} />}
+        {route === "sale-new"   && <NewSingleSaleScreen onNavigate={navigate} />}
+        {route === "sale-day"   && <DaySaleScreen onNavigate={navigate} />}
+        {route === "sale-list"  && <SaleListScreen onNavigate={navigate} />}
+        {route === "rep-ledger" && <CustomerLedgerScreen />}
+        {route === "settings"   && <SettingsScreen />}
+        {!MOCKED.includes(route) && <PlaceholderScreen route={route} onNavigate={navigate} />}
+      </main>
+      {toast && <Toast toast={toast} />}
+      <TweaksPanel title="Tweaks">
+        <TweakSection label="Theme">
+          <TweakRadio
+            label="Colour mode"
+            value={theme}
+            options={[{ label: "Light", value: "" }, { label: "Dark", value: "charcoal-pro" }]}
+            onChange={setTheme}
+          />
+          <TweakColor
+            label="Accent colour"
+            value={tweakVals.accentColor}
+            onChange={(v) => {
+              setTweak("accentColor", v);
+              document.documentElement.style.setProperty("--color-accent-1", v);
+            }}
+          />
+        </TweakSection>
+        <TweakSection label="Layout">
+          <TweakToggle label="Compact mode"     value={tweakVals.compactMode}     onChange={(v) => setTweak("compactMode", v)} />
+          <TweakToggle label="Show stock alerts" value={tweakVals.showStockAlerts} onChange={(v) => setTweak("showStockAlerts", v)} />
+        </TweakSection>
+        <TweakSection label="Quick navigate">
+          <TweakButton label="Dashboard"        onClick={() => navigate("dashboard")} />
+          <TweakButton label="New Single Sale"  onClick={() => navigate("sale-new")} />
+          <TweakButton label="Day Sale"         onClick={() => navigate("sale-day")} />
+          <TweakButton label="Sale List"        onClick={() => navigate("sale-list")} />
+          <TweakButton label="Customer Ledger"  onClick={() => navigate("rep-ledger")} />
+          <TweakButton label="Settings"         onClick={() => navigate("settings")} />
+        </TweakSection>
+      </TweaksPanel>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+
+</script>
+</body>
+</html>

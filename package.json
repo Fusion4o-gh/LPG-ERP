@@ -1,0 +1,33 @@
+{
+  "name": "hasnan-traders-lpg-erp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Phase 1 foundation for Hasnan Traders LPG cylinder distribution ERP rebuild.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "node -r ./scripts/patch-exfat-readlink.js ./node_modules/next/dist/bin/next build",
+    "start": "next start",
+    "test": "node --test tests/*.test.mjs",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "node prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "6.19.3",
+    "next": "15.5.15",
+    "react": "19.2.5",
+    "react-dom": "19.2.5"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.17",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "postcss": "8.5.14",
+    "prisma": "6.19.3",
+    "tailwindcss": "3.4.19",
+    "typescript": "5.9.3"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  }
+}

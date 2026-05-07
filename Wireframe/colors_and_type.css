@@ -1,0 +1,267 @@
+/* =============================================================
+   Fusion4o Design Tokens
+   Calm corporate SaaS / Windows 11 Fluent influence
+   Light theme (Business Blue) as default; see [data-theme="..."]
+   overrides below for Cash & Counter, Charcoal Pro, High-Visibility.
+   ============================================================= */
+
+/* ---------- Font face (Inter, fallback to system) ---------- */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("fonts/Inter-Variable.woff2") format("woff2-variations"),
+       url("https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMa1ZL7.woff2") format("woff2");
+}
+
+:root {
+  /* ====== PRIMITIVE: Neutrals ====== */
+  --color-gray-0:  #F5F7FA;   /* app background */
+  --color-gray-1:  #FFFFFF;   /* cards, surfaces */
+  --color-gray-2:  #F3F4F6;
+  --color-gray-3:  #E5E7EB;
+  --color-gray-4:  #D1D5DB;
+  --color-gray-5:  #6B7280;   /* secondary text */
+  --color-gray-6:  #4B5563;
+  --color-gray-7:  #1F2933;   /* primary text */
+  --color-gray-8:  #0F172A;
+  --color-gray-9:  #0B1220;   /* deep sidebar */
+
+  /* ====== PRIMITIVE: Brand & Semantic hues ====== */
+  --color-accent-1:  #2563EB;  /* Business Blue primary */
+  --color-accent-2:  #1D4ED8;  /* hover */
+  --color-accent-3:  #DBEAFE;  /* tinted bg */
+
+  --color-success-1: #16A34A;
+  --color-success-2: #DCFCE7;
+  --color-success-3: #14532D;
+
+  --color-warning-1: #F59E0B;
+  --color-warning-2: #FEF9C3;
+  --color-warning-3: #854D0E;
+
+  --color-danger-1:  #DC2626;
+  --color-danger-2:  #FEE2E2;
+  --color-danger-3:  #991B1B;
+
+  --color-info-1:    #0EA5E9;
+  --color-info-2:    #E0F2FE;
+  --color-info-3:    #075985;
+
+  /* ====== SEMANTIC: Surfaces ====== */
+  --bg-app:        var(--color-gray-0);
+  --bg-card:       var(--color-gray-1);
+  --bg-sidebar:    var(--color-gray-9);
+  --bg-input:      #FFFFFF;
+  --bg-subtle:     var(--color-gray-2);
+  --bg-hover:      #EEF2F7;
+
+  /* Acrylic / frosted surfaces (Windows 11 style) */
+  --bg-acrylic:        rgba(255, 255, 255, 0.72);
+  --bg-acrylic-strong: rgba(255, 255, 255, 0.85);
+  --bg-acrylic-dark:   rgba(15, 23, 42, 0.60);
+  --backdrop-blur:     saturate(180%) blur(20px);
+
+  /* ====== SEMANTIC: Text ====== */
+  --text-primary:    var(--color-gray-7);
+  --text-secondary:  var(--color-gray-5);
+  --text-muted:      #9CA3AF;
+  --text-on-primary: #FFFFFF;
+  --text-on-danger:  #FFFFFF;
+  --text-link:       var(--color-accent-1);
+
+  /* ====== SEMANTIC: Borders ====== */
+  --border-subtle:   #E5E7EB;
+  --border-default:  #D1D5DB;
+  --border-strong:   #9CA3AF;
+  --border-focus:    var(--color-accent-1);
+
+  /* ====== SEMANTIC: Actions ====== */
+  --action-primary-bg:        var(--color-accent-1);
+  --action-primary-bg-hover:  var(--color-accent-2);
+  --action-primary-bg-active: #1E40AF;
+  --action-primary-border:    transparent;
+  --action-primary-text:      var(--text-on-primary);
+
+  --action-secondary-bg:        #E5E7EB;
+  --action-secondary-bg-hover:  #D1D5DB;
+  --action-secondary-text:      var(--text-primary);
+  --action-secondary-border:    transparent;
+
+  --action-ghost-bg:        transparent;
+  --action-ghost-bg-hover:  var(--bg-hover);
+  --action-ghost-text:      var(--text-primary);
+
+  --action-danger-bg:        var(--color-danger-1);
+  --action-danger-bg-hover:  #B91C1C;
+  --action-danger-text:      var(--text-on-danger);
+
+  /* ====== SEMANTIC: Status pills ====== */
+  --status-success-bg:   var(--color-success-2);
+  --status-success-text: var(--color-success-3);
+  --status-warning-bg:   var(--color-warning-2);
+  --status-warning-text: var(--color-warning-3);
+  --status-danger-bg:    var(--color-danger-2);
+  --status-danger-text:  var(--color-danger-3);
+  --status-info-bg:      var(--color-info-2);
+  --status-info-text:    var(--color-info-3);
+  --status-neutral-bg:   var(--color-gray-2);
+  --status-neutral-text: var(--color-gray-6);
+
+  /* ====== RADIUS (Windows 11-ish) ====== */
+  --radius-xs:   4px;
+  --radius-sm:   6px;
+  --radius-md:   8px;
+  --radius-lg:   12px;   /* cards, modals */
+  --radius-xl:   16px;
+  --radius-full: 999px;
+
+  /* ====== SPACING SCALE ====== */
+  --space-0:  0;
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ====== ELEVATION ====== */
+  --shadow-none: none;
+  --shadow-sm:   0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-md:   0 4px 12px rgba(15, 23, 42, 0.10);
+  --shadow-lg:   0 18px 40px rgba(15, 23, 42, 0.18);
+  --shadow-focus: 0 0 0 3px rgba(37, 99, 235, 0.25);
+  --shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  /* ====== TYPOGRAPHY ====== */
+  --font-family-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+                      "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-family-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas,
+                      "Liberation Mono", monospace;
+
+  --font-size-xs: 11px;
+  --font-size-sm: 13px;
+  --font-size-md: 15px;
+  --font-size-lg: 17px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 32px;
+
+  --font-weight-regular: 400;
+  --font-weight-medium:  500;
+  --font-weight-semibold: 600;
+  --font-weight-bold:    700;
+
+  --line-height-tight:   1.2;
+  --line-height-normal:  1.4;
+  --line-height-relaxed: 1.6;
+
+  /* Letter-spacing — Inter likes a tiny negative at display sizes */
+  --tracking-tight:   -0.01em;
+  --tracking-normal:  0;
+  --tracking-wide:    0.02em;
+
+  /* ====== MOTION ====== */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);      /* Fluent standard */
+  --ease-emph:     cubic-bezier(0.3, 0, 0.1, 1);    /* emphasized */
+  --ease-out:      cubic-bezier(0.1, 0.9, 0.2, 1);
+  --duration-fast:   120ms;
+  --duration-normal: 200ms;
+  --duration-slow:   320ms;
+}
+
+/* =============================================================
+   THEME: Cash & Counter
+   — brighter, higher-contrast retail counter look; green accent
+   ============================================================= */
+[data-theme="cash-counter"] {
+  --color-accent-1: #15803D;
+  --color-accent-2: #166534;
+  --color-accent-3: #DCFCE7;
+  --action-primary-bg:       var(--color-accent-1);
+  --action-primary-bg-hover: var(--color-accent-2);
+  --bg-app:  #F6FAF6;
+}
+
+/* =============================================================
+   THEME: Charcoal Pro (dark)
+   ============================================================= */
+[data-theme="charcoal-pro"] {
+  --bg-app:       #0F172A;
+  --bg-card:      #111827;
+  --bg-sidebar:   #0B1220;
+  --bg-input:     #1F2937;
+  --bg-subtle:    #1F2937;
+  --bg-hover:     #1E293B;
+  --bg-acrylic:        rgba(17, 24, 39, 0.72);
+  --bg-acrylic-strong: rgba(17, 24, 39, 0.90);
+
+  --text-primary:   #F3F4F6;
+  --text-secondary: #9CA3AF;
+  --text-muted:     #6B7280;
+
+  --border-subtle:  #1F2937;
+  --border-default: #374151;
+  --border-strong:  #4B5563;
+
+  --action-secondary-bg:       #1F2937;
+  --action-secondary-bg-hover: #374151;
+  --action-secondary-text:     #F3F4F6;
+
+  --status-success-bg: rgba(22, 163, 74, 0.18);
+  --status-success-text: #86EFAC;
+  --status-warning-bg: rgba(245, 158, 11, 0.18);
+  --status-warning-text: #FCD34D;
+  --status-danger-bg: rgba(220, 38, 38, 0.18);
+  --status-danger-text: #FCA5A5;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 18px 40px rgba(0, 0, 0, 0.55);
+}
+
+/* =============================================================
+   THEME: High Visibility
+   — large hit areas, stronger borders, high-contrast accent.
+   Pair with class .hv on root for sizing bumps.
+   ============================================================= */
+[data-theme="high-visibility"] {
+  --color-accent-1: #1D4ED8;
+  --border-subtle:  #9CA3AF;
+  --border-default: #4B5563;
+  --text-secondary: #374151;
+  --shadow-focus:   0 0 0 4px rgba(29, 78, 216, 0.45);
+  --font-size-md: 16px;
+  --font-size-lg: 19px;
+  --font-size-xl: 22px;
+}
+
+/* =============================================================
+   BASE ELEMENT STYLES (semantic type tokens)
+   Use these classes OR the CSS vars directly.
+   ============================================================= */
+html, body {
+  background: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.t-display   { font-size: var(--font-size-3xl); font-weight: 600; line-height: var(--line-height-tight); letter-spacing: var(--tracking-tight); }
+.t-h-page    { font-size: var(--font-size-xl); font-weight: 600; line-height: var(--line-height-tight); letter-spacing: var(--tracking-tight); }
+.t-h-section { font-size: var(--font-size-lg); font-weight: 600; line-height: var(--line-height-tight); }
+.t-body      { font-size: var(--font-size-md); font-weight: 400; line-height: var(--line-height-normal); }
+.t-body-strong { font-size: var(--font-size-md); font-weight: 600; line-height: var(--line-height-normal); }
+.t-caption   { font-size: var(--font-size-sm); font-weight: 400; line-height: var(--line-height-relaxed); color: var(--text-secondary); }
+.t-micro     { font-size: var(--font-size-xs); font-weight: 500; line-height: var(--line-height-normal); color: var(--text-muted); text-transform: uppercase; letter-spacing: var(--tracking-wide); }
+.t-mono      { font-family: var(--font-family-mono); font-size: var(--font-size-sm); }
+.t-number    { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }

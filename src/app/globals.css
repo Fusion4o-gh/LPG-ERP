@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #f6f7f9;
+  color: #17202a;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  html,
+  body {
+    min-height: auto;
+    background: #ffffff;
+    color: #111827;
+  }
+
+  [data-print-hidden] {
+    display: none !important;
+  }
+
+  [data-report-print] {
+    display: block;
+  }
+
+  [data-report-print] table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+
+  [data-report-print] th,
+  [data-report-print] td {
+    border: 1px solid #cbd5e1;
+    padding: 6px 8px;
+    white-space: normal !important;
+  }
+
+  [data-report-print] th {
+    background: #f1f5f9 !important;
+    color: #111827;
+  }
+
+  [data-report-print] .overflow-x-auto {
+    overflow: visible;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+}

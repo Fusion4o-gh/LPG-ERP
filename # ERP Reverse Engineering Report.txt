@@ -1,0 +1,506 @@
+# ERP Reverse Engineering Report
+### Hasnan Traders LPG Distribution ERP — Full Rebuild Plan for Codex
+**Prepared:** May 6, 2026 | **Analyst:** Autonomous Agent | **Based on:** Complete live system exploration
+
+***
+
+## 1. Executive Summary
+
+Hasnan Traders operates a **custom, single-tenant, LPG (Liquefied Petroleum Gas) cylinder distribution ERP** built by Evision System, Lahore (©2018–2019). The system manages the full LPG distribution lifecycle: purchasing filled cylinders from gas companies → issuing to ~259 retail customers on credit → tracking empty cylinder returns → collecting cash/bank payments → maintaining a Chart of Accounts.
+
+The system is **functionally active** (14,618+ sale issues, 6,269+ cylinder returns, 2,651+ cash payment vouchers, 1,307+ bank receipts) but is built on a dead technology stack with no API, no mobile support, no audit log, no financial-year progression, and a day-closing function not run in 3+ years. At least 4 of 7 Sale/Purchase modules and 3 of 5 Return modules are entirely unused.
+
+**Verdict: Full rebuild is required.** The system cannot be wrapped or incrementally patched — its architecture prevents API-first design, role-based access, multi-year accounting, and mobile access.
+
+***
+
+## 2. System Map
+
+### 2.1 Identity
+
+| Field | Value |
+|-------|-------|
+| System Name | LPG Management System |
+| Vendor | Evision System (`evisionsystem.com`) |
+| Copyright | ©2018–2019 |
+| Branding in UI | "LPG" breadcrumb prefix on every page |
+| Industry | LPG Cylinder Distribution (B2B + retail) |
+| Tenancy | Single-tenant |
+| Financial Year | Stuck at **2020-21** (running in 2026) |
+| Domain | `hasnantraders.evtsolutionz.com` |
+| Active Users | 3: `evision` (vendor), `admin` (owner), `shop2` (shop staff) |
+
+### 2.2 Complete Module Map
+
+```
+SIDEBAR
+│
+├── Dashboard (/admin)
+│   ├── KPI tiles: Today Cash, Cash Position, Payables, Receivables, Today's Sale, Expenses, M Expenses
+│   ├── Banks Position widget (16 bank accounts, live Dr/Cr)
+│   ├── Quick-link tiles (11 color-coded shortcuts)
+│   └── Show Current Stock / Show Sale Stats (collapsed widgets)
+│
+├── Configuration
+│   ├── Company Information (/Company) ──── BROKEN (Google Maps API expired, logo broken, all days=NO)
+│   ├── User Management (/User) ─────────── 3 users, Access Role + Map Area per user
+│   ├── Cities (/City) ──────────────────── 12 local cities, Active status
+│   ├── Area (/area) ────────────────────── 11 sub-areas → City mapping
+│   ├── Brand Coding (/Brand) ───────────── 5 LPG brands (PSO, Khass Gas, Supper Gas, Fon Gas, Local Gas)
+│   ├── Category Coding (/Category) ─────── 7 categories (Cylinders, Regulators, Kado types, Others)
+│   ├── Item Coding (/Item) ─────────────── ~20 items (cylinder sizes + regulators + accessories)
+│   ├── Customer Coding (/Customer) ──────── 259 customers, City/Area/Status
+│   ├── Vendor Coding (/Vendor) ─────────── 31 vendors (LPG gas companies)
+│   ├── Bank Coding (/Bank implied) ─────── 16 bank accounts (via CoA)
+│   ├── Shop Opening Balance (/ShopOpeningBalance) ── One-time stock snapshot (2020-11-09), LOCKED
+│   ├── Cash Opening (/cashopening) ─────── One-time: Cash in Hand Rs.102,500, LOCKED
+│   ├── Day Closing (/day_closing) ──────── CRITICAL: Last closed 2023-03-29, 3+ years stale
+│   ├── CustomerOpeningBalance (/CustomerOpeningBalance) ── BROKEN (blank white page)
+│   └── Expense Type Coding (/ExpenseType) ─ 75 expense type accounts
+│
+├── Sale/Purchase
+│   ├── Purchase Filled Cylinder (/DirectGIRN) ──── ACTIVE (1,615+ GIRNs)
+│   ├── Purchase Empty Cylinder (/Purchaseempty) ── UNUSED (0 entries)
+│   ├── Purchase Other (/Purchaseother) ─────────── UNUSED (0 entries)
+│   ├── Sale LPG (/SaleLPG) ──────────────────────── ACTIVE (14,618+ issues)
+│   ├── Decanting Sale (/decanting) ─────────────── UNUSED (0 entries)
+│   ├── Cylinder Conversion (/CylinderConversion) ── UNUSED (0 entries)
+│   └── Empty Sale (/Emptysale) ─────────────────── UNUSED (0 entries)
+│
+├── Return
+│   ├── Cylinder Return (/Salereturn) ──────────────── ACTIVE (6,269+ returns)
+│   ├── Purchase Return Cylinder (/Purchasereturn) ─── UNUSED (0 entries)
+│   └── Purchase Return Other (/Purchasereturn) ────── SAME URL as above (broken distinction)
+│
+├── Payment/Receipt
+│   ├── Cash Payment (/Multiplecashpayment) ─────── ACTIVE (2,651+ vouchers, CP prefix)
+│   ├── Cash Receipt (/Multiplecashreceipt) ─────── ACTIVE (2,145+ vouchers, CR prefix)
+│   ├── Security Receipt (/SecurityReceipt) ──────── INACTIVE in current range (Trans#, Customer, Cylinder, Qty, Amount)
+│   ├── Chart of Account (/Chartofaccounts) ──────── ACTIVE (hierarchical 10-digit codes, 200+ accounts)
+│   ├── Journal Vouchers (/Journal_voucher) ────────── INACTIVE in current range
+│   └── Bank Payments/Receipt (/Account_bank_payment) ─ ACTIVE (BP 1728+, BR 1307+, large amounts)
+│
+├── Reports (15 reports)
+│   ├── Sale B/W Date (/SaleDateReport) ─── Filters: Type, Segment, Item, Brand, Date; 2 output modes
+│   ├── Cylinder Conversion B/W Date (/ConversionDateReport)
+│   ├── One Customer Sale History (/SaleDateReport/single_customer_report)
+│   ├── Stock Report (/StockReport)
+│   ├── Cash Book (/CashBookReport)
+│   ├── Vendor Wise Receiving Report (/VendorWiseReport)
+│   ├── General Ledger (/VendorLedger)
+│   ├── Customer Ledger (/CustomerLedger)
+│   ├── Sale Return Report (/Salereturnreport)
+│   ├── Purchase Return Report (/Purchasereturnreport)
+│   ├── Customer Stock Ledger (/Customerstockledger)
+│   ├── Daily Activity Report (/DAR)
+│   ├── Access Cylinders (/Accesscylinders) ─── TWO sub-reports: by Customers + by Own Business
+│   ├── Salewise Profit (/SalewiseProfit) ─── "Profit B/W Date Report"
+│   └── Profit/Loss Report (/ProfitReport) ─── By Month+Year
+│
+└── Database Backup (/Db_backup) ─── Manual date-triggered DB dump
+```
+
+***
+
+## 3. Core Workflows
+
+### 3.1 Purchase Workflow (Inbound Stock)
+
+```
+TRIGGER: Gas company delivers filled cylinders
+
+STEP 1 — Create Purchase GIRN (/DirectGIRN/add_direct_girn)
+  Inputs:
+    - Vendor (dropdown → 31 LPG companies)
+    - Date
+    - Remarks
+    - 11.8 KG global price (overrides line-item price for this size)
+  
+  Line items (per cylinder type):
+    - Item (e.g. 45.4-PSO, 11.8-Khass Gas)
+    - Type: Filled or Empty
+    - Received Qty
+    - Unit Price
+    - GST%
+    - Empty Return (empties returned to vendor simultaneously)
+    - Empty Stock (resulting empty stock after transaction)
+    - GST Amount, Ex-GST Amount, Inc-GST Amount (calculated)
+
+BUSINESS RULES:
+  - Empty cylinders are returned to vendor WITHIN the same purchase transaction
+  - GST is calculated per line item and stored separately
+  - 11.8 KG price is a global override affecting all 11.8kg items in the GIRN
+  - Stock increases by Recv Qty (filled)
+  - Stock decreases by Empty Return qty
+
+OUTPUT:
+  - Receipt # (sequential, e.g. 1615)
+  - Vendor ledger Dr (payable created)
+  - Stock ledger updated (filled +, empty -)
+  - GST payable recorded
+```
+
+### 3.2 Sale Workflow — Single Sale
+
+```
+TRIGGER: Customer orders LPG cylinders
+
+STEP 1 — Create Sale (/SaleLPG/add_sale_lpg)
+  Inputs:
+    - Customer (dropdown, shows outstanding balance inline)
+    - Date
+    - Sale Type: Direct
+    - Remarks
+    - 11.8 KG Price (global for this sale)
+    - Language: English / Urdu (invoice print language)
+  
+  Line items (per cylinder type):
+    - Item
+    - Sale Qty
+    - Unit Price
+    - GST (%)
+    - Security (deposit per cylinder - Rs. per unit)
+    - Empty Cylinder Type (what empty they return now)
+    - Return Qty (empties returned AT time of delivery)
+    - Filled Stock (stock available — real-time check)
+    - GST Amount, Ex-GST Amount, Inc-GST Amount
+
+BUSINESS RULES:
+  - Customer can return empty cylinders at the same time as receiving filled ones
+  - Security deposit is charged per cylinder (typically once per new cylinder)
+  - Filled stock check prevents over-selling (Company Setting: Stock Available Check = ON)
+  - Issue # is globally sequential (up to 14,618+)
+  - Customer receivable (Dr) and Sales Revenue (Cr) are posted to CoA
+
+OUTPUT:
+  - Issue # assigned
+  - Customer ledger Dr (receivable)
+  - Sales account Cr
+  - Stock: Filled -, Empty + (for returned empties)
+  - Security ledger Cr (if applicable)
+  - Printable invoice (English or Urdu)
+```
+
+### 3.3 Sale Workflow — Complete Day Sale (Batch)
+
+```
+TRIGGER: End of day or dispatch run — multiple customers in one session
+
+STEP 1 — Batch entry form (/SaleLPG/add_sale_lpg_new)
+  Per row (one row = one customer):
+    - Customer (dropdown)
+    - 11.8 KG Price
+    - Item 1 / Item 2 / Item 3 (up to 3 items per customer)
+    - Qty per item (inline)
+    - Total (auto-calculated)
+    - Payment Type: Cash or Credit
+    - Amount Received (if Cash, full or partial)
+
+  Header:
+    - Date (single date for all rows)
+    - Remarks
+
+BUSINESS RULES:
+  - Each row generates a separate Sale Issue # internally
+  - "Cash" type immediately creates a Cash Receipt entry
+  - "Credit" type leaves balance open in customer receivable
+  - Stock availability shown inline per item
+  - Limited to 3 item types per customer per session
+
+OUTPUT:
+  - Multiple Issue #s generated (one per row)
+  - All customers' ledgers updated
+  - Cash receipts auto-generated for cash sales
+```
+
+### 3.4 Cylinder Return Workflow
+
+```
+TRIGGER: Customer returns empty cylinders (separate transaction from sale)
+
+STEP 1 — Cylinder Return (/Salereturn/add_sale_return)
+  Inputs:
+    - Customer
+    - Date
+    - Items: Empty / Filled flag
+    - Return Qty per item
+    - Total Amount (usually Rs.0 for empty returns, non-zero for filled returns)
+
+BUSINESS RULES:
+  - Return # is globally sequential (up to 6,269+)
+  - Empty returns increase shop's empty stock
+  - Filled returns (customer returning unused filled cylinders) reverse a sale
+  - No approval required — operator enters directly
+  - Customer's outstanding cylinder balance (Access Cylinders report) decreases
+
+OUTPUT:
+  - Return # assigned
+  - Empty stock +
+  - Customer stock ledger updated
+  - For filled returns: customer receivable Cr, Sales Cr (reversal)
+```
+
+### 3.5 Payment & Receipt Workflows
+
+```
+CASH RECEIPT (/Multiplecashreceipt):
+  - Voucher format: 1-CR-XXXX
+  - Customer pays cash → Cash in Hand Dr, Customer Receivable Cr
+  - Daily operation (2,145+ vouchers)
+  - Multi-line: can receive from multiple accounts per voucher
+
+CASH PAYMENT (/Multiplecashpayment):
+  - Voucher format: 1-CP-XXXX
+  - Company pays vendor → Vendor Payable Dr, Cash in Hand Cr
+  - OR pays expenses → Expense account Dr, Cash in Hand Cr
+  - 2,651+ vouchers, active daily
+
+BANK PAYMENT (/Account_bank_payment — type BP):
+  - Voucher format: 1-BP-XXXX
+  - Large payments (Rs.144,000–472,000 typically)
+  - Bank account Cr, Vendor/Expense Dr
+  - Primarily HBL account used
+
+BANK RECEIPT (/Account_bank_payment — type BR):
+  - Voucher format: 1-BR-XXXX
+  - Customer deposits into company bank
+  - Bank account Dr, Customer Receivable Cr
+
+SECURITY RECEIPT (/SecurityReceipt):
+  - Customer pays cylinder security deposit
+  - Fields: Customer, Cylinder type, Quantity, Amount
+  - Security Liability Cr, Cash Dr
+  - Rarely used in current period
+```
+
+### 3.6 Accounting Structure
+
+```
+CHART OF ACCOUNTS (10-digit hierarchical codes):
+
+1000000000 — LIABILITIES
+  1001000000 — CAPITAL & RESERVES
+    1001001000 — Trade Creditors & Suppliers (vendor accounts: 1001001001–1001001031)
+    1001002000 — Security (cylinder deposit liability: 1001002001)
+    1001003000 — Output Tax/Payables (GST Payable: 1001003001)
+
+2000000000 — ASSETS & CAPITAL EXPENDITURE
+  2002000000 — FIXED ASSETS
+    2002001000 — Vehicles and Machinery
+  2003000000 — CURRENT ASSETS
+    2003001000 — STOCK AND STORES (Purchase account: 2003001001)
+    2003014000 — CASH AT BANKS (16 bank sub-accounts: 2004002001–2004002016)
+  2004000000 — Trade Debtors / Customers
+    2004001000 — Customer accounts (~200 sub-accounts: 2004001001–2004001259)
+    2004003000 — Input Tax/Receivables (GST Receivable: 2004003001)
+
+3000000000 — SALES AND REVENUE
+  3001000000 — Sales
+    3001001000 — SALES ACCOUNT - LPG (Retail Sales LPG: 3001001001)
+  3002000000 — OTHER INCOME
+    3002001000 — INCOMES (Labour income: 3002001001)
+
+4000000000 — EXPENSES
+  4001000000 — PURCHASES & EXPENSES
+    4001001000 — EXPENSES (75 sub-accounts: shop rents, fuel, salaries, etc.)
+    4001002000 — COST OF GOOD SOLD (4001002001)
+```
+
+### 3.7 Cylinder Accountability (Domain-Critical Logic)
+
+```
+THE CORE PROBLEM THIS ERP SOLVES:
+  Cylinders are expensive physical assets. When sold:
+  - Customer takes FILLED cylinder
+  - Customer owes: Payment for gas + return of EMPTY cylinder
+  
+  Two parallel ledgers per customer:
+  1. CASH LEDGER: Rs. owed for gas value
+  2. CYLINDER LEDGER: Number of cylinders outstanding (not yet returned)
+
+CYLINDER LIFECYCLE:
+  Purchase Filled → Shop Stock (Filled)
+       ↓ Sale
+  Customer (Filled) → Customer has cylinder + owes empty
+       ↓ Return
+  Shop Stock (Empty) → Next purchase cycle
+       ↓ To vendor
+  Vendor gets empties back WITH next filled purchase
+
+TRACKING MECHANISM:
+  - Access Cylinders Report (Customers): shows who has how many cylinders outstanding
+  - Access Cylinders Report (Own Business): shows own filled + empty stock
+  - Customer Stock Ledger: cylinder movement history per customer
+  - Daily Activity Report: cross-sectional view of all movements
+```
+
+***
+
+## 4. Data Model
+
+### 4.1 Inferred Core Entities
+
+```sql
+-- MASTER DATA
+
+financial_years
+  id, label VARCHAR(10), start_date DATE, end_date DATE, is_active BOOLEAN
+
+companies
+  id, name, owner_name, address, phone, email, ntn_no, gst_no,
+  logo_path, centralized_pricing BOOLEAN, show_default_date BOOLEAN,
+  stock_available_check BOOLEAN, redirect_on_same_page BOOLEAN,
+  start_time TIME, end_time TIME, working_days JSONB
+
+cities
+  id, name, status ENUM(active,inactive)
+
+areas
+  id, name, city_id FK(cities), status
+
+brands
+  id, name
+
+categories
+  id, name, status ENUM(active,inactive), is_system_protected BOOLEAN
+
+items
+  id, name, category_id FK(categories), brand_id FK(brands),
+  security_amount DECIMAL, status
+
+item_prices
+  id, item_id FK(items), customer_id FK(customers) NULLABLE,
+  price DECIMAL, valid_from DATE
+  -- NULL customer_id = default price; specific customer_id = override price
+
+customers
+  id, code VARCHAR(20), name, email, address, phone, cell,
+  city_id FK(cities), area_id FK(areas), status, account_code FK(chart_of_accounts)
+
+vendors
+  id, code VARCHAR(20), name, phone, cell, status, account_code FK(chart_of_accounts)
+
+users
+  id, name, login_id VARCHAR(50) UNIQUE, password_hash,
+  financial_year_id FK(financial_years), status
+
+roles (access_roles)
+  id, user_id FK(users), module VARCHAR(50), can_view BOOLEAN,
+  can_create BOOLEAN, can_edit BOOLEAN, can_delete BOOLEAN, can_print BOOLEAN
+
+user_areas
+  id, user_id FK(users), area_id FK(areas)
+
+expense_types
+  id, name, type ENUM(expense, income), opening_balance DECIMAL,
+  opening_type ENUM(debit, credit), status, account_code FK(chart_of_accounts)
+
+banks
+  id, name, display_name VARCHAR(100), account_code FK(chart_of_accounts), status
+
+-- ACCOUNTING
+
+chart_of_accounts
+  id, code VARCHAR(10) UNIQUE, name, parent_id FK(self) NULLABLE,
+  level INT, account_type ENUM(asset,liability,revenue,expense,capital),
+  is_system BOOLEAN
+
+-- INVENTORY & STOCK
+
+shop_opening_balance
+  id, item_id FK(items), type ENUM(filled,empty), quantity INT, date DATE
+
+-- PURCHASES
+
+purchases (direct_girn)
+  id, receipt_no INT UNIQUE, vendor_id FK(vendors), date DATE,
+  remarks TEXT, kg_11_8_price DECIMAL, financial_year_id FK(financial_years),
+  created_by FK(users), created_at TIMESTAMP
+
+purchase_items
+  id, purchase_id FK(purchases), item_id FK(items),
+  type ENUM(filled,empty), recv_qty INT, unit_price DECIMAL,
+  gst_pct DECIMAL, empty_return INT, empty_stock INT,
+  gst_amount DECIMAL, ex_gst_amount DECIMAL, inc_gst_amount DECIMAL
+
+-- SALES
+
+sales
+  id, issue_no INT UNIQUE, customer_id FK(customers), date DATE,
+  sale_type ENUM(direct,batch), remarks TEXT, kg_11_8_price DECIMAL,
+  invoice_language ENUM(english,urdu), total_amount DECIMAL,
+  received_amount DECIMAL, financial_year_id FK(financial_years),
+  batch_session_id FK(batch_sessions) NULLABLE,
+  created_by FK(users), created_at TIMESTAMP
+
+sale_items
+  id, sale_id FK(sales), item_id FK(items), sale_qty INT,
+  unit_price DECIMAL, gst_pct DECIMAL, security DECIMAL,
+  empty_cylinder_type VARCHAR(50), return_qty INT,
+  filled_stock_at_time INT, gst_amount DECIMAL,
+  ex_gst_amount DECIMAL, inc_gst_amount DECIMAL
+
+batch_sessions
+  id, date DATE, remarks TEXT, created_by FK(users), created_at TIMESTAMP
+
+-- RETURNS
+
+cylinder_returns
+  id, return_no INT UNIQUE, customer_id FK(customers), date DATE,
+  type ENUM(empty,filled), total_amount DECIMAL,
+  financial_year_id FK(financial_years), created_by FK(users)
+
+cylinder_return_items
+  id, return_id FK(cylinder_returns), item_id FK(items),
+  quantity INT, unit_price DECIMAL
+
+purchase_returns
+  id, return_no INT UNIQUE, vendor_id FK(vendors), date DATE,
+  total_amount DECIMAL, type ENUM(cylinder,other),
+  financial_year_id FK(financial_years), created_by FK(users)
+
+purchase_return_items
+  id, return_id FK(purchase_returns), item_id FK(items),
+  quantity INT, unit_price DECIMAL
+
+-- PAYMENTS / RECEIPTS
+
+vouchers (covers CP, CR, BR, BP, JV)
+  id, voucher_no VARCHAR(20) UNIQUE,
+  voucher_type ENUM(CP,CR,BR,BP,JV,SR) NOT NULL,
+  date DATE, total DECIMAL, bank_id FK(banks) NULLABLE,
+  financial_year_id FK(financial_years),
+  created_by FK(users), created_at TIMESTAMP
+
+voucher_lines
+  id, voucher_id FK(vouchers), account_id FK(chart_of_accounts),
+  description TEXT, debit DECIMAL DEFAULT 0, credit DECIMAL DEFAULT 0
+
+security_receipts
+  id, trans_no INT UNIQUE, customer_id FK(customers),
+  item_id FK(items), quantity INT, amount DECIMAL, date DATE,
+  created_by FK(users)
+
+-- OPENING BALANCES
+
+cash_opening
+  id, account_id FK(chart_of_accounts), amount DECIMAL, is_locked BOOLEAN
+
+customer_opening_balances
+  id, customer_id FK(customers), amount DECIMAL,
+  type ENUM(debit,credit), date DATE
+
+-- DAY CLOSING
+
+day_closing_log
+  id, closed_date DATE UNIQUE, closed_by FK(users), closed_at TIMESTAMP
+
+-- AUDIT
+
+audit_log
+  id, user_id FK(users), action ENUM(create,update,delete,view),
+  module VARCHAR(50), record_id INT, old_value JSONB, new_value JSONB,
+  ip_address INET, timestamp TIMESTAMP
+```
+
+###

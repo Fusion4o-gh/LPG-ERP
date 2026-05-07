@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: hasnan_lpg_erp
+      POSTGRES_USER: lpg
+      POSTGRES_PASSWORD: lpg_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  app:
+    build: .
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgresql://lpg:lpg_dev_password@postgres:5432/hasnan_lpg_erp?schema=public
+      AUTH_SECRET: replace-with-strong-secret
+      AUTH_URL: http://localhost:3000
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres-data:

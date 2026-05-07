@@ -1,0 +1,595 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RecordStatus {
+  ACTIVE
+  INACTIVE
+  LOCKED
+}
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+enum NormalBalance {
+  DEBIT
+  CREDIT
+}
+
+enum PermissionAction {
+  VIEW
+  CREATE
+  UPDATE
+  DELETE
+  PRINT
+  APPROVE
+  CLOSE_DAY
+  MANAGE_RBAC
+}
+
+enum CylinderState {
+  FILLED
+  EMPTY
+}
+
+enum StockDirection {
+  IN
+  OUT
+}
+
+enum StockSourceType {
+  OPENING_BALANCE
+  PURCHASE_FILLED
+  SALE_LPG
+  CYLINDER_RETURN
+  PURCHASE_RETURN
+  ADJUSTMENT
+}
+
+enum PartyType {
+  CUSTOMER
+  VENDOR
+  COMPANY
+}
+
+enum VoucherType {
+  CP
+  CR
+  BP
+  BR
+  JV
+  SR
+  OPENING
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  CLOSE_DAY
+}
+
+model Company {
+  id                    String       @id @default(cuid())
+  legalName             String
+  tradeName             String?
+  ownerName             String?
+  address               String?
+  phone                 String?
+  email                 String?
+  taxRegistrationNumber String?
+  nationalTaxNumber     String?
+  baseCurrency          String       @default("PKR")
+  locale                String       @default("en")
+  timeZone              String       @default("Asia/Karachi")
+  stockAvailableCheck   Boolean      @default(true)
+  centralizedPricing    Boolean      @default(false)
+  workingDays           Json?
+  status                RecordStatus @default(ACTIVE)
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+
+  users              User[]
+  financialYears     FinancialYear[]
+  cities             City[]
+  chartAccounts      ChartAccount[]
+  customers          Customer[]
+  vendors            Vendor[]
+  items              Item[]
+  stockLedgerEntries StockLedgerEntry[]
+  accountingVouchers AccountingVoucher[]
+  auditLogs          AuditLog[]
+  documentSequences  DocumentSequence[]
+}
+
+model FinancialYear {
+  id        String    @id @default(cuid())
+  companyId String
+  label     String
+  startsOn  DateTime  @db.Date
+  endsOn    DateTime  @db.Date
+  isActive  Boolean   @default(false)
+  isClosed  Boolean   @default(false)
+  closedAt  DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  company            Company             @relation(fields: [companyId], references: [id])
+  users              User[]
+  stockLedgerEntries StockLedgerEntry[]
+  accountingVouchers AccountingVoucher[]
+  dayClosings        DayClosing[]
+  documentSequences  DocumentSequence[]
+
+  @@unique([companyId, label])
+  @@index([companyId, isActive])
+}
+
+model User {
+  id              String       @id @default(cuid())
+  companyId       String
+  financialYearId String?
+  name            String
+  loginId         String
+  email           String?
+  passwordHash    String?
+  status          RecordStatus @default(ACTIVE)
+  lastLoginAt     DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  company             Company             @relation(fields: [companyId], references: [id])
+  financialYear       FinancialYear?      @relation(fields: [financialYearId], references: [id])
+  accounts            Account[]
+  sessions            Session[]
+  userRoles           UserRole[]
+  userAreas           UserArea[]
+  vouchersCreated     AccountingVoucher[] @relation("VoucherCreatedBy")
+  stockEntriesCreated StockLedgerEntry[]  @relation("StockEntryCreatedBy")
+  auditLogs           AuditLog[]
+  dayClosings         DayClosing[]
+
+  @@unique([companyId, loginId])
+  @@unique([companyId, email])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Role {
+  id          String       @id @default(cuid())
+  companyId   String
+  name        String
+  description String?
+  isSystem    Boolean      @default(false)
+  status      RecordStatus @default(ACTIVE)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  userRoles   UserRole[]
+  permissions RolePermission[]
+
+  @@unique([companyId, name])
+}
+
+model UserRole {
+  id        String   @id @default(cuid())
+  userId    String
+  roleId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+}
+
+model Permission {
+  id          String           @id @default(cuid())
+  module      String
+  action      PermissionAction
+  description String?
+
+  roles RolePermission[]
+
+  @@unique([module, action])
+}
+
+model RolePermission {
+  id           String @id @default(cuid())
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+}
+
+model City {
+  id        String       @id @default(cuid())
+  companyId String
+  name      String
+  status    RecordStatus @default(ACTIVE)
+
+  company   Company    @relation(fields: [companyId], references: [id])
+  areas     Area[]
+  customers Customer[]
+
+  @@unique([companyId, name])
+}
+
+model Area {
+  id        String       @id @default(cuid())
+  companyId String
+  cityId    String
+  name      String
+  status    RecordStatus @default(ACTIVE)
+
+  city      City       @relation(fields: [cityId], references: [id])
+  customers Customer[]
+  userAreas UserArea[]
+
+  @@unique([cityId, name])
+}
+
+model UserArea {
+  id     String @id @default(cuid())
+  userId String
+  areaId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  area Area @relation(fields: [areaId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, areaId])
+}
+
+model Brand {
+  id        String       @id @default(cuid())
+  companyId String
+  name      String
+  status    RecordStatus @default(ACTIVE)
+
+  items Item[]
+
+  @@unique([companyId, name])
+}
+
+model Category {
+  id                String       @id @default(cuid())
+  companyId         String
+  name              String
+  status            RecordStatus @default(ACTIVE)
+  isSystemProtected Boolean      @default(false)
+
+  items Item[]
+
+  @@unique([companyId, name])
+}
+
+model Item {
+  id               String       @id @default(cuid())
+  companyId        String
+  code             String
+  name             String
+  categoryId       String
+  brandId          String?
+  cylinderWeightKg Decimal?     @db.Decimal(8, 2)
+  defaultSecurity  Decimal      @default(0) @db.Decimal(14, 2)
+  status           RecordStatus @default(ACTIVE)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  company                  Company                       @relation(fields: [companyId], references: [id])
+  category                 Category                      @relation(fields: [categoryId], references: [id])
+  brand                    Brand?                        @relation(fields: [brandId], references: [id])
+  prices                   ItemPrice[]
+  stockLedgerEntries       StockLedgerEntry[]
+  customerCylinderBalances CustomerCylinderBalance[]
+  vendorCylinderBalances   VendorCylinderReturnBalance[]
+
+  @@unique([companyId, code])
+  @@index([companyId, name])
+}
+
+model ItemPrice {
+  id         String    @id @default(cuid())
+  itemId     String
+  customerId String?
+  price      Decimal   @db.Decimal(14, 2)
+  validFrom  DateTime  @db.Date
+  validTo    DateTime? @db.Date
+  createdAt  DateTime  @default(now())
+
+  item     Item      @relation(fields: [itemId], references: [id])
+  customer Customer? @relation(fields: [customerId], references: [id])
+
+  @@index([itemId, customerId, validFrom])
+}
+
+model ChartAccount {
+  id            String        @id @default(cuid())
+  companyId     String
+  code          String
+  name          String
+  parentId      String?
+  level         Int
+  accountType   AccountType
+  normalBalance NormalBalance
+  isControl     Boolean       @default(false)
+  isSystem      Boolean       @default(false)
+  status        RecordStatus  @default(ACTIVE)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  company      Company                 @relation(fields: [companyId], references: [id])
+  parent       ChartAccount?           @relation("ChartAccountTree", fields: [parentId], references: [id])
+  children     ChartAccount[]          @relation("ChartAccountTree")
+  customers    Customer[]
+  vendors      Vendor[]
+  banks        Bank[]
+  voucherLines AccountingVoucherLine[]
+
+  @@unique([companyId, code])
+  @@index([companyId, parentId])
+}
+
+model Customer {
+  id        String       @id @default(cuid())
+  companyId String
+  code      String
+  name      String
+  phone     String?
+  cell      String?
+  email     String?
+  address   String?
+  cityId    String?
+  areaId    String?
+  accountId String
+  status    RecordStatus @default(ACTIVE)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  company            Company                   @relation(fields: [companyId], references: [id])
+  city               City?                     @relation(fields: [cityId], references: [id])
+  area               Area?                     @relation(fields: [areaId], references: [id])
+  account            ChartAccount              @relation(fields: [accountId], references: [id])
+  prices             ItemPrice[]
+  cylinderBalances   CustomerCylinderBalance[]
+  stockLedgerEntries StockLedgerEntry[]
+
+  @@unique([companyId, code])
+  @@index([companyId, name])
+}
+
+model Vendor {
+  id        String       @id @default(cuid())
+  companyId String
+  code      String
+  name      String
+  phone     String?
+  cell      String?
+  address   String?
+  accountId String
+  status    RecordStatus @default(ACTIVE)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  company            Company                       @relation(fields: [companyId], references: [id])
+  account            ChartAccount                  @relation(fields: [accountId], references: [id])
+  cylinderBalances   VendorCylinderReturnBalance[]
+  stockLedgerEntries StockLedgerEntry[]
+
+  @@unique([companyId, code])
+  @@index([companyId, name])
+}
+
+model Bank {
+  id        String       @id @default(cuid())
+  companyId String
+  name      String
+  accountId String
+  status    RecordStatus @default(ACTIVE)
+
+  account ChartAccount @relation(fields: [accountId], references: [id])
+
+  @@unique([companyId, name])
+}
+
+model CustomerCylinderBalance {
+  id                String   @id @default(cuid())
+  customerId        String
+  itemId            String
+  filledOutstanding Int      @default(0)
+  emptyOwed         Int      @default(0)
+  securityHeld      Decimal  @default(0) @db.Decimal(14, 2)
+  updatedAt         DateTime @updatedAt
+
+  customer Customer @relation(fields: [customerId], references: [id])
+  item     Item     @relation(fields: [itemId], references: [id])
+
+  @@unique([customerId, itemId])
+}
+
+model VendorCylinderReturnBalance {
+  id        String   @id @default(cuid())
+  vendorId  String
+  itemId    String
+  emptyDue  Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  vendor Vendor @relation(fields: [vendorId], references: [id])
+  item   Item   @relation(fields: [itemId], references: [id])
+
+  @@unique([vendorId, itemId])
+}
+
+model StockLedgerEntry {
+  id              String          @id @default(cuid())
+  companyId       String
+  financialYearId String
+  itemId          String
+  cylinderState   CylinderState
+  direction       StockDirection
+  partyType       PartyType?
+  customerId      String?
+  vendorId        String?
+  quantity        Int
+  balanceAfter    Int
+  sourceType      StockSourceType
+  sourceId        String
+  transactionDate DateTime        @db.Date
+  remarks         String?
+  createdById     String
+  createdAt       DateTime        @default(now())
+
+  company       Company       @relation(fields: [companyId], references: [id])
+  financialYear FinancialYear @relation(fields: [financialYearId], references: [id])
+  item          Item          @relation(fields: [itemId], references: [id])
+  customer      Customer?     @relation(fields: [customerId], references: [id])
+  vendor        Vendor?       @relation(fields: [vendorId], references: [id])
+  createdBy     User          @relation("StockEntryCreatedBy", fields: [createdById], references: [id])
+
+  @@index([companyId, itemId, cylinderState, transactionDate])
+  @@index([customerId, itemId, transactionDate])
+  @@index([vendorId, itemId, transactionDate])
+  @@index([sourceType, sourceId])
+}
+
+model AccountingVoucher {
+  id              String      @id @default(cuid())
+  companyId       String
+  financialYearId String
+  voucherNo       String
+  voucherType     VoucherType
+  voucherDate     DateTime    @db.Date
+  narration       String?
+  totalDebit      Decimal     @default(0) @db.Decimal(14, 2)
+  totalCredit     Decimal     @default(0) @db.Decimal(14, 2)
+  sourceType      String?
+  sourceId        String?
+  isPosted        Boolean     @default(true)
+  createdById     String
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  company       Company                 @relation(fields: [companyId], references: [id])
+  financialYear FinancialYear           @relation(fields: [financialYearId], references: [id])
+  createdBy     User                    @relation("VoucherCreatedBy", fields: [createdById], references: [id])
+  lines         AccountingVoucherLine[]
+
+  @@unique([companyId, voucherNo])
+  @@index([companyId, voucherDate])
+  @@index([sourceType, sourceId])
+}
+
+model AccountingVoucherLine {
+  id          String  @id @default(cuid())
+  voucherId   String
+  accountId   String
+  description String?
+  debit       Decimal @default(0) @db.Decimal(14, 2)
+  credit      Decimal @default(0) @db.Decimal(14, 2)
+  sortOrder   Int     @default(0)
+
+  voucher AccountingVoucher @relation(fields: [voucherId], references: [id], onDelete: Restrict)
+  account ChartAccount      @relation(fields: [accountId], references: [id])
+
+  @@index([accountId])
+}
+
+model DocumentSequence {
+  id              String   @id @default(cuid())
+  companyId       String
+  financialYearId String
+  prefix          String
+  nextNumber      Int      @default(1)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  company       Company       @relation(fields: [companyId], references: [id])
+  financialYear FinancialYear @relation(fields: [financialYearId], references: [id])
+
+  @@unique([companyId, financialYearId, prefix])
+}
+
+model DayClosing {
+  id              String   @id @default(cuid())
+  companyId       String
+  financialYearId String
+  closedDate      DateTime @db.Date
+  closedById      String
+  cashBalance     Decimal  @default(0) @db.Decimal(14, 2)
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  financialYear FinancialYear @relation(fields: [financialYearId], references: [id])
+  closedBy      User          @relation(fields: [closedById], references: [id])
+
+  @@unique([companyId, closedDate])
+}
+
+model AuditLog {
+  id         String      @id @default(cuid())
+  companyId  String
+  userId     String?
+  action     AuditAction
+  entityType String
+  entityId   String
+  before     Json?
+  after      Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime    @default(now())
+
+  company Company @relation(fields: [companyId], references: [id])
+  user    User?   @relation(fields: [userId], references: [id])
+
+  @@index([companyId, entityType, entityId])
+  @@index([companyId, createdAt])
+}
