@@ -45,7 +45,7 @@ test("Phase 3B operational pages are wired to existing APIs", async () => {
 
   for (const route of routes) {
     await exists(route);
-    assert.match(await file(route), /OperationForm|BatchSaleForm/);
+    assert.match(await file(route), /OperationForm|BatchSaleForm|PurchaseFilledCylinderForm|SaleLpgForm|CylinderReturnForm/);
   }
 });
 
@@ -55,6 +55,58 @@ test("dashboard and sidebar use LPG ERP operational terminology", async () => {
 
   for (const label of ["Purchase Filled Cylinder", "Sale LPG", "Complete Day Sale", "Cylinder Return", "Security Receipt"]) {
     assert.match(sidebar + dashboard, new RegExp(label));
+  }
+});
+
+test("Fusion4o branding assets and shell copy are present", async () => {
+  const rootLayout = await file("src/app/layout.tsx");
+  const loginPage = await file("src/app/(auth)/login/page.tsx");
+  const sidebar = await file("src/components/Sidebar.tsx");
+  const globals = await file("src/app/globals.css");
+
+  await exists("public/fusion4o-logo.png");
+  assert.match(rootLayout, /LPG ERP \| Fusion4o/);
+  assert.match(rootLayout, /LPG distribution ERP powered by Fusion4o/);
+  assert.match(loginPage, /Operational control for LPG distribution businesses/);
+  assert.match(loginPage, /Custom Software & Intelligent Business Systems/);
+  assert.match(loginPage + sidebar, /Powered by Fusion4o/);
+  assert.match(globals, /--fusion-cyan/);
+  assert.match(globals, /--fusion-blue/);
+  assert.match(globals, /\.fusion-gradient/);
+});
+
+test("customer cylinder balance page keeps table formatters inside the client boundary", async () => {
+  const page = await file("src/app/(protected)/customer-cylinder-balances/page.tsx");
+
+  assert.match(page, /^"use client";/);
+  assert.match(page, /render: \(row\)/);
+});
+
+test("role management normalizes listed RBAC role relations for the UI", async () => {
+  const client = await file("src/app/(protected)/settings/roles/RoleManagementClient.tsx");
+
+  assert.match(client, /function normalizeRole/);
+  assert.match(client, /role\.userRoles/);
+  assert.match(client, /role\.permissions/);
+  assert.match(client, /setRoles\(roleData\.roles\.map\(normalizeRole\)\)/);
+});
+
+test("report pages with table formatters keep callbacks inside the client boundary", async () => {
+  const reportPages = [
+    "src/app/(protected)/reports/balance-sheet/page.tsx",
+    "src/app/(protected)/reports/cash-book/page.tsx",
+    "src/app/(protected)/reports/customer-cylinder-balances/page.tsx",
+    "src/app/(protected)/reports/customer-ledger/page.tsx",
+    "src/app/(protected)/reports/profit-loss/page.tsx",
+    "src/app/(protected)/reports/stock-summary/page.tsx",
+    "src/app/(protected)/reports/trial-balance/page.tsx",
+    "src/app/(protected)/reports/vendor-ledger/page.tsx",
+  ];
+
+  for (const route of reportPages) {
+    const page = await file(route);
+    assert.match(page, /^"use client";/, `${route} should be a client component`);
+    assert.match(page, /render: \(row\)/, `${route} should define table formatters`);
   }
 });
 
@@ -75,6 +127,7 @@ test("report pages include shared print action and print metadata", async () => 
   assert.match(reportClient, /window\.print\(\)/);
   assert.match(reportClient, /Print/);
   assert.match(reportClient, /Generated:/);
+  assert.match(reportClient, /Preparing\.\.\./);
   assert.match(reportClient, /Filters:/);
   assert.match(reportClient, /data-report-print/);
   assert.match(reportClient, /data-print-only/);

@@ -56,7 +56,7 @@ export function ReportTableClient({
   const [vendors, setVendors] = useState<Lookup[]>([]);
   const [accounts, setAccounts] = useState<Lookup[]>([]);
   const [filters, setFilters] = useState({ from: "", to: "", asOf: "", itemId: "", customerId: "", vendorId: "", accountId: "", accountType: "" });
-  const [generatedAt] = useState(() => new Date());
+  const [generatedAt, setGeneratedAt] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -81,6 +81,7 @@ export function ReportTableClient({
   }
 
   useEffect(() => {
+    setGeneratedAt(new Date().toLocaleString());
     if (showItemFilter) apiGet<{ items: Lookup[] }>("/api/items").then((data) => setItems(data.items)).catch((err: Error) => setError(err.message));
     if (showCustomerFilter) apiGet<{ customers: Lookup[] }>("/api/customers").then((data) => setCustomers(data.customers)).catch((err: Error) => setError(err.message));
     if (showVendorFilter) apiGet<{ vendors: Lookup[] }>("/api/vendors").then((data) => setVendors(data.vendors)).catch((err: Error) => setError(err.message));
@@ -109,7 +110,7 @@ export function ReportTableClient({
         <h1 className="text-xl font-semibold text-slate-950">{title}</h1>
         <p className="mt-1 text-sm text-slate-700">{description}</p>
         <div className="mt-3 grid gap-1 text-xs text-slate-700">
-          <div>Generated: {generatedAt.toLocaleString()}</div>
+          <div>Generated: {generatedAt || "Preparing..."}</div>
           <div>
             Filters:{" "}
             {activeFilters.length

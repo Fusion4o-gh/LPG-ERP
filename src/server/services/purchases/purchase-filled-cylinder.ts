@@ -13,13 +13,75 @@ type PurchaseFilledCylinderInput = {
   userId: string;
   issueNo: string;
   vendorId: string;
-  itemId: string;
-  quantity: number;
-  unitCost: string | number;
+  itemId?: string;
+  quantity?: number;
+  unitCost?: string | number;
   gstAmount?: string | number;
+  gstPercent?: string | number;
+  remarks?: string;
+  elevenPointEightKgPrice?: string | number;
+  lines?: PurchaseFilledCylinderLineInput[];
   transactionDate: string | Date;
   allowClosedDayOverride?: boolean;
 };
+
+type PurchaseFilledCylinderLineInput = {
+  itemId: string;
+  cylinderState?: "FILLED" | "EMPTY" | CylinderState;
+  quantity: number;
+  unitCost: string | number;
+  gstPercent?: string | number;
+  gstAmount?: string | number;
+  emptyReturnQuantity?: number;
+};
+
+function decimal(value: string | number | Prisma.Decimal | undefined) {
+  return new Prisma.Decimal(value ?? 0);
+}
+
+function normalizeCylinderState(value: PurchaseFilledCylinderLineInput["cylinderState"]) {
+  return String(value) === CylinderState.EMPTY ? CylinderState.EMPTY : CylinderState.FILLED;
+}
+
+function normalizeLines(input: PurchaseFilledCylinderInput) {
+  const rawLines: PurchaseFilledCylinderLineInput[] = input.lines?.length
+    ? input.lines
+    : [
+        {
+          itemId: input.itemId ?? "",
+          cylinderState: CylinderState.FILLED,
+          quantity: input.quantity ?? 0,
+          unitCost: input.unitCost ?? 0,
+          gstAmount: input.gstAmount,
+          gstPercent: input.gstPercent,
+        },
+      ];
+
+  return rawLines.map((line, index) => {
+    if (!line.itemId) throw new Error(`lines[${index}].itemId is required.`);
+    const quantity = Number(line.quantity);
+    if (!Number.isInteger(quantity) || quantity <= 0) throw new Error(`lines[${index}].quantity must be a positive integer.`);
+    const unitCost = decimal(line.unitCost);
+    if (unitCost.lte(0)) throw new Error(`lines[${index}].unitCost must be a positive number.`);
+    const exGstAmount = unitCost.times(quantity);
+    const gstPercent = decimal(line.gstPercent);
+    const gstAmount = line.gstAmount === undefined ? exGstAmount.times(gstPercent).div(100) : decimal(line.gstAmount);
+    const incGstAmount = exGstAmount.plus(gstAmount);
+    const emptyReturnQuantity = Number(line.emptyReturnQuantity ?? 0);
+    if (!Number.isInteger(emptyReturnQuantity) || emptyReturnQuantity < 0) throw new Error(`lines[${index}].emptyReturnQuantity must be a non-negative integer.`);
+    return {
+      itemId: line.itemId,
+      cylinderState: normalizeCylinderState(line.cylinderState),
+      quantity,
+      unitCost,
+      gstPercent,
+      gstAmount,
+      exGstAmount,
+      incGstAmount,
+      emptyReturnQuantity,
+    };
+  });
+}
 
 export async function purchaseFilledCylinder(input: PurchaseFilledCylinderInput) {
   return prisma.$transaction(async (tx) => {
@@ -29,30 +91,65 @@ export async function purchaseFilledCylinder(input: PurchaseFilledCylinderInput)
     const vendor = await tx.vendor.findUniqueOrThrow({ where: { id: input.vendorId }, select: { accountId: true } });
     const stockAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.stock);
     const gstReceivableAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.gstReceivable);
-    const grossAmount = new Prisma.Decimal(input.unitCost).times(input.quantity);
-    const gstAmount = new Prisma.Decimal(input.gstAmount ?? 0);
+    const lines = normalizeLines(input);
+    const itemRows = await tx.item.findMany({
+      where: { companyId: input.companyId, id: { in: [...new Set(lines.map((line) => line.itemId))] } },
+      select: { id: true, code: true, name: true },
+    });
+    const itemById = new Map(itemRows.map((item) => [item.id, item]));
+    const grossAmount = lines.reduce((sum, line) => sum.plus(line.exGstAmount), new Prisma.Decimal(0));
+    const gstAmount = lines.reduce((sum, line) => sum.plus(line.gstAmount), new Prisma.Decimal(0));
     const payableAmount = grossAmount.plus(gstAmount);
+    const stockEntries = [];
 
-    const stockEntry = await createStockLedgerEntry(tx, {
-      companyId: input.companyId,
-      financialYearId: input.financialYearId,
-      itemId: input.itemId,
-      cylinderState: CylinderState.FILLED,
-      direction: StockDirection.IN,
-      sourceType: StockSourceType.PURCHASE_FILLED,
-      sourceId: input.issueNo,
-      transactionDate: input.transactionDate,
-      quantity: input.quantity,
-      createdById: input.userId,
-      partyType: PartyType.VENDOR,
-      vendorId: input.vendorId,
-    });
+    for (const line of lines) {
+      const stockEntry = await createStockLedgerEntry(tx, {
+        companyId: input.companyId,
+        financialYearId: input.financialYearId,
+        itemId: line.itemId,
+        cylinderState: line.cylinderState,
+        direction: StockDirection.IN,
+        sourceType: StockSourceType.PURCHASE_FILLED,
+        sourceId: input.issueNo,
+        transactionDate: input.transactionDate,
+        quantity: line.quantity,
+        createdById: input.userId,
+        partyType: PartyType.VENDOR,
+        vendorId: input.vendorId,
+      });
+      stockEntries.push(stockEntry);
 
-    await tx.vendorCylinderReturnBalance.upsert({
-      where: { vendorId_itemId: { vendorId: input.vendorId, itemId: input.itemId } },
-      update: { emptyDue: { increment: input.quantity } },
-      create: { vendorId: input.vendorId, itemId: input.itemId, emptyDue: input.quantity },
-    });
+      if (line.cylinderState === CylinderState.FILLED) {
+        await tx.vendorCylinderReturnBalance.upsert({
+          where: { vendorId_itemId: { vendorId: input.vendorId, itemId: line.itemId } },
+          update: { emptyDue: { increment: line.quantity } },
+          create: { vendorId: input.vendorId, itemId: line.itemId, emptyDue: line.quantity },
+        });
+      }
+
+      if (line.emptyReturnQuantity > 0) {
+        const emptyReturnEntry = await createStockLedgerEntry(tx, {
+          companyId: input.companyId,
+          financialYearId: input.financialYearId,
+          itemId: line.itemId,
+          cylinderState: CylinderState.EMPTY,
+          direction: StockDirection.OUT,
+          sourceType: StockSourceType.PURCHASE_FILLED,
+          sourceId: input.issueNo,
+          transactionDate: input.transactionDate,
+          quantity: line.emptyReturnQuantity,
+          createdById: input.userId,
+          partyType: PartyType.VENDOR,
+          vendorId: input.vendorId,
+          remarks: "Empty cylinders returned to vendor with purchase receipt.",
+        });
+        stockEntries.push(emptyReturnEntry);
+        await tx.vendorCylinderReturnBalance.update({
+          where: { vendorId_itemId: { vendorId: input.vendorId, itemId: line.itemId } },
+          data: { emptyDue: { decrement: line.emptyReturnQuantity } },
+        });
+      }
+    }
 
     const voucher = await createBalancedVoucher(tx, {
       companyId: input.companyId,
@@ -60,6 +157,7 @@ export async function purchaseFilledCylinder(input: PurchaseFilledCylinderInput)
       voucherNo: input.issueNo,
       voucherType: VoucherType.JV,
       voucherDate: input.transactionDate,
+      narration: input.remarks,
       sourceType: "PurchaseFilledCylinder",
       sourceId: input.issueNo,
       createdById: input.userId,
@@ -75,9 +173,40 @@ export async function purchaseFilledCylinder(input: PurchaseFilledCylinderInput)
       userId: input.userId,
       entityType: "PurchaseFilledCylinder",
       entityId: input.issueNo,
-      after: { ...input, unitCost: String(input.unitCost), gstAmount: String(input.gstAmount ?? 0) },
+      after: {
+        issueNo: input.issueNo,
+        vendorId: input.vendorId,
+        transactionDate: input.transactionDate,
+        remarks: input.remarks,
+        elevenPointEightKgPrice: String(input.elevenPointEightKgPrice ?? ""),
+        totalExGstAmount: String(grossAmount),
+        totalGstAmount: String(gstAmount),
+        totalIncGstAmount: String(payableAmount),
+        lines: lines.map((line) => {
+          const item = itemById.get(line.itemId);
+          return {
+            itemId: line.itemId,
+            item: item ? [item.code, item.name].filter(Boolean).join(" - ") : line.itemId,
+            cylinderState: line.cylinderState,
+            quantity: line.quantity,
+            unitCost: String(line.unitCost),
+            gstPercent: String(line.gstPercent),
+            gstAmount: String(line.gstAmount),
+            emptyReturnQuantity: line.emptyReturnQuantity,
+            exGstAmount: String(line.exGstAmount),
+            incGstAmount: String(line.incGstAmount),
+          };
+        }),
+      },
     });
 
-    return { voucher, stockEntries: [stockEntry] };
+    return {
+      issueNo: input.issueNo,
+      voucher,
+      stockEntries,
+      totalExGstAmount: grossAmount,
+      totalGstAmount: gstAmount,
+      totalIncGstAmount: payableAmount,
+    };
   });
 }

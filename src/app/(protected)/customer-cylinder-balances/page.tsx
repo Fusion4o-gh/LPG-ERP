@@ -1,3 +1,5 @@
+"use client";
+
 import { EntityList } from "@/components/EntityList";
 
 export default function CustomerCylinderBalancesPage() {

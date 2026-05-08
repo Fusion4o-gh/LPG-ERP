@@ -12,10 +12,25 @@ body {
   background: #f6f7f9;
   color: #17202a;
   font-family: Arial, Helvetica, sans-serif;
+  --fusion-cyan: #22e6f2;
+  --fusion-blue: #0477f2;
+  --fusion-gradient: linear-gradient(135deg, var(--fusion-cyan), var(--fusion-blue));
 }
 
 * {
   box-sizing: border-box;
+}
+
+.fusion-cyan {
+  color: var(--fusion-cyan);
+}
+
+.fusion-blue {
+  color: var(--fusion-blue);
+}
+
+.fusion-gradient {
+  background: var(--fusion-gradient);
 }
 
 @media print {

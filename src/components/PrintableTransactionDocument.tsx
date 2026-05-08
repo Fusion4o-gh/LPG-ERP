@@ -14,6 +14,7 @@ type PrintableDocument = {
   lineItems: Array<Record<string, unknown>>;
   voucherLines: Array<Record<string, unknown>>;
   totals: Record<string, unknown>;
+  invoiceLanguage?: string;
   generatedAt: string;
 };
 
@@ -30,6 +31,8 @@ export function PrintableTransactionDocument({ documentType, documentNo }: { doc
       .then((data) => setDocument(data.document))
       .catch((err: Error) => setError(err.message));
   }, [documentNo, documentType]);
+
+  const hasLineAmounts = document?.lineItems.some((line) => line.exGstAmount !== undefined || line.incGstAmount !== undefined) ?? false;
 
   return (
     <section data-report-print className="mx-auto max-w-4xl space-y-4 bg-white p-5 shadow-sm print:shadow-none">
@@ -64,6 +67,12 @@ export function PrintableTransactionDocument({ documentType, documentNo }: { doc
               <dt className="font-semibold text-slate-600">Generated</dt>
               <dd className="text-slate-950">{new Date(document.generatedAt).toLocaleString()}</dd>
             </div>
+            {document.invoiceLanguage ? (
+              <div>
+                <dt className="font-semibold text-slate-600">Invoice Language</dt>
+                <dd className="text-slate-950">{document.invoiceLanguage}</dd>
+              </div>
+            ) : null}
           </dl>
 
           {document.lineItems.length > 0 ? (
@@ -74,6 +83,10 @@ export function PrintableTransactionDocument({ documentType, documentNo }: { doc
                   <th className="border border-slate-200 px-3 py-2">State</th>
                   <th className="border border-slate-200 px-3 py-2">Direction</th>
                   <th className="border border-slate-200 px-3 py-2 text-right">Quantity</th>
+                  {hasLineAmounts ? <th className="border border-slate-200 px-3 py-2 text-right">Unit Price</th> : null}
+                  {hasLineAmounts ? <th className="border border-slate-200 px-3 py-2 text-right">GST</th> : null}
+                  {hasLineAmounts ? <th className="border border-slate-200 px-3 py-2 text-right">Ex-GST</th> : null}
+                  {hasLineAmounts ? <th className="border border-slate-200 px-3 py-2 text-right">Inc-GST</th> : null}
                 </tr>
               </thead>
               <tbody>
@@ -83,6 +96,10 @@ export function PrintableTransactionDocument({ documentType, documentNo }: { doc
                     <td className="border border-slate-200 px-3 py-2">{display(line.cylinderState)}</td>
                     <td className="border border-slate-200 px-3 py-2">{display(line.direction)}</td>
                     <td className="border border-slate-200 px-3 py-2 text-right">{display(line.quantity)}</td>
+                    {hasLineAmounts ? <td className="border border-slate-200 px-3 py-2 text-right">{display(line.unitPrice ?? line.unitCost)}</td> : null}
+                    {hasLineAmounts ? <td className="border border-slate-200 px-3 py-2 text-right">{display(line.gstAmount)}</td> : null}
+                    {hasLineAmounts ? <td className="border border-slate-200 px-3 py-2 text-right">{display(line.exGstAmount)}</td> : null}
+                    {hasLineAmounts ? <td className="border border-slate-200 px-3 py-2 text-right">{display(line.incGstAmount)}</td> : null}
                   </tr>
                 ))}
               </tbody>
@@ -132,6 +149,10 @@ export function PrintableTransactionDocument({ documentType, documentNo }: { doc
               {display(document.totals.totalCredit)}
             </div>
           </div>
+
+          <footer className="border-t border-slate-200 pt-3 text-center text-[11px] text-slate-500">
+            Powered by Fusion4o
+          </footer>
         </>
       ) : null}
     </section>

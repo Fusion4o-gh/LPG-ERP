@@ -30,6 +30,17 @@ const documentConfigs: Record<string, DocumentConfig> = {
     sourceType: "CylinderReturn",
     stockSourceType: StockSourceType.CYLINDER_RETURN,
   },
+  "purchase-return-cylinder": {
+    type: "Purchase Return Cylinder Receipt",
+    module: "purchase-filled-cylinders",
+    sourceType: "PurchaseReturnCylinder",
+    stockSourceType: StockSourceType.PURCHASE_RETURN,
+  },
+  "purchase-return-other": {
+    type: "Purchase Return Other Receipt",
+    module: "purchase-filled-cylinders",
+    sourceType: "PurchaseReturnOther",
+  },
   "cash-receipt": {
     type: "Cash Receipt Voucher",
     module: "cash-receipts",
@@ -67,6 +78,10 @@ function money(value: unknown) {
 
 function dateText(value: Date | string | null | undefined) {
   return value instanceof Date ? value.toISOString().slice(0, 10) : String(value ?? "");
+}
+
+function auditObject(value: unknown) {
+  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
 }
 
 export async function GET(request: Request, { params }: { params: Promise<{ documentType: string; documentNo: string }> }) {
@@ -121,6 +136,30 @@ export async function GET(request: Request, { params }: { params: Promise<{ docu
     const voucherPartyLine = voucher?.lines.find((line) => line.account && !line.debit.equals(0)) ?? voucher?.lines[0];
     const partyName = party ? [party.code, party.name].filter(Boolean).join(" - ") : voucherPartyLine?.account ? [voucherPartyLine.account.code, voucherPartyLine.account.name].filter(Boolean).join(" - ") : "";
     const date = dateText(voucher?.voucherDate ?? stockEntries[0]?.transactionDate);
+    const auditLineEntityType =
+      documentType === "purchase-filled-cylinder"
+        ? "PurchaseFilledCylinder"
+        : documentType === "sale-lpg"
+          ? "SaleLpg"
+          : documentType === "cylinder-return"
+            ? "CylinderReturn"
+            : documentType === "purchase-return-cylinder"
+              ? "PurchaseReturnCylinder"
+              : documentType === "purchase-return-other"
+                ? "PurchaseReturnOther"
+                : null;
+    const lineAudit =
+      auditLineEntityType
+        ? await prisma.auditLog.findFirst({
+            where: { companyId: context.companyId, entityType: auditLineEntityType, entityId: documentNo },
+            orderBy: { createdAt: "desc" },
+          })
+        : null;
+    const lineAuditAfter = auditObject(lineAudit?.after);
+    const auditLines = Array.isArray(lineAuditAfter.lines) ? (lineAuditAfter.lines as Array<Record<string, unknown>>) : null;
+
+    const auditPartyName = typeof lineAuditAfter.vendor === "string" ? lineAuditAfter.vendor : "";
+    const isPurchaseReturn = documentType === "purchase-return-cylinder" || documentType === "purchase-return-other";
 
     return ok({
       document: {
@@ -128,15 +167,18 @@ export async function GET(request: Request, { params }: { params: Promise<{ docu
         type: config.type,
         number: documentNo,
         date,
-        partyLabel: party ? (stockEntries[0]?.customer ? "Customer" : "Vendor") : "Account",
-        partyName,
-        lineItems: stockEntries.map((entry) => ({
-          id: entry.id,
-          item: [entry.item.code, entry.item.name].filter(Boolean).join(" - "),
-          cylinderState: entry.cylinderState,
-          direction: entry.direction,
-          quantity: entry.quantity,
-        })),
+        invoiceLanguage: documentType === "sale-lpg" ? String(lineAuditAfter.invoiceLanguage ?? "English") : undefined,
+        partyLabel: isPurchaseReturn ? "Vendor" : party ? (stockEntries[0]?.customer ? "Customer" : "Vendor") : "Account",
+        partyName: auditPartyName || partyName,
+        lineItems:
+          auditLines ??
+          stockEntries.map((entry) => ({
+            id: entry.id,
+            item: [entry.item.code, entry.item.name].filter(Boolean).join(" - "),
+            cylinderState: entry.cylinderState,
+            direction: entry.direction,
+            quantity: entry.quantity,
+          })),
         voucherLines:
           voucher?.lines.map((line) => ({
             id: line.id,

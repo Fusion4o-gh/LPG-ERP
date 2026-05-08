@@ -1,3 +1,5 @@
+"use client";
+
 import { ReportTableClient } from "../ReportTableClient";
 
 function money(value: unknown) {

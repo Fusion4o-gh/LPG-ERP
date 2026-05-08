@@ -18,8 +18,21 @@ type Role = {
   permissions: Permission[];
   users: User[];
 };
+type RoleListItem = Omit<Role, "permissions" | "users"> & {
+  permissions?: Array<Permission | { permission?: Permission | null }>;
+  users?: User[];
+  userRoles?: Array<{ user?: User | null }>;
+};
 
 const emptyForm = { name: "", description: "", status: "ACTIVE", permissionIds: [] as string[], userIds: [] as string[] };
+
+function normalizeRole(role: RoleListItem): Role {
+  return {
+    ...role,
+    permissions: (role.permissions ?? []).map((entry) => ("permission" in entry ? entry.permission : entry)).filter(Boolean) as Permission[],
+    users: role.users ?? (role.userRoles ?? []).map((entry) => entry.user).filter(Boolean) as User[],
+  };
+}
 
 export function RoleManagementClient({ canManage }: { canManage: boolean }) {
   const [roles, setRoles] = useState<Role[]>([]);
@@ -43,10 +56,10 @@ export function RoleManagementClient({ canManage }: { canManage: boolean }) {
   async function load() {
     setLoading(true);
     const [roleData, permissionData] = await Promise.all([
-      apiGet<{ roles: Role[]; users: User[] }>("/api/rbac/roles"),
+      apiGet<{ roles: RoleListItem[]; users: User[] }>("/api/rbac/roles"),
       apiGet<{ permissions: Permission[] }>("/api/rbac/permissions"),
     ]);
-    setRoles(roleData.roles);
+    setRoles(roleData.roles.map(normalizeRole));
     setUsers(roleData.users);
     setPermissions(permissionData.permissions);
     setLoading(false);

@@ -2,15 +2,21 @@ import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
 
 const reports = [
-  { title: "Stock Summary", href: "/reports/stock-summary", description: "Filled and empty cylinder movement by item." },
-  { title: "Customer Cylinder Balance", href: "/reports/customer-cylinder-balances", description: "Outstanding empty cylinders by customer and item." },
-  { title: "Daily Activity", href: "/reports/daily-activity", description: "Sales, purchases, returns, vouchers, and stock movement counts." },
-  { title: "Customer Ledger", href: "/reports/customer-ledger", description: "Customer debit, credit, and running balance from vouchers." },
-  { title: "Vendor Ledger", href: "/reports/vendor-ledger", description: "Vendor debit, credit, and running balance from vouchers." },
+  { title: "Sale B/W Date", href: "/reports/sale-between-dates", description: "Pending parity report for sale transactions between dates." },
+  { title: "Cylinder Conversion B/W Date", href: "/reports/cylinder-conversion-between-dates", description: "Pending parity report for cylinder conversion history." },
+  { title: "One Customer Sale History", href: "/reports/one-customer-sale-history", description: "Pending single-customer sale history report." },
+  { title: "Stock Report", href: "/reports/stock-summary", description: "Filled and empty cylinder movement by item." },
   { title: "Cash Book", href: "/reports/cash-book", description: "Cash and bank movement from voucher lines." },
-  { title: "Trial Balance", href: "/reports/trial-balance", description: "Debit, credit, and net balances by account." },
-  { title: "Profit & Loss", href: "/reports/profit-loss", description: "Revenue, expenses, and net profit or loss." },
-  { title: "Balance Sheet", href: "/reports/balance-sheet", description: "Assets, liabilities, equity, and balance check." },
+  { title: "Vendor Wise Receiving Report", href: "/reports/vendor-wise-receiving", description: "Pending vendor receiving report." },
+  { title: "General Ledger", href: "/reports/general-ledger", description: "Pending arbitrary account ledger report." },
+  { title: "Customer Ledger", href: "/reports/customer-ledger", description: "Customer debit, credit, and running balance from vouchers." },
+  { title: "Sale Return Report", href: "/reports/sale-return", description: "Pending sale return report." },
+  { title: "Purchase Return Report", href: "/reports/purchase-return", description: "Pending purchase return report." },
+  { title: "Customer Stock Ledger", href: "/reports/customer-stock-ledger", description: "Pending customer cylinder stock ledger report." },
+  { title: "Daily Activity Report", href: "/reports/daily-activity", description: "Sales, purchases, returns, vouchers, and stock movement counts." },
+  { title: "Access Cylinders", href: "/reports/customer-cylinder-balances", description: "Outstanding empty cylinders by customer and item." },
+  { title: "Salewise Profit", href: "/reports/salewise-profit", description: "Pending sale-wise profit report." },
+  { title: "Profit/Loss Report", href: "/reports/profit-loss", description: "Revenue, expenses, and net profit or loss." },
 ];
 
 export default function ReportsPage() {

@@ -60,6 +60,77 @@ test("purchase filled cylinder creates stock ledger, balanced voucher, vendor cy
   assert.ok(audit);
 });
 
+test("multi-line purchase filled cylinder creates one document with per-line stock, aggregate voucher, GST, empty return, and audit details", async () => {
+  const { company, financialYear, user, item, seedItem, vendor } = await fixture();
+  const secondItem = await prisma.item.create({
+    data: {
+      companyId: company.id,
+      code: doc("PUR-MULTI-ITEM"),
+      name: "Multi Purchase Cylinder",
+      categoryId: seedItem.categoryId,
+      brandId: seedItem.brandId,
+    },
+  });
+  await prisma.stockLedgerEntry.create({
+    data: {
+      companyId: company.id,
+      financialYearId: financialYear.id,
+      itemId: item.id,
+      cylinderState: "EMPTY",
+      direction: "IN",
+      sourceType: "OPENING_BALANCE",
+      sourceId: doc("OPEN-EMPTY"),
+      transactionDate: new Date("2026-07-14"),
+      quantity: 5,
+      balanceAfter: 5,
+      createdById: user.id,
+    },
+  });
+  const issueNo = doc("PUR-MULTI");
+
+  const result = await purchases.purchaseFilledCylinder({
+    companyId: company.id,
+    financialYearId: financialYear.id,
+    userId: user.id,
+    issueNo,
+    vendorId: vendor.id,
+    remarks: "Legacy GIRN multi-line receipt",
+    elevenPointEightKgPrice: 2400,
+    transactionDate: "2026-07-15",
+    lines: [
+      { itemId: item.id, cylinderState: "FILLED", quantity: 3, unitCost: 2500, gstPercent: 10, emptyReturnQuantity: 2 },
+      { itemId: secondItem.id, cylinderState: "FILLED", quantity: 2, unitCost: 1500, gstPercent: 5 },
+    ],
+  });
+
+  assert.equal(result.issueNo, issueNo);
+  assert.equal(result.stockEntries.length, 3);
+  assert.equal(Number(result.totalExGstAmount), 10500);
+  assert.equal(Number(result.totalGstAmount), 900);
+  assert.equal(Number(result.totalIncGstAmount), 11400);
+  assert.equal(Number(result.voucher.totalDebit), 11400);
+  assert.equal(Number(result.voucher.totalCredit), 11400);
+
+  const stockEntries = await prisma.stockLedgerEntry.findMany({
+    where: { sourceId: issueNo },
+    orderBy: [{ cylinderState: "asc" }, { direction: "asc" }, { quantity: "asc" }],
+  });
+  assert.equal(stockEntries.length, 3);
+  assert.equal(stockEntries.filter((entry) => entry.direction === "IN").length, 2);
+  assert.equal(stockEntries.filter((entry) => entry.direction === "OUT").length, 1);
+  assert.equal(stockEntries.find((entry) => entry.direction === "OUT")?.quantity, 2);
+
+  const vendorBalance = await prisma.vendorCylinderReturnBalance.findUniqueOrThrow({
+    where: { vendorId_itemId: { vendorId: vendor.id, itemId: item.id } },
+  });
+  assert.equal(vendorBalance.emptyDue, 1);
+
+  const audit = await prisma.auditLog.findFirstOrThrow({ where: { entityType: "PurchaseFilledCylinder", entityId: issueNo } });
+  assert.equal(audit.after.lines.length, 2);
+  assert.equal(audit.after.lines[0].gstAmount, "750");
+  assert.equal(audit.after.lines[0].incGstAmount, "8250");
+});
+
 test("single LPG sale creates stock ledger, balanced voucher, customer cylinder accountability, and audit log", async () => {
   const { company, financialYear, user, item, customer, vendor } = await fixture();
 
@@ -98,6 +169,95 @@ test("single LPG sale creates stock ledger, balanced voucher, customer cylinder 
 
   const audit = await prisma.auditLog.findFirst({ where: { entityType: "SaleLpg", entityId: issueNo } });
   assert.ok(audit);
+});
+
+test("multi-line LPG sale creates one document with sale stock outs, same-sale empty returns, aggregate voucher, GST, security, and audit details", async () => {
+  const { company, financialYear, user, item, seedItem, customer, vendor } = await fixture();
+  const secondItem = await prisma.item.create({
+    data: {
+      companyId: company.id,
+      code: doc("SALE-MULTI-ITEM"),
+      name: "Multi Sale Cylinder",
+      categoryId: seedItem.categoryId,
+      brandId: seedItem.brandId,
+    },
+  });
+
+  await purchases.purchaseFilledCylinder({
+    companyId: company.id,
+    financialYearId: financialYear.id,
+    userId: user.id,
+    issueNo: doc("PUR-SALE-MULTI-1"),
+    vendorId: vendor.id,
+    itemId: item.id,
+    quantity: 5,
+    unitCost: 2200,
+    transactionDate: "2026-07-16",
+  });
+  await purchases.purchaseFilledCylinder({
+    companyId: company.id,
+    financialYearId: financialYear.id,
+    userId: user.id,
+    issueNo: doc("PUR-SALE-MULTI-2"),
+    vendorId: vendor.id,
+    itemId: secondItem.id,
+    quantity: 3,
+    unitCost: 1800,
+    transactionDate: "2026-07-16",
+  });
+
+  const issueNo = doc("SALE-MULTI");
+  const result = await sales.saleLpgSingle({
+    companyId: company.id,
+    financialYearId: financialYear.id,
+    userId: user.id,
+    issueNo,
+    customerId: customer.id,
+    saleType: "Direct",
+    remarks: "Legacy multi-line sale invoice",
+    elevenPointEightKgPrice: 3300,
+    invoiceLanguage: "Urdu",
+    transactionDate: "2026-07-16",
+    lines: [
+      { itemId: item.id, quantity: 2, unitPrice: 3000, gstPercent: 10, securityDepositAmount: 500, emptyReturnItemId: item.id, emptyReturnQuantity: 1 },
+      { itemId: secondItem.id, quantity: 1, unitPrice: 2000, gstPercent: 5, securityDepositAmount: 250 },
+    ],
+  });
+
+  assert.equal(result.issueNo, issueNo);
+  assert.equal(result.stockEntries.length, 3);
+  assert.equal(Number(result.totalExGstAmount), 8000);
+  assert.equal(Number(result.totalGstAmount), 700);
+  assert.equal(Number(result.totalSecurityAmount), 750);
+  assert.equal(Number(result.totalReceivableAmount), 9450);
+  assert.equal(Number(result.voucher.totalDebit), 9450);
+  assert.equal(Number(result.voucher.totalCredit), 9450);
+
+  const stockEntries = await prisma.stockLedgerEntry.findMany({
+    where: { sourceId: issueNo },
+    orderBy: [{ direction: "asc" }, { cylinderState: "asc" }, { quantity: "asc" }],
+  });
+  assert.equal(stockEntries.filter((entry) => entry.direction === "OUT" && entry.cylinderState === "FILLED").length, 2);
+  assert.equal(stockEntries.filter((entry) => entry.direction === "IN" && entry.cylinderState === "EMPTY").length, 1);
+  assert.equal(stockEntries.find((entry) => entry.direction === "IN" && entry.cylinderState === "EMPTY")?.quantity, 1);
+
+  const firstBalance = await prisma.customerCylinderBalance.findUniqueOrThrow({
+    where: { customerId_itemId: { customerId: customer.id, itemId: item.id } },
+  });
+  assert.equal(firstBalance.emptyOwed, 1);
+  assert.equal(Number(firstBalance.securityHeld), 500);
+
+  const secondBalance = await prisma.customerCylinderBalance.findUniqueOrThrow({
+    where: { customerId_itemId: { customerId: customer.id, itemId: secondItem.id } },
+  });
+  assert.equal(secondBalance.emptyOwed, 1);
+  assert.equal(Number(secondBalance.securityHeld), 250);
+
+  const audit = await prisma.auditLog.findFirstOrThrow({ where: { entityType: "SaleLpg", entityId: issueNo } });
+  assert.equal(audit.after.invoiceLanguage, "Urdu");
+  assert.equal(audit.after.lines.length, 2);
+  assert.equal(audit.after.lines[0].gstAmount, "600");
+  assert.equal(audit.after.lines[0].incGstAmount, "6600");
 });
 
 test("complete day LPG sale batch processes multiple sales in one transaction", async () => {
@@ -141,6 +301,104 @@ test("complete day LPG sale batch processes multiple sales in one transaction", 
   });
 
   assert.equal(result.sales.length, 2);
+});
+
+test("complete day sale batch supports multi-item rows, cash receipts, credit rows, partial cash, stock, cylinders, and batch audit", async () => {
+  const { company, financialYear, user, item, seedItem, customer, seedCustomer, vendor } = await fixture();
+  const secondItem = await prisma.item.create({
+    data: {
+      companyId: company.id,
+      code: doc("DAY-MULTI-ITEM-2"),
+      name: "Day Sale Multi Cylinder 2",
+      categoryId: seedItem.categoryId,
+      brandId: seedItem.brandId,
+    },
+  });
+  const thirdItem = await prisma.item.create({
+    data: {
+      companyId: company.id,
+      code: doc("DAY-MULTI-ITEM-3"),
+      name: "Day Sale Multi Cylinder 3",
+      categoryId: seedItem.categoryId,
+      brandId: seedItem.brandId,
+    },
+  });
+  const creditCustomer = await prisma.customer.create({
+    data: {
+      companyId: company.id,
+      code: doc("DAY-CREDIT-C"),
+      name: "Day Credit Customer",
+      accountId: seedCustomer.accountId,
+    },
+  });
+
+  await purchases.purchaseFilledCylinder({
+    companyId: company.id,
+    financialYearId: financialYear.id,
+    userId: user.id,
+    issueNo: doc("PUR-DAY-MULTI"),
+    vendorId: vendor.id,
+    transactionDate: "2026-07-17",
+    lines: [
+      { itemId: item.id, quantity: 5, unitCost: 2200 },
+      { itemId: secondItem.id, quantity: 4, unitCost: 1800 },
+      { itemId: thirdItem.id, quantity: 3, unitCost: 1600 },
+    ],
+  });
+
+  const batchNo = doc("DAY-BATCH");
+  const result = await sales.saleLpgCompleteDayBatch({
+    companyId: company.id,
+    financialYearId: financialYear.id,
+    userId: user.id,
+    batchNo,
+    transactionDate: "2026-07-17",
+    remarks: "Legacy complete day sale",
+    sales: [
+      {
+        customerId: customer.id,
+        elevenPointEightKgPrice: 3300,
+        paymentType: "Cash",
+        amountReceived: 4000,
+        lines: [
+          { itemId: item.id, quantity: 1, unitPrice: 3000 },
+          { itemId: secondItem.id, quantity: 2, unitPrice: 2000 },
+          { itemId: thirdItem.id, quantity: 1, unitPrice: 1000 },
+        ],
+      },
+      {
+        customerId: creditCustomer.id,
+        elevenPointEightKgPrice: 3400,
+        paymentType: "Credit",
+        amountReceived: 0,
+        lines: [{ itemId: item.id, quantity: 1, unitPrice: 3200 }],
+      },
+    ],
+  });
+
+  assert.equal(result.sales.length, 2);
+  assert.equal(result.issueNos.length, 2);
+  assert.notEqual(result.issueNos[0], result.issueNos[1]);
+  assert.equal(result.cashReceipts.length, 1);
+  assert.equal(Number(result.cashReceipts[0].voucher.totalDebit), 4000);
+  assert.equal(Number(result.sales[0].voucher.totalDebit), 8000);
+  assert.equal(Number(result.sales[1].voucher.totalDebit), 3200);
+
+  const stockEntries = await prisma.stockLedgerEntry.findMany({ where: { sourceId: { in: result.issueNos } } });
+  assert.equal(stockEntries.filter((entry) => entry.direction === "OUT" && entry.cylinderState === "FILLED").length, 4);
+
+  const firstBalance = await prisma.customerCylinderBalance.findUniqueOrThrow({
+    where: { customerId_itemId: { customerId: customer.id, itemId: secondItem.id } },
+  });
+  assert.equal(firstBalance.emptyOwed, 2);
+
+  const cashReceiptVouchers = await prisma.accountingVoucher.findMany({ where: { sourceType: "CashReceipt", sourceId: { startsWith: "CRV-" } } });
+  assert.equal(cashReceiptVouchers.some((voucher) => Number(voucher.totalDebit) === 4000), true);
+
+  const batchAudit = await prisma.auditLog.findFirstOrThrow({ where: { entityType: "CompleteDaySaleBatch", entityId: batchNo } });
+  assert.equal(batchAudit.after.count, 2);
+  assert.equal(batchAudit.after.rows[0].paymentType, "Cash");
+  assert.equal(batchAudit.after.rows[1].paymentType, "Credit");
 });
 
 test("cylinder return reduces customer empty cylinder accountability and creates stock/audit entries", async () => {
@@ -198,6 +456,84 @@ test("cylinder return reduces customer empty cylinder accountability and creates
     where: { customerId_itemId: { customerId: isolatedCustomer.id, itemId: item.id } },
   });
   assert.equal(after.emptyOwed, before.emptyOwed - 1);
+});
+
+test("multi-line cylinder return supports empty and filled returns with one return number, stock, voucher, cylinder balance, and audit", async () => {
+  const { company, financialYear, user, item, seedItem, customer, vendor } = await fixture();
+  const secondItem = await prisma.item.create({
+    data: {
+      companyId: company.id,
+      code: doc("RET-MULTI-ITEM"),
+      name: "Return Multi Cylinder",
+      categoryId: seedItem.categoryId,
+      brandId: seedItem.brandId,
+    },
+  });
+  await purchases.purchaseFilledCylinder({
+    companyId: company.id,
+    financialYearId: financialYear.id,
+    userId: user.id,
+    issueNo: doc("PUR-RET-MULTI"),
+    vendorId: vendor.id,
+    transactionDate: "2026-07-18",
+    lines: [
+      { itemId: item.id, quantity: 3, unitCost: 2200 },
+      { itemId: secondItem.id, quantity: 2, unitCost: 1800 },
+    ],
+  });
+  await sales.saleLpgSingle({
+    companyId: company.id,
+    financialYearId: financialYear.id,
+    userId: user.id,
+    issueNo: doc("SALE-RET-MULTI"),
+    customerId: customer.id,
+    transactionDate: "2026-07-18",
+    lines: [
+      { itemId: item.id, quantity: 2, unitPrice: 3000 },
+      { itemId: secondItem.id, quantity: 1, unitPrice: 2000 },
+    ],
+  });
+
+  const returnNo = doc("RET-MULTI");
+  const result = await returns.cylinderReturn({
+    companyId: company.id,
+    financialYearId: financialYear.id,
+    userId: user.id,
+    returnNo,
+    customerId: customer.id,
+    transactionDate: "2026-07-19",
+    remarks: "Legacy sale return",
+    lines: [
+      { itemId: item.id, returnType: "Empty", quantity: 1 },
+      { itemId: secondItem.id, returnType: "Filled", quantity: 1, unitPrice: 2000, gstPercent: 5 },
+    ],
+  });
+
+  assert.equal(result.returnNo, returnNo);
+  assert.equal(result.stockEntries.length, 2);
+  assert.equal(Number(result.totalReturnAmount), 2100);
+  assert.equal(Number(result.voucher.totalDebit), 2100);
+  assert.equal(Number(result.voucher.totalCredit), 2100);
+
+  const stockEntries = await prisma.stockLedgerEntry.findMany({ where: { sourceId: returnNo } });
+  assert.equal(stockEntries.filter((entry) => entry.cylinderState === "EMPTY" && entry.direction === "IN").length, 1);
+  assert.equal(stockEntries.filter((entry) => entry.cylinderState === "FILLED" && entry.direction === "IN").length, 1);
+
+  const emptyBalance = await prisma.customerCylinderBalance.findUniqueOrThrow({
+    where: { customerId_itemId: { customerId: customer.id, itemId: item.id } },
+  });
+  assert.equal(emptyBalance.emptyOwed, 1);
+
+  const filledBalance = await prisma.customerCylinderBalance.findUniqueOrThrow({
+    where: { customerId_itemId: { customerId: customer.id, itemId: secondItem.id } },
+  });
+  assert.equal(filledBalance.emptyOwed, 0);
+
+  const audit = await prisma.auditLog.findFirstOrThrow({ where: { entityType: "CylinderReturn", entityId: returnNo } });
+  assert.equal(audit.after.lines.length, 2);
+  assert.equal(audit.after.lines[0].returnType, "Empty");
+  assert.equal(audit.after.lines[1].returnType, "Filled");
+  assert.equal(audit.after.lines[1].totalAmount, "2100");
 });
 
 test("RBAC denial prevents write services from creating stock or audit entries", async () => {
