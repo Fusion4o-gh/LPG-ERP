@@ -1,5 +1,5 @@
-import { ComingSoonPage } from "@/components/ComingSoonPage";
+import { PurchaseEmptyOtherForm } from "@/components/PurchaseEmptyOtherForm";
 
 export default function PurchaseOtherPage() {
-  return <ComingSoonPage title="Purchase Other" section="Sale/Purchase" legacyPath="/Purchaseother" />;
+  return <PurchaseEmptyOtherForm kind="Other" />;
 }

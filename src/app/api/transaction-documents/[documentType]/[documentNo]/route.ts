@@ -24,6 +24,18 @@ const documentConfigs: Record<string, DocumentConfig> = {
     sourceType: "PurchaseFilledCylinder",
     stockSourceType: StockSourceType.PURCHASE_FILLED,
   },
+  "purchase-empty-cylinder": {
+    type: "Purchase Empty Cylinder Receipt",
+    module: "purchase-filled-cylinders",
+    sourceType: "PurchaseEmptyCylinder",
+    stockSourceType: StockSourceType.PURCHASE_FILLED,
+  },
+  "purchase-other": {
+    type: "Purchase Other Receipt",
+    module: "purchase-filled-cylinders",
+    sourceType: "PurchaseOther",
+    stockSourceType: StockSourceType.PURCHASE_FILLED,
+  },
   "cylinder-return": {
     type: "Cylinder Return Receipt",
     module: "cylinder-returns",
@@ -139,7 +151,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ docu
     const auditLineEntityType =
       documentType === "purchase-filled-cylinder"
         ? "PurchaseFilledCylinder"
-        : documentType === "sale-lpg"
+        : documentType === "purchase-empty-cylinder"
+          ? "PurchaseEmptyCylinder"
+          : documentType === "purchase-other"
+            ? "PurchaseOther"
+            : documentType === "sale-lpg"
           ? "SaleLpg"
           : documentType === "cylinder-return"
             ? "CylinderReturn"
@@ -159,7 +175,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ docu
     const auditLines = Array.isArray(lineAuditAfter.lines) ? (lineAuditAfter.lines as Array<Record<string, unknown>>) : null;
 
     const auditPartyName = typeof lineAuditAfter.vendor === "string" ? lineAuditAfter.vendor : "";
-    const isPurchaseReturn = documentType === "purchase-return-cylinder" || documentType === "purchase-return-other";
+    const isPurchaseVendorDocument = documentType === "purchase-return-cylinder" || documentType === "purchase-return-other" || documentType === "purchase-empty-cylinder" || documentType === "purchase-other";
 
     return ok({
       document: {
@@ -168,7 +184,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ docu
         number: documentNo,
         date,
         invoiceLanguage: documentType === "sale-lpg" ? String(lineAuditAfter.invoiceLanguage ?? "English") : undefined,
-        partyLabel: isPurchaseReturn ? "Vendor" : party ? (stockEntries[0]?.customer ? "Customer" : "Vendor") : "Account",
+        partyLabel: isPurchaseVendorDocument ? "Vendor" : party ? (stockEntries[0]?.customer ? "Customer" : "Vendor") : "Account",
         partyName: auditPartyName || partyName,
         lineItems:
           auditLines ??
