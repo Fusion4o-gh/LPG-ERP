@@ -1,5 +1,5 @@
-import { ComingSoonPage } from "@/components/ComingSoonPage";
+import { DecantingSaleForm } from "@/components/DecantingSaleForm";
 
 export default function DecantingSalePage() {
-  return <ComingSoonPage title="Decanting Sale" section="Sale/Purchase" legacyPath="/decanting" />;
+  return <DecantingSaleForm />;
 }

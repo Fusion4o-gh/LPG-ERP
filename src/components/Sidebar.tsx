@@ -30,7 +30,7 @@ const groups = [
       { label: "Purchase Empty Cylinder", href: "/sale-purchase/purchase-empty-cylinder", module: "purchase-filled-cylinders" },
       { label: "Purchase Other", href: "/sale-purchase/purchase-other", module: "purchase-filled-cylinders" },
       { label: "Sale LPG", href: "/operations/sale-lpg", module: "sale-lpg" },
-      { label: "Decanting Sale", href: "/sale-purchase/decanting-sale", module: "sale-lpg" },
+      { label: "Decanting Sale", href: "/sale-purchase/decanting-sale", module: "decanting-sales" },
       { label: "Cylinder Conversion", href: "/sale-purchase/cylinder-conversion", module: "cylinder-conversions" },
       { label: "Empty Sale", href: "/sale-purchase/empty-sale", module: "empty-sales" },
     ],

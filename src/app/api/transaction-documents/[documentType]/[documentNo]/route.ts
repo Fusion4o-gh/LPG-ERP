@@ -54,6 +54,12 @@ const documentConfigs: Record<string, DocumentConfig> = {
     sourceType: "EmptySale",
     stockSourceType: StockSourceType.SALE_LPG,
   },
+  "decanting-sale": {
+    type: "Decanting Sale Document",
+    module: "decanting-sales",
+    sourceType: "DecantingSale",
+    stockSourceType: StockSourceType.SALE_LPG,
+  },
   "purchase-return-cylinder": {
     type: "Purchase Return Cylinder Receipt",
     module: "purchase-filled-cylinders",
@@ -175,11 +181,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ docu
                 ? "CylinderConversion"
                 : documentType === "empty-sale"
                   ? "EmptySale"
-                  : documentType === "purchase-return-cylinder"
-                    ? "PurchaseReturnCylinder"
-                    : documentType === "purchase-return-other"
-                      ? "PurchaseReturnOther"
-                      : null;
+                  : documentType === "decanting-sale"
+                    ? "DecantingSale"
+                    : documentType === "purchase-return-cylinder"
+                      ? "PurchaseReturnCylinder"
+                      : documentType === "purchase-return-other"
+                        ? "PurchaseReturnOther"
+                        : null;
     const lineAudit =
       auditLineEntityType
         ? await prisma.auditLog.findFirst({

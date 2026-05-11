@@ -16,6 +16,7 @@ const modules = [
   "sale-lpg",
   "cylinder-conversions",
   "empty-sales",
+  "decanting-sales",
   "cylinder-returns",
   "cash-receipts",
   "cash-payments",

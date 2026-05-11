@@ -13,6 +13,7 @@ export const DOCUMENT_PREFIXES = {
   securityReceipt: "SR",
   cylinderConversion: "CC",
   emptySaleIssue: "ES",
+  decantingSaleIssue: "DS",
 } as const;
 
 type Tx = Prisma.TransactionClient;
