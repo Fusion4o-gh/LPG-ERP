@@ -33,6 +33,7 @@ export function PrintableTransactionDocument({ documentType, documentNo }: { doc
   }, [documentNo, documentType]);
 
   const hasLineAmounts = document?.lineItems.some((line) => line.exGstAmount !== undefined || line.incGstAmount !== undefined) ?? false;
+  const hasSections = document?.lineItems.some((line) => line.section !== undefined) ?? false;
 
   return (
     <section data-report-print className="mx-auto max-w-4xl space-y-4 bg-white p-5 shadow-sm print:shadow-none">
@@ -79,6 +80,7 @@ export function PrintableTransactionDocument({ documentType, documentNo }: { doc
             <table className="w-full border-collapse text-sm">
               <thead className="bg-slate-100 text-left">
                 <tr>
+                  {hasSections ? <th className="border border-slate-200 px-3 py-2">Section</th> : null}
                   <th className="border border-slate-200 px-3 py-2">Item</th>
                   <th className="border border-slate-200 px-3 py-2">State</th>
                   <th className="border border-slate-200 px-3 py-2">Direction</th>
@@ -92,6 +94,7 @@ export function PrintableTransactionDocument({ documentType, documentNo }: { doc
               <tbody>
                 {document.lineItems.map((line) => (
                   <tr key={display(line.id)}>
+                    {hasSections ? <td className="border border-slate-200 px-3 py-2">{display(line.section)}</td> : null}
                     <td className="border border-slate-200 px-3 py-2">{display(line.item)}</td>
                     <td className="border border-slate-200 px-3 py-2">{display(line.cylinderState)}</td>
                     <td className="border border-slate-200 px-3 py-2">{display(line.direction)}</td>

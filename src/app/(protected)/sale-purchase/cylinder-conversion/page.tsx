@@ -1,5 +1,5 @@
-import { ComingSoonPage } from "@/components/ComingSoonPage";
+import { CylinderConversionForm } from "@/components/CylinderConversionForm";
 
 export default function CylinderConversionPage() {
-  return <ComingSoonPage title="Cylinder Conversion" section="Sale/Purchase" legacyPath="/CylinderConversion" />;
+  return <CylinderConversionForm />;
 }
