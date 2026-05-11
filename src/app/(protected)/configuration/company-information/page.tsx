@@ -1,5 +1,5 @@
-import { ComingSoonPage } from "@/components/ComingSoonPage";
+import { CompanyInformationForm } from "@/components/CompanyInformationForm";
 
 export default function CompanyInformationPage() {
-  return <ComingSoonPage title="Company Information" section="Configuration" legacyPath="/Company" />;
+  return <CompanyInformationForm />;
 }
