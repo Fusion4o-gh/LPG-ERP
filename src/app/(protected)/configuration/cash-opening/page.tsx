@@ -1,5 +1,5 @@
-import { ComingSoonPage } from "@/components/ComingSoonPage";
+import { CashOpeningManager } from "@/components/OpeningBalanceManagers";
 
 export default function CashOpeningPage() {
-  return <ComingSoonPage title="Cash Opening" section="Configuration" legacyPath="/cashopening" />;
+  return <CashOpeningManager />;
 }

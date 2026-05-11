@@ -25,6 +25,11 @@ export async function apiPut<T>(url: string, body: Record<string, unknown>): Pro
   return parseResponse<T>(response);
 }
 
+export async function apiDelete<T>(url: string): Promise<ApiResult<T>> {
+  const response = await fetch(url, { method: "DELETE" });
+  return parseResponse<T>(response);
+}
+
 async function parseResponse<T>(response: Response): Promise<ApiResult<T>> {
   const data = await response.json();
   if (!response.ok || !data.success) {

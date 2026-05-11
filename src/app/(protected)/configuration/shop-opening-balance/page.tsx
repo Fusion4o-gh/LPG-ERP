@@ -1,5 +1,5 @@
-import { ComingSoonPage } from "@/components/ComingSoonPage";
+import { ShopOpeningBalanceManager } from "@/components/OpeningBalanceManagers";
 
 export default function ShopOpeningBalancePage() {
-  return <ComingSoonPage title="Shop Opening Balance" section="Configuration" legacyPath="/ShopOpeningBalance" />;
+  return <ShopOpeningBalanceManager />;
 }
