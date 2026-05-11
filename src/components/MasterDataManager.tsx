@@ -9,7 +9,11 @@ import { FormSection } from "./FormSection";
 import { PageHeader } from "./PageHeader";
 import { SuccessMessage } from "./SuccessMessage";
 
-type Field = FormFieldDefinition & { options?: string[] };
+type Option = { value: string; label: string };
+type Field = FormFieldDefinition & {
+  options?: string[];
+  optionSource?: { endpoint: string; dataKey: string; valueKey?: string; labelKey?: string };
+};
 type Column = { key: string; label: string };
 
 const highRiskEndpoints = new Set(["/api/banks", "/api/items", "/api/chart-of-accounts"]);
@@ -34,6 +38,7 @@ export function MasterDataManager({
   columns: Column[];
 }) {
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
+  const [dynamicOptions, setDynamicOptions] = useState<Record<string, Option[]>>({});
   const [values, setValues] = useState<Record<string, string>>(emptyValues(fields));
   const [editingId, setEditingId] = useState("");
   const [loading, setLoading] = useState(true);
@@ -44,8 +49,27 @@ export function MasterDataManager({
 
   async function load() {
     setLoading(true);
-    const data = await apiGet<Record<string, Record<string, unknown>[]>>(`${endpoint}?all=1`);
+    const optionFields = fields.filter((field) => field.optionSource);
+    const [data, ...optionData] = await Promise.all([
+      apiGet<Record<string, Record<string, unknown>[]>>(`${endpoint}?all=1`),
+      ...optionFields.map((field) => apiGet<Record<string, Record<string, unknown>[]>>(`${field.optionSource?.endpoint}?all=1`)),
+    ]);
     setRows(data[dataKey] ?? []);
+    setDynamicOptions(
+      Object.fromEntries(
+        optionFields.map((field, index) => {
+          const source = field.optionSource as NonNullable<Field["optionSource"]>;
+          const sourceRows = optionData[index][source.dataKey] ?? [];
+          return [
+            field.name,
+            sourceRows.map((row) => ({
+              value: String(row[source.valueKey ?? "id"] ?? ""),
+              label: String(row[source.labelKey ?? "name"] ?? ""),
+            })),
+          ];
+        }),
+      ),
+    );
     setLoading(false);
   }
 
@@ -113,11 +137,12 @@ export function MasterDataManager({
                     {field.label}
                     {field.required ? <span className="text-red-600"> *</span> : null}
                   </span>
-                  {field.options ? (
+                  {field.options || field.optionSource ? (
                     <select value={values[field.name] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [field.name]: event.target.value }))} className="w-full rounded-md border border-slate-300 bg-white px-3 py-2">
-                      {field.options.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
+                      {field.optionSource ? <option value="">Select {field.label}</option> : null}
+                      {(field.optionSource ? dynamicOptions[field.name] ?? [] : field.options?.map((option) => ({ value: option, label: option })) ?? []).map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
                         </option>
                       ))}
                     </select>
