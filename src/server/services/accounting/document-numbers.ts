@@ -12,6 +12,7 @@ export const DOCUMENT_PREFIXES = {
   bankPaymentVoucher: "BPV",
   securityReceipt: "SR",
   cylinderConversion: "CC",
+  emptySaleIssue: "ES",
 } as const;
 
 type Tx = Prisma.TransactionClient;

@@ -48,6 +48,12 @@ const documentConfigs: Record<string, DocumentConfig> = {
     sourceType: "CylinderConversion",
     stockSourceType: StockSourceType.ADJUSTMENT,
   },
+  "empty-sale": {
+    type: "Empty Sale Invoice",
+    module: "empty-sales",
+    sourceType: "EmptySale",
+    stockSourceType: StockSourceType.SALE_LPG,
+  },
   "purchase-return-cylinder": {
     type: "Purchase Return Cylinder Receipt",
     module: "purchase-filled-cylinders",
@@ -167,11 +173,13 @@ export async function GET(request: Request, { params }: { params: Promise<{ docu
               ? "CylinderReturn"
               : documentType === "cylinder-conversion"
                 ? "CylinderConversion"
-                : documentType === "purchase-return-cylinder"
-                  ? "PurchaseReturnCylinder"
-                  : documentType === "purchase-return-other"
-                    ? "PurchaseReturnOther"
-                    : null;
+                : documentType === "empty-sale"
+                  ? "EmptySale"
+                  : documentType === "purchase-return-cylinder"
+                    ? "PurchaseReturnCylinder"
+                    : documentType === "purchase-return-other"
+                      ? "PurchaseReturnOther"
+                      : null;
     const lineAudit =
       auditLineEntityType
         ? await prisma.auditLog.findFirst({
@@ -182,7 +190,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ docu
     const lineAuditAfter = auditObject(lineAudit?.after);
     const auditLines = Array.isArray(lineAuditAfter.lines) ? (lineAuditAfter.lines as Array<Record<string, unknown>>) : null;
 
-    const auditPartyName = typeof lineAuditAfter.vendor === "string" ? lineAuditAfter.vendor : "";
+    const auditPartyName = typeof lineAuditAfter.vendor === "string" ? lineAuditAfter.vendor : typeof lineAuditAfter.customer === "string" ? lineAuditAfter.customer : "";
     const isPurchaseVendorDocument = documentType === "purchase-return-cylinder" || documentType === "purchase-return-other" || documentType === "purchase-empty-cylinder" || documentType === "purchase-other";
 
     return ok({
