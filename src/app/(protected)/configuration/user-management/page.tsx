@@ -1,5 +1,5 @@
-import { ComingSoonPage } from "@/components/ComingSoonPage";
+import { UserManagementClient } from "./UserManagementClient";
 
 export default function UserManagementPage() {
-  return <ComingSoonPage title="User Management" section="Configuration" legacyPath="/User" relatedLinks={[{ href: "/settings/roles", label: "Roles & Permissions" }]} />;
+  return <UserManagementClient />;
 }
