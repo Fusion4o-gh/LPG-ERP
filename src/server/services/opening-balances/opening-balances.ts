@@ -23,6 +23,13 @@ type CashOpeningInput = {
   balanceType?: string;
 };
 
+type CustomerOpeningInput = {
+  customerId: string;
+  amount: string | number;
+  transactionDate: string | Date;
+  balanceType?: string;
+};
+
 function positiveInteger(value: number, field: string) {
   if (!Number.isInteger(value) || value <= 0) throw new Error(`${field} must be a positive integer.`);
   return value;
@@ -136,6 +143,31 @@ async function cashHasTransactions(tx: Tx, companyId: string, financialYearId: s
   return count > 0;
 }
 
+async function customerAccount(tx: Tx, companyId: string, customerId: string) {
+  const customer = await tx.customer.findFirst({
+    where: { id: customerId, companyId, status: "ACTIVE" },
+    select: { id: true, code: true, name: true, accountId: true, account: { select: { id: true, code: true, name: true } } },
+  });
+  if (!customer) throw new Error("customerId must reference an active customer.");
+  return customer;
+}
+
+async function customerHasLaterTransactions(tx: Tx, companyId: string, financialYearId: string, accountId: string, openingDate: Date, excludeVoucherId?: string) {
+  const count = await tx.accountingVoucherLine.count({
+    where: {
+      accountId,
+      voucher: {
+        companyId,
+        financialYearId,
+        sourceType: { not: "CustomerOpeningBalance" },
+        voucherDate: { gt: openingDate },
+        ...(excludeVoucherId ? { NOT: { id: excludeVoucherId } } : {}),
+      },
+    },
+  });
+  return count > 0;
+}
+
 async function serializeShopEntry(tx: Tx, entry: { id: string; companyId: string; financialYearId: string; itemId: string; cylinderState: CylinderState }) {
   const locked = await stockHasTransactions(tx, entry.companyId, entry.financialYearId, entry.itemId, entry.cylinderState, entry.id);
   const full = await tx.stockLedgerEntry.findUniqueOrThrow({
@@ -160,6 +192,29 @@ async function serializeCashVoucher(tx: Tx, voucherId: string) {
     balanceType: cashLine && Number(cashLine.debit) > 0 ? "DEBIT" : "CREDIT",
     accountId: cashLine?.accountId ?? "",
     account: cashLine?.account ?? null,
+    locked,
+  };
+}
+
+async function serializeCustomerOpeningVoucher(tx: Tx, voucherId: string) {
+  const voucher = await tx.accountingVoucher.findUniqueOrThrow({
+    where: { id: voucherId },
+    include: { lines: { include: { account: { select: { id: true, code: true, name: true } } }, orderBy: { sortOrder: "asc" } } },
+  });
+  const customer = await tx.customer.findFirst({
+    where: { companyId: voucher.companyId, accountId: { in: voucher.lines.map((line) => line.accountId) } },
+    select: { id: true, code: true, name: true, accountId: true },
+  });
+  const customerLine = customer ? voucher.lines.find((line) => line.accountId === customer.accountId) : undefined;
+  const locked = customerLine ? await customerHasLaterTransactions(tx, voucher.companyId, voucher.financialYearId, customerLine.accountId, voucher.voucherDate, voucher.id) : true;
+  return {
+    id: voucher.id,
+    voucherNo: voucher.voucherNo,
+    voucherDate: voucher.voucherDate,
+    amount: voucher.totalDebit,
+    balanceType: customerLine && Number(customerLine.debit) > 0 ? "DEBIT" : "CREDIT",
+    customerId: customer?.id ?? "",
+    customer: customer ? { id: customer.id, code: customer.code, name: customer.name } : null,
     locked,
   };
 }
@@ -228,6 +283,136 @@ export async function deleteShopOpeningBalance(context: Context, id: string) {
     if (await stockHasTransactions(tx, context.companyId, context.financialYearId, before.itemId, before.cylinderState, id)) throw new Error("Opening stock is locked because transactions exist.");
     await tx.stockLedgerEntry.delete({ where: { id } });
     await writeAuditLog(tx, { companyId: context.companyId, userId: context.userId, action: AuditAction.DELETE, entityType: "ShopOpeningBalance", entityId: id, before });
+    return { id };
+  });
+}
+
+export async function listCustomerOpeningBalances(context: Context) {
+  return prisma.$transaction(async (tx) => {
+    await enforcePermission(tx, context.userId, "customer-ledger", PermissionAction.VIEW);
+    const vouchers = await tx.accountingVoucher.findMany({
+      where: { companyId: context.companyId, financialYearId: context.financialYearId, sourceType: "CustomerOpeningBalance" },
+      orderBy: [{ voucherDate: "desc" }, { createdAt: "desc" }],
+      select: { id: true },
+      take: 100,
+    });
+    return Promise.all(vouchers.map((voucher) => serializeCustomerOpeningVoucher(tx, voucher.id)));
+  });
+}
+
+export async function listCustomerOpeningCustomers(context: Context) {
+  return prisma.$transaction(async (tx) => {
+    await enforcePermission(tx, context.userId, "customer-ledger", PermissionAction.VIEW);
+    return tx.customer.findMany({
+      where: { companyId: context.companyId, status: "ACTIVE" },
+      orderBy: { name: "asc" },
+      select: { id: true, code: true, name: true },
+      take: 200,
+    });
+  });
+}
+
+export async function createCustomerOpeningBalance(context: Context, input: CustomerOpeningInput) {
+  return prisma.$transaction(async (tx) => {
+    await enforcePermission(tx, context.userId, "customer-ledger", PermissionAction.CREATE);
+    const customer = await customerAccount(tx, context.companyId, input.customerId);
+    const existingCount = await tx.accountingVoucherLine.count({
+      where: {
+        accountId: customer.accountId,
+        voucher: { companyId: context.companyId, financialYearId: context.financialYearId, sourceType: "CustomerOpeningBalance" },
+      },
+    });
+    if (existingCount > 0) throw new Error("Customer opening balance already exists.");
+    const amount = positiveDecimal(input.amount, "amount");
+    const sourceId = await nextDocumentNumberInTransaction(tx, { companyId: context.companyId, financialYearId: context.financialYearId, prefix: "COB" });
+    const equityAccountId = await openingEquityAccount(tx, context.companyId);
+    const balanceType = input.balanceType === "CREDIT" ? "CREDIT" : "DEBIT";
+    const voucher = await createBalancedVoucher(tx, {
+      companyId: context.companyId,
+      financialYearId: context.financialYearId,
+      voucherNo: sourceId,
+      voucherType: VoucherType.OPENING,
+      voucherDate: openingDate(input.transactionDate),
+      sourceType: "CustomerOpeningBalance",
+      sourceId,
+      createdById: context.userId,
+      narration: "CustomerOpeningBalance",
+      lines:
+        balanceType === "DEBIT"
+          ? [
+              { accountId: customer.accountId, debit: amount },
+              { accountId: equityAccountId, credit: amount },
+            ]
+          : [
+              { accountId: equityAccountId, debit: amount },
+              { accountId: customer.accountId, credit: amount },
+            ],
+    });
+    await writeAuditLog(tx, { companyId: context.companyId, userId: context.userId, entityType: "CustomerOpeningBalance", entityId: voucher.id, after: { voucherId: voucher.id, customerId: customer.id, amount: amount.toString(), balanceType } });
+    return serializeCustomerOpeningVoucher(tx, voucher.id);
+  });
+}
+
+export async function updateCustomerOpeningBalance(context: Context, id: string, input: CustomerOpeningInput) {
+  return prisma.$transaction(async (tx) => {
+    await enforcePermission(tx, context.userId, "customer-ledger", PermissionAction.UPDATE);
+    const before = await tx.accountingVoucher.findFirstOrThrow({
+      where: { id, companyId: context.companyId, financialYearId: context.financialYearId, sourceType: "CustomerOpeningBalance" },
+      include: { lines: true },
+    });
+    const currentCustomer = await tx.customer.findFirst({ where: { companyId: context.companyId, accountId: { in: before.lines.map((line) => line.accountId) } }, select: { id: true, accountId: true } });
+    if (!currentCustomer || (await customerHasLaterTransactions(tx, context.companyId, context.financialYearId, currentCustomer.accountId, before.voucherDate, id))) throw new Error("Customer opening balance is locked because later transactions exist.");
+    const customer = await customerAccount(tx, context.companyId, input.customerId);
+    if (customer.accountId !== currentCustomer.accountId) {
+      const existingCount = await tx.accountingVoucherLine.count({
+        where: {
+          accountId: customer.accountId,
+          voucher: { companyId: context.companyId, financialYearId: context.financialYearId },
+        },
+      });
+      if (existingCount > 0) throw new Error("Customer opening balance can only be moved to a customer without accounting movement.");
+    }
+    const amount = positiveDecimal(input.amount, "amount");
+    const equityAccountId = before.lines.find((line) => line.accountId !== currentCustomer.accountId)?.accountId ?? (await openingEquityAccount(tx, context.companyId));
+    const balanceType = input.balanceType === "CREDIT" ? "CREDIT" : "DEBIT";
+    await tx.accountingVoucherLine.deleteMany({ where: { voucherId: id } });
+    const voucher = await tx.accountingVoucher.update({
+      where: { id },
+      data: {
+        voucherDate: openingDate(input.transactionDate),
+        totalDebit: amount,
+        totalCredit: amount,
+        lines: {
+          create:
+            balanceType === "DEBIT"
+              ? [
+                  { accountId: customer.accountId, debit: amount, credit: 0, sortOrder: 1 },
+                  { accountId: equityAccountId, debit: 0, credit: amount, sortOrder: 2 },
+                ]
+              : [
+                  { accountId: equityAccountId, debit: amount, credit: 0, sortOrder: 1 },
+                  { accountId: customer.accountId, debit: 0, credit: amount, sortOrder: 2 },
+                ],
+        },
+      },
+    });
+    await writeAuditLog(tx, { companyId: context.companyId, userId: context.userId, action: AuditAction.UPDATE, entityType: "CustomerOpeningBalance", entityId: id, before, after: { voucherId: voucher.id, customerId: customer.id, amount: amount.toString(), balanceType } });
+    return serializeCustomerOpeningVoucher(tx, id);
+  });
+}
+
+export async function deleteCustomerOpeningBalance(context: Context, id: string) {
+  return prisma.$transaction(async (tx) => {
+    await enforcePermission(tx, context.userId, "customer-ledger", PermissionAction.DELETE);
+    const before = await tx.accountingVoucher.findFirstOrThrow({
+      where: { id, companyId: context.companyId, financialYearId: context.financialYearId, sourceType: "CustomerOpeningBalance" },
+      include: { lines: true },
+    });
+    const customer = await tx.customer.findFirst({ where: { companyId: context.companyId, accountId: { in: before.lines.map((line) => line.accountId) } }, select: { accountId: true } });
+    if (!customer || (await customerHasLaterTransactions(tx, context.companyId, context.financialYearId, customer.accountId, before.voucherDate, id))) throw new Error("Customer opening balance is locked because later transactions exist.");
+    await tx.accountingVoucherLine.deleteMany({ where: { voucherId: id } });
+    await tx.accountingVoucher.delete({ where: { id } });
+    await writeAuditLog(tx, { companyId: context.companyId, userId: context.userId, action: AuditAction.DELETE, entityType: "CustomerOpeningBalance", entityId: id, before });
     return { id };
   });
 }
