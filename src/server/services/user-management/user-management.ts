@@ -285,3 +285,62 @@ export async function resetUserPassword(context: Context, id: string, newPasswor
     return { id };
   });
 }
+
+export async function listAreasForMapping(context: Context) {
+  return prisma.$transaction(async (tx) => {
+    await enforcePermission(tx, context.userId, "rbac", PermissionAction.MANAGE_RBAC);
+    return tx.area.findMany({
+      where: { companyId: context.companyId, status: RecordStatus.ACTIVE },
+      orderBy: [{ city: { name: "asc" } }, { name: "asc" }],
+      select: { id: true, name: true, cityId: true, city: { select: { id: true, name: true } } },
+    });
+  });
+}
+
+export async function getUserAreaAssignments(context: Context, targetUserId: string) {
+  return prisma.$transaction(async (tx) => {
+    await enforcePermission(tx, context.userId, "rbac", PermissionAction.MANAGE_RBAC);
+    const user = await tx.user.findFirstOrThrow({
+      where: { id: targetUserId, companyId: context.companyId },
+      select: { id: true, loginId: true, name: true },
+    });
+    const assignments = await tx.userArea.findMany({ where: { userId: targetUserId }, select: { areaId: true } });
+    return { user, assignedAreaIds: assignments.map((a) => a.areaId) };
+  });
+}
+
+export async function setUserAreas(context: Context, targetUserId: string, areaIds: string[]) {
+  return prisma.$transaction(async (tx) => {
+    await enforcePermission(tx, context.userId, "rbac", PermissionAction.MANAGE_RBAC);
+    await tx.user.findFirstOrThrow({ where: { id: targetUserId, companyId: context.companyId }, select: { id: true } });
+
+    const uniqueIds = [...new Set(areaIds.filter((id): id is string => typeof id === "string" && id.length > 0))];
+    if (uniqueIds.length > 0) {
+      const valid = await tx.area.findMany({ where: { id: { in: uniqueIds }, companyId: context.companyId }, select: { id: true } });
+      if (valid.length !== uniqueIds.length) throw new Error("One or more areas are invalid.");
+    }
+
+    const before = await tx.userArea.findMany({ where: { userId: targetUserId }, select: { areaId: true } });
+
+    await tx.userArea.deleteMany({ where: { userId: targetUserId, areaId: { notIn: uniqueIds } } });
+    for (const areaId of uniqueIds) {
+      await tx.userArea.upsert({
+        where: { userId_areaId: { userId: targetUserId, areaId } },
+        update: {},
+        create: { userId: targetUserId, areaId },
+      });
+    }
+
+    await writeAuditLog(tx, {
+      companyId: context.companyId,
+      userId: context.userId,
+      action: AuditAction.UPDATE,
+      entityType: "UserArea",
+      entityId: targetUserId,
+      before: { areaIds: before.map((a) => a.areaId) },
+      after: { areaIds: uniqueIds },
+    });
+
+    return { userId: targetUserId, areaIds: uniqueIds };
+  });
+}

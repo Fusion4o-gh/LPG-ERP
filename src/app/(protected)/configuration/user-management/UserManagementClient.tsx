@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { apiGet, apiPost, apiPut } from "@/lib/api-client";
 import { ApiError } from "@/components/ApiError";
 import { DataTable } from "@/components/DataTable";
@@ -22,6 +23,7 @@ type UserRow = {
 const BLANK_FORM = { loginId: "", name: "", email: "", password: "", status: "ACTIVE", roleIds: [] as string[] };
 
 export function UserManagementClient() {
+  const router = useRouter();
   const [rows, setRows] = useState<UserRow[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [values, setValues] = useState({ ...BLANK_FORM });
@@ -292,12 +294,20 @@ export function UserManagementClient() {
               key: "actions",
               label: "Actions",
               render: (row) => (
-                <button
-                  onClick={() => edit(row as unknown as UserRow)}
-                  className="rounded-md border border-blue-200 px-2 py-1 text-xs font-semibold text-blue-800"
-                >
-                  Edit
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => edit(row as unknown as UserRow)}
+                    className="rounded-md border border-blue-200 px-2 py-1 text-xs font-semibold text-blue-800"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => router.push(`/configuration/user-management/${row.id}/map-area`)}
+                    className="rounded-md border border-blue-200 px-2 py-1 text-xs font-semibold text-blue-800"
+                  >
+                    Map Area
+                  </button>
+                </div>
               ),
             },
           ]}
