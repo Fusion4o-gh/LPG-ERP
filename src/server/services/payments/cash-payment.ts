@@ -1,1 +1,1 @@
-export { cashPayment } from "./payment-services.ts";
+export { cashPayment, multiLineCashPayment } from "./payment-services.ts";

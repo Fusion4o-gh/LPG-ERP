@@ -93,6 +93,107 @@ export async function bankPayment(input: BasePaymentInput & { voucherNo: string;
   });
 }
 
+export type PaymentLineInput = {
+  accountId: string;
+  amount: number;
+  description?: string;
+};
+
+export type MultiLinePaymentInput = {
+  companyId: string;
+  financialYearId: string;
+  userId: string;
+  documentNo: string;
+  transactionDate: string | Date;
+  narration?: string;
+  allowClosedDayOverride?: boolean;
+  lines: PaymentLineInput[];
+};
+
+async function createMultiLinePaymentVoucher(
+  tx: Prisma.TransactionClient,
+  input: MultiLinePaymentInput & {
+    module: string;
+    entityType: string;
+    voucherType: VoucherType;
+    systemAccountId: string;
+    systemSide: "debit" | "credit";
+  },
+) {
+  await enforcePermission(tx, input.userId, input.module, PermissionAction.CREATE);
+  await assertWritableBusinessDate(tx, input);
+
+  if (!input.lines.length) throw new Error("lines must not be empty.");
+  const total = input.lines.reduce((sum, l) => sum + Number(l.amount), 0);
+  if (total <= 0) throw new Error("Total amount must be positive.");
+
+  const systemLine = input.systemSide === "debit"
+    ? { accountId: input.systemAccountId, debit: total, credit: 0 }
+    : { accountId: input.systemAccountId, debit: 0, credit: total };
+
+  const counterLines = input.lines.map((l) => ({
+    accountId: l.accountId,
+    description: l.description,
+    debit: input.systemSide === "debit" ? 0 : Number(l.amount),
+    credit: input.systemSide === "debit" ? Number(l.amount) : 0,
+  }));
+
+  const allLines = input.systemSide === "debit"
+    ? [systemLine, ...counterLines]
+    : [...counterLines, systemLine];
+
+  const voucher = await createBalancedVoucher(tx, {
+    companyId: input.companyId,
+    financialYearId: input.financialYearId,
+    voucherNo: input.documentNo,
+    voucherType: input.voucherType,
+    voucherDate: input.transactionDate,
+    narration: input.narration,
+    sourceType: input.entityType,
+    sourceId: input.documentNo,
+    createdById: input.userId,
+    lines: allLines,
+  });
+
+  await writeAuditLog(tx, {
+    companyId: input.companyId,
+    userId: input.userId,
+    entityType: input.entityType,
+    entityId: input.documentNo,
+    after: { documentNo: input.documentNo, transactionDate: String(input.transactionDate), narration: input.narration ?? null, lines: input.lines },
+  });
+
+  return { voucher };
+}
+
+export async function multiLineCashReceipt(input: MultiLinePaymentInput) {
+  return prisma.$transaction(async (tx) => {
+    const cashAccountId = await getCashAccountId(tx, input.companyId);
+    return createMultiLinePaymentVoucher(tx, { ...input, module: "cash-receipts", entityType: "CashReceipt", voucherType: VoucherType.CR, systemAccountId: cashAccountId, systemSide: "debit" });
+  });
+}
+
+export async function multiLineCashPayment(input: MultiLinePaymentInput) {
+  return prisma.$transaction(async (tx) => {
+    const cashAccountId = await getCashAccountId(tx, input.companyId);
+    return createMultiLinePaymentVoucher(tx, { ...input, module: "cash-payments", entityType: "CashPayment", voucherType: VoucherType.CP, systemAccountId: cashAccountId, systemSide: "credit" });
+  });
+}
+
+export async function multiLineBankReceipt(input: MultiLinePaymentInput & { bankId: string }) {
+  return prisma.$transaction(async (tx) => {
+    const bankAccountId = await getBankAccountId(tx, input.bankId);
+    return createMultiLinePaymentVoucher(tx, { ...input, module: "bank-receipts", entityType: "BankReceipt", voucherType: VoucherType.BR, systemAccountId: bankAccountId, systemSide: "debit" });
+  });
+}
+
+export async function multiLineBankPayment(input: MultiLinePaymentInput & { bankId: string }) {
+  return prisma.$transaction(async (tx) => {
+    const bankAccountId = await getBankAccountId(tx, input.bankId);
+    return createMultiLinePaymentVoucher(tx, { ...input, module: "bank-payments", entityType: "BankPayment", voucherType: VoucherType.BP, systemAccountId: bankAccountId, systemSide: "credit" });
+  });
+}
+
 export async function securityReceipt(input: BasePaymentInput & { receiptNo: string; customerId: string; itemId: string; bankId?: string }) {
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, input.userId, "cash-receipts", PermissionAction.CREATE);
