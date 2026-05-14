@@ -67,6 +67,7 @@ const groups = [
       { label: "One Customer Sale History", href: "/reports/one-customer-sale-history", module: "reports" },
       { label: "Stock Report", href: "/reports/stock-summary", module: "reports" },
       { label: "Cash Book", href: "/reports/cash-book", module: "reports" },
+      { label: "Bank Book", href: "/reports/bank-book", module: "reports" },
       { label: "Vendor Wise Receiving", href: "/reports/vendor-wise-receiving", module: "reports" },
       { label: "General Ledger", href: "/reports/general-ledger", module: "reports" },
       { label: "Customer Ledger", href: "/reports/customer-ledger", module: "reports" },

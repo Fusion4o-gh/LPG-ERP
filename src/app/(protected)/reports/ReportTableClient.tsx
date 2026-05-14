@@ -34,6 +34,7 @@ export function ReportTableClient({
   showVendorFilter = false,
   showAccountFilter = false,
   accountFilterLabel = "Default Cash Account",
+  showBankFilter = false,
   showAccountTypeFilter = false,
   showAsOfFilter = false,
   enableCsv = true,
@@ -48,6 +49,7 @@ export function ReportTableClient({
   showVendorFilter?: boolean;
   showAccountFilter?: boolean;
   accountFilterLabel?: string;
+  showBankFilter?: boolean;
   showAccountTypeFilter?: boolean;
   showAsOfFilter?: boolean;
   enableCsv?: boolean;
@@ -57,7 +59,8 @@ export function ReportTableClient({
   const [customers, setCustomers] = useState<Lookup[]>([]);
   const [vendors, setVendors] = useState<Lookup[]>([]);
   const [accounts, setAccounts] = useState<Lookup[]>([]);
-  const [filters, setFilters] = useState({ from: "", to: "", asOf: "", itemId: "", customerId: "", vendorId: "", accountId: "", accountType: "" });
+  const [banks, setBanks] = useState<Lookup[]>([]);
+  const [filters, setFilters] = useState({ from: "", to: "", asOf: "", itemId: "", customerId: "", vendorId: "", accountId: "", bankId: "", accountType: "" });
   const [generatedAt, setGeneratedAt] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -88,6 +91,7 @@ export function ReportTableClient({
     if (showCustomerFilter) apiGet<{ customers: Lookup[] }>("/api/customers").then((data) => setCustomers(data.customers)).catch((err: Error) => setError(err.message));
     if (showVendorFilter) apiGet<{ vendors: Lookup[] }>("/api/vendors").then((data) => setVendors(data.vendors)).catch((err: Error) => setError(err.message));
     if (showAccountFilter) apiGet<{ accounts: Lookup[] }>("/api/chart-of-accounts").then((data) => setAccounts(data.accounts)).catch((err: Error) => setError(err.message));
+    if (showBankFilter) apiGet<{ banks: Lookup[] }>("/api/banks").then((data) => setBanks(data.banks)).catch((err: Error) => setError(err.message));
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -158,6 +162,16 @@ export function ReportTableClient({
             {accounts.map((account) => (
               <option key={account.id} value={account.id}>
                 {[account.code, account.name].filter(Boolean).join(" - ")}
+              </option>
+            ))}
+          </select>
+        ) : null}
+        {showBankFilter ? (
+          <select value={filters.bankId} onChange={(event) => setFilters((current) => ({ ...current, bankId: event.target.value }))} className="rounded-md border border-slate-300 px-3 py-2">
+            <option value="">Select Bank</option>
+            {banks.map((bank) => (
+              <option key={bank.id} value={bank.id}>
+                {bank.name}
               </option>
             ))}
           </select>

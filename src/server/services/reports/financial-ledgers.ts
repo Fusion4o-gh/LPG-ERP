@@ -4,7 +4,7 @@ import { enforcePermission } from "../rbac/enforce.ts";
 import { parseReportFilters, type ReportFilters } from "./operational-reports.ts";
 
 type Context = { companyId: string; financialYearId: string; userId: string };
-type LedgerFilters = ReportFilters & { vendorId?: string; accountId?: string; accountType?: string; asOf?: string };
+type LedgerFilters = ReportFilters & { vendorId?: string; accountId?: string; bankId?: string; accountType?: string; asOf?: string };
 type AccountRef = { id: string; code: string; name: string; normalBalance: NormalBalance };
 type LedgerRow = {
   id: string;
@@ -417,6 +417,24 @@ export async function getProfitLossReportCsv(context: Context, input: ReportFilt
       [report.result, "", "", "", "", formatMoney(report.netProfit)],
     ],
   );
+}
+
+export async function getBankBookReport(context: Context, input: LedgerFilters = {}) {
+  return prisma.$transaction(async (tx) => {
+    await enforcePermission(tx, context.userId, "reports", PermissionAction.VIEW);
+    if (!input.bankId) throw new Error("bankId is required.");
+    const bank = await tx.bank.findFirst({
+      where: { id: input.bankId, companyId: context.companyId },
+      select: { id: true, name: true, account: { select: { id: true, code: true, name: true, normalBalance: true } } },
+    });
+    if (!bank) throw new Error("bankId must reference a valid bank account.");
+    return accountLedger(tx, context, bank.account, input);
+  });
+}
+
+export async function getBankBookReportCsv(context: Context, input: LedgerFilters = {}) {
+  const report = await getBankBookReport(context, input);
+  return ledgerRowsCsv(report.rows);
 }
 
 export async function getGeneralLedgerReport(context: Context, input: LedgerFilters = {}) {
