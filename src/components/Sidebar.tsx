@@ -23,6 +23,7 @@ const groups = [
       { label: "Cash Opening", href: "/configuration/cash-opening", module: "journal-vouchers" },
       { label: "Day Closing", href: "/operations/day-closing", module: "day-closing" },
       { label: "Customer Opening Balance", href: "/configuration/customer-opening-balance", module: "customer-ledger" },
+      { label: "Vendor Opening Balance", href: "/configuration/vendor-opening-balance", module: "vendors" },
       { label: "Expense Type Coding", href: "/configuration/expense-type-coding", module: "chart-of-accounts" },
     ],
   },
