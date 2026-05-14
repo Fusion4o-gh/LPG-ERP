@@ -9,30 +9,135 @@ body {
 
 body {
   margin: 0;
-  background: #f6f7f9;
-  color: #17202a;
-  font-family: Arial, Helvetica, sans-serif;
+  background: #f1f5f9;
+  color: #0f172a;
+  font-family: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
   --fusion-cyan: #22e6f2;
   --fusion-blue: #0477f2;
-  --fusion-gradient: linear-gradient(135deg, var(--fusion-cyan), var(--fusion-blue));
+  --fusion-gradient: linear-gradient(135deg, #1d4ed8 0%, var(--fusion-blue) 100%);
+  --fusion-gradient-soft: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
+
+  --sidebar-bg: #0c1a36;
+  --sidebar-border: rgba(255, 255, 255, 0.07);
+  --sidebar-text: #7fa8d4;
+  --sidebar-text-active: #ffffff;
+  --sidebar-active-bg: linear-gradient(135deg, #1d4ed8, #0477f2);
+  --sidebar-hover-bg: rgba(59, 130, 246, 0.13);
+
+  --card-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  --card-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
+  --card-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.08);
 }
 
 * {
   box-sizing: border-box;
 }
 
+/* Smooth transitions */
+a,
+button {
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ─── Brand helpers ─── */
 .fusion-cyan {
   color: var(--fusion-cyan);
 }
-
 .fusion-blue {
   color: var(--fusion-blue);
 }
-
 .fusion-gradient {
   background: var(--fusion-gradient);
 }
+.fusion-gradient-text {
+  background: var(--fusion-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 
+/* ─── Component layer ─── */
+@layer components {
+  .form-input {
+    @apply mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm
+           placeholder:text-slate-400
+           focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100
+           disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-slate-700;
+  }
+
+  .card {
+    @apply rounded-xl border border-slate-200 bg-white;
+    box-shadow: var(--card-shadow);
+  }
+
+  .card-md {
+    @apply rounded-xl border border-slate-200 bg-white;
+    box-shadow: var(--card-shadow-md);
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;
+  }
+
+  .badge-blue {
+    @apply badge bg-blue-50 text-blue-700;
+  }
+
+  .badge-green {
+    @apply badge bg-emerald-50 text-emerald-700;
+  }
+
+  .badge-red {
+    @apply badge bg-red-50 text-red-700;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm
+           hover:opacity-90 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60;
+    background: var(--fusion-gradient);
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm
+           font-medium text-slate-700 shadow-sm hover:bg-slate-50 active:scale-[0.99];
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600
+           hover:bg-slate-100 active:scale-[0.99];
+  }
+}
+
+/* ─── Sidebar link hover (CSS-variable driven, avoids JS inline) ─── */
+.sidebar-link-hover:hover {
+  background: var(--sidebar-hover-bg);
+}
+
+/* ─── Print styles ─── */
 @media print {
   @page {
     margin: 14mm;

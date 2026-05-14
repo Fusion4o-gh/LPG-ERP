@@ -120,7 +120,7 @@ export function Sidebar({ permissions }: { permissions: string[] }) {
 
           return (
             <div key={group.title} className="mb-3">
-              <div className="px-3 pt-1 pb-2 text-[10px] font-semibold uppercase tracking-widest text-slate-600">
+              <div className="px-3 pt-1 pb-2 text-[10px] font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>
                 {group.title}
               </div>
               <div className="space-y-0.5">
@@ -132,20 +132,10 @@ export function Sidebar({ permissions }: { permissions: string[] }) {
                       href={link.href}
                       className={`flex items-center rounded-lg px-3 py-2 text-sm leading-snug transition-all ${
                         isActive
-                          ? "font-medium text-white shadow-sm"
-                          : "text-slate-400 hover:text-slate-100"
+                          ? "font-semibold text-white shadow-sm sidebar-link-active"
+                          : "text-slate-400 hover:text-slate-100 sidebar-link-hover"
                       }`}
-                      style={
-                        isActive
-                          ? { background: "var(--sidebar-active-bg)" }
-                          : { background: "transparent" }
-                      }
-                      onMouseEnter={(e) => {
-                        if (!isActive) (e.currentTarget as HTMLAnchorElement).style.background = "var(--sidebar-hover-bg)";
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isActive) (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
-                      }}
+                      style={isActive ? { background: "var(--sidebar-active-bg)" } : undefined}
                     >
                       {link.label}
                     </Link>
