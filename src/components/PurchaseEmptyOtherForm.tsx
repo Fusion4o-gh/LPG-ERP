@@ -78,11 +78,7 @@ export function PurchaseEmptyOtherForm({ kind }: { kind: PurchaseKind }) {
       lines.reduce(
         (sum, line) => {
           const current = lineTotals(line, kind);
-          return {
-            exGstAmount: sum.exGstAmount + current.exGstAmount,
-            gstAmount: sum.gstAmount + current.gstAmount,
-            incGstAmount: sum.incGstAmount + current.incGstAmount,
-          };
+          return { exGstAmount: sum.exGstAmount + current.exGstAmount, gstAmount: sum.gstAmount + current.gstAmount, incGstAmount: sum.incGstAmount + current.incGstAmount };
         },
         { exGstAmount: 0, gstAmount: 0, incGstAmount: 0 },
       ),
@@ -111,25 +107,17 @@ export function PurchaseEmptyOtherForm({ kind }: { kind: PurchaseKind }) {
     const preparedLines = lines.map((line, index) => {
       const quantity = numberValue(line.quantity);
       const unitPrice = numberValue(line.unitPrice);
-      const amount = numberValue(line.amount);
+      const amt = numberValue(line.amount);
       const gstPercent = numberValue(line.gstPercent);
       if (kind === "EmptyCylinder" && !line.itemId) throw new Error(`Line ${index + 1}: item is required.`);
       if (kind === "EmptyCylinder" && (!Number.isInteger(quantity) || quantity <= 0)) throw new Error(`Line ${index + 1}: quantity must be a positive integer.`);
       if (kind === "EmptyCylinder" && unitPrice <= 0) throw new Error(`Line ${index + 1}: unit price must be positive.`);
       if (kind === "Other" && !line.accountId && !line.itemId && !line.description) throw new Error(`Line ${index + 1}: account, item, or description is required.`);
-      if (kind === "Other" && amount <= 0 && (!quantity || !unitPrice)) throw new Error(`Line ${index + 1}: enter amount or quantity with unit price.`);
+      if (kind === "Other" && amt <= 0 && (!quantity || !unitPrice)) throw new Error(`Line ${index + 1}: enter amount or quantity with unit price.`);
       if (gstPercent < 0) throw new Error(`Line ${index + 1}: GST % cannot be negative.`);
       return kind === "EmptyCylinder"
         ? { itemId: line.itemId, quantity, unitPrice, gstPercent }
-        : {
-            accountId: line.accountId || undefined,
-            itemId: line.itemId || undefined,
-            description: line.description || undefined,
-            quantity: quantity || undefined,
-            unitPrice: unitPrice || undefined,
-            amount: amount || undefined,
-            gstPercent,
-          };
+        : { accountId: line.accountId || undefined, itemId: line.itemId || undefined, description: line.description || undefined, quantity: quantity || undefined, unitPrice: unitPrice || undefined, amount: amt || undefined, gstPercent };
     });
     return { vendorId, transactionDate, remarks, lines: preparedLines };
   }
@@ -166,115 +154,105 @@ export function PurchaseEmptyOtherForm({ kind }: { kind: PurchaseKind }) {
       <form onSubmit={onSubmit} className="space-y-5">
         <ApiError message={error} />
         <SuccessMessage message={success} />
+
         {printDocumentNo ? (
-          <div className="rounded-md border border-blue-100 bg-white px-3 py-2 text-sm text-slate-700">
-            Receipt number: <span className="font-semibold text-slate-950">{printDocumentNo}</span>
-            <Link href={`/sale-purchase/${printType}/print/${encodeURIComponent(printDocumentNo)}`} className="ml-3 font-semibold text-blue-700 underline">
-              Open printable view
+          <div className="card rounded-lg flex flex-wrap items-center gap-3 px-4 py-3 text-sm">
+            <svg className="h-4 w-4 shrink-0 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            <span className="text-slate-600">Receipt number: <span className="font-semibold text-slate-900">{printDocumentNo}</span></span>
+            <Link href={`/sale-purchase/${printType}/print/${encodeURIComponent(printDocumentNo)}`} className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
+              Open Print View
             </Link>
           </div>
         ) : null}
 
-        <section className="rounded-lg border border-blue-100 bg-white p-4 shadow-sm">
-          <div className="mb-4 rounded-md bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-800">Purchase Header</div>
-          <div className="grid gap-4 lg:grid-cols-4">
-            <label className="block text-sm text-slate-700 lg:col-span-2">
-              <span className="mb-1 block font-medium">Vendor *</span>
-              <select value={vendorId} onChange={(event) => setVendorId(event.target.value)} disabled={lookupLoading} className="w-full rounded-md border border-blue-100 bg-white px-3 py-2">
-                <option value="">Select Vendor</option>
-                {vendors.map((vendor) => (
-                  <option key={String(vendor.id)} value={String(vendor.id)}>
-                    {optionLabel(vendor)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block text-sm text-slate-700">
-              <span className="mb-1 block font-medium">Date *</span>
-              <input type="date" value={transactionDate} onChange={(event) => setTransactionDate(event.target.value)} className="w-full rounded-md border border-blue-100 px-3 py-2" />
-            </label>
-            <label className="block text-sm text-slate-700">
-              <span className="mb-1 block font-medium">Remarks</span>
-              <input value={remarks} onChange={(event) => setRemarks(event.target.value)} className="w-full rounded-md border border-blue-100 px-3 py-2" />
-            </label>
+        {/* Purchase Header */}
+        <section className="card rounded-xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center gap-2">
+            <div className="h-3.5 w-0.5 rounded-full bg-blue-500/60 shrink-0" />
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Purchase Header</h2>
+          </div>
+          <div className="p-5">
+            <div className="grid gap-4 lg:grid-cols-4">
+              <div className="lg:col-span-2">
+                <label className="form-label" htmlFor="vendorId">Vendor *</label>
+                <select id="vendorId" value={vendorId} onChange={(e) => setVendorId(e.target.value)} disabled={lookupLoading} className="form-input">
+                  <option value="">Select Vendor</option>
+                  {vendors.map((v) => <option key={String(v.id)} value={String(v.id)}>{optionLabel(v)}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="form-label" htmlFor="transactionDate">Date *</label>
+                <input id="transactionDate" type="date" value={transactionDate} onChange={(e) => setTransactionDate(e.target.value)} className="form-input" />
+              </div>
+              <div>
+                <label className="form-label" htmlFor="remarks">Remarks</label>
+                <input id="remarks" value={remarks} onChange={(e) => setRemarks(e.target.value)} className="form-input" />
+              </div>
+            </div>
           </div>
         </section>
 
-        <section className="rounded-lg border border-blue-100 bg-white p-4 shadow-sm">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div className="rounded-md bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-800">Purchase Lines</div>
-            <button type="button" onClick={() => setLines((current) => [...current, emptyLine(kind)])} className="rounded-md bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800">
-              Add Row
-            </button>
+        {/* Purchase Lines */}
+        <section className="card rounded-xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <div className="h-3.5 w-0.5 rounded-full bg-blue-500/60 shrink-0" />
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Purchase Lines</h2>
+            </div>
+            <button type="button" onClick={() => setLines((c) => [...c, emptyLine(kind)])} className="btn-primary-sm">+ Add Row</button>
           </div>
           <div className="overflow-x-auto">
-            <table className="min-w-[1080px] border-collapse text-sm">
-              <thead className="bg-blue-50 text-left text-blue-950">
-                <tr>
-                  <th className="border border-blue-100 px-2 py-2">Item</th>
-                  {kind === "Other" ? <th className="border border-blue-100 px-2 py-2">Account</th> : null}
-                  {kind === "Other" ? <th className="border border-blue-100 px-2 py-2">Description</th> : null}
-                  <th className="border border-blue-100 px-2 py-2 text-right">Quantity</th>
-                  <th className="border border-blue-100 px-2 py-2 text-right">Unit Price</th>
-                  {kind === "Other" ? <th className="border border-blue-100 px-2 py-2 text-right">Amount</th> : null}
-                  <th className="border border-blue-100 px-2 py-2 text-right">GST %</th>
-                  <th className="border border-blue-100 px-2 py-2 text-right">GST Amount</th>
-                  <th className="border border-blue-100 px-2 py-2 text-right">Total</th>
-                  <th className="border border-blue-100 px-2 py-2">Action</th>
+            <table className="min-w-[900px] border-collapse text-sm">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200">
+                  <th className="whitespace-nowrap px-2.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Item</th>
+                  {kind === "Other" && <th className="whitespace-nowrap px-2.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Account</th>}
+                  {kind === "Other" && <th className="whitespace-nowrap px-2.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Description</th>}
+                  <th className="whitespace-nowrap px-2.5 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Quantity</th>
+                  <th className="whitespace-nowrap px-2.5 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Unit Price</th>
+                  {kind === "Other" && <th className="whitespace-nowrap px-2.5 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Amount</th>}
+                  <th className="whitespace-nowrap px-2.5 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">GST %</th>
+                  <th className="whitespace-nowrap px-2.5 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">GST Amt</th>
+                  <th className="whitespace-nowrap px-2.5 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Total</th>
+                  <th className="whitespace-nowrap px-2.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"></th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-100">
                 {lines.map((line, index) => {
                   const current = lineTotals(line, kind);
                   return (
-                    <tr key={index}>
-                      <td className="border border-blue-100 px-2 py-2">
-                        <select value={line.itemId} onChange={(event) => updateLine(index, { itemId: event.target.value })} disabled={lookupLoading} className="w-56 rounded-md border border-slate-300 bg-white px-2 py-1.5">
+                    <tr key={index} className="hover:bg-blue-50/30 transition-colors">
+                      <td className="px-2.5 py-2">
+                        <select value={line.itemId} onChange={(e) => updateLine(index, { itemId: e.target.value })} disabled={lookupLoading} className="tbl-select w-48">
                           <option value="">{kind === "EmptyCylinder" ? "Select Item" : "Optional Item"}</option>
-                          {items.map((item) => (
-                            <option key={String(item.id)} value={String(item.id)}>
-                              {optionLabel(item)}
-                            </option>
-                          ))}
+                          {items.map((item) => <option key={String(item.id)} value={String(item.id)}>{optionLabel(item)}</option>)}
                         </select>
                       </td>
-                      {kind === "Other" ? (
-                        <td className="border border-blue-100 px-2 py-2">
-                          <select value={line.accountId} onChange={(event) => updateLine(index, { accountId: event.target.value })} disabled={lookupLoading} className="w-64 rounded-md border border-slate-300 bg-white px-2 py-1.5">
+                      {kind === "Other" && (
+                        <td className="px-2.5 py-2">
+                          <select value={line.accountId} onChange={(e) => updateLine(index, { accountId: e.target.value })} disabled={lookupLoading} className="tbl-select w-56">
                             <option value="">Use Stock Account</option>
-                            {accounts.map((account) => (
-                              <option key={String(account.id)} value={String(account.id)}>
-                                {optionLabel(account)}
-                              </option>
-                            ))}
+                            {accounts.map((a) => <option key={String(a.id)} value={String(a.id)}>{optionLabel(a)}</option>)}
                           </select>
                         </td>
-                      ) : null}
-                      {kind === "Other" ? (
-                        <td className="border border-blue-100 px-2 py-2">
-                          <input value={line.description} onChange={(event) => updateLine(index, { description: event.target.value })} className="w-56 rounded-md border border-slate-300 px-2 py-1.5" />
+                      )}
+                      {kind === "Other" && (
+                        <td className="px-2.5 py-2">
+                          <input value={line.description} onChange={(e) => updateLine(index, { description: e.target.value })} className="tbl-input w-48" />
                         </td>
-                      ) : null}
-                      <td className="border border-blue-100 px-2 py-2">
-                        <input type="number" min={kind === "EmptyCylinder" ? "1" : "0"} value={line.quantity} onChange={(event) => updateLine(index, { quantity: event.target.value })} className="w-24 rounded-md border border-slate-300 px-2 py-1.5 text-right" />
-                      </td>
-                      <td className="border border-blue-100 px-2 py-2">
-                        <input type="number" min="0" value={line.unitPrice} onChange={(event) => updateLine(index, { unitPrice: event.target.value })} className="w-28 rounded-md border border-slate-300 px-2 py-1.5 text-right" />
-                      </td>
-                      {kind === "Other" ? (
-                        <td className="border border-blue-100 px-2 py-2">
-                          <input type="number" min="0" value={line.amount} onChange={(event) => updateLine(index, { amount: event.target.value })} className="w-28 rounded-md border border-slate-300 px-2 py-1.5 text-right" />
-                        </td>
-                      ) : null}
-                      <td className="border border-blue-100 px-2 py-2">
-                        <input type="number" min="0" value={line.gstPercent} onChange={(event) => updateLine(index, { gstPercent: event.target.value })} className="w-20 rounded-md border border-slate-300 px-2 py-1.5 text-right" />
-                      </td>
-                      <td className="border border-blue-100 px-2 py-2 text-right tabular-nums">{money(current.gstAmount)}</td>
-                      <td className="border border-blue-100 px-2 py-2 text-right font-semibold tabular-nums">{money(current.incGstAmount)}</td>
-                      <td className="border border-blue-100 px-2 py-2">
-                        <button type="button" onClick={() => removeLine(index)} disabled={lines.length === 1} className="rounded-md border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-700 disabled:opacity-40">
-                          Remove
-                        </button>
+                      )}
+                      <td className="px-2.5 py-2"><input type="number" min={kind === "EmptyCylinder" ? "1" : "0"} value={line.quantity} onChange={(e) => updateLine(index, { quantity: e.target.value })} className="tbl-input w-20 text-right" /></td>
+                      <td className="px-2.5 py-2"><input type="number" min="0" value={line.unitPrice} onChange={(e) => updateLine(index, { unitPrice: e.target.value })} className="tbl-input w-24 text-right" /></td>
+                      {kind === "Other" && (
+                        <td className="px-2.5 py-2"><input type="number" min="0" value={line.amount} onChange={(e) => updateLine(index, { amount: e.target.value })} className="tbl-input w-24 text-right" /></td>
+                      )}
+                      <td className="px-2.5 py-2"><input type="number" min="0" value={line.gstPercent} onChange={(e) => updateLine(index, { gstPercent: e.target.value })} className="tbl-input w-16 text-right" /></td>
+                      <td className="px-2.5 py-2 text-right tabular-nums text-slate-600">{money(current.gstAmount)}</td>
+                      <td className="px-2.5 py-2 text-right tabular-nums font-medium text-slate-800">{money(current.incGstAmount)}</td>
+                      <td className="px-2.5 py-2">
+                        <button type="button" onClick={() => removeLine(index)} disabled={lines.length === 1} className="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50 disabled:opacity-40 transition-colors">Remove</button>
                       </td>
                     </tr>
                   );
@@ -282,27 +260,25 @@ export function PurchaseEmptyOtherForm({ kind }: { kind: PurchaseKind }) {
               </tbody>
             </table>
           </div>
-          <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
-            <div className="rounded-md bg-blue-50 p-3 text-blue-950">
-              <div className="text-xs font-semibold uppercase">Ex-GST Total</div>
-              <div className="mt-1 text-lg font-semibold">{money(totals.exGstAmount)}</div>
+          <div className="border-t border-slate-100 bg-slate-50/60 px-5 py-4 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-lg border border-slate-200 bg-white p-3">
+              <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Ex-GST Total</div>
+              <div className="mt-1.5 text-lg font-bold text-slate-800 tabular-nums">{money(totals.exGstAmount)}</div>
             </div>
-            <div className="rounded-md bg-blue-50 p-3 text-blue-950">
-              <div className="text-xs font-semibold uppercase">GST Total</div>
-              <div className="mt-1 text-lg font-semibold">{money(totals.gstAmount)}</div>
+            <div className="rounded-lg border border-slate-200 bg-white p-3">
+              <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">GST Total</div>
+              <div className="mt-1.5 text-lg font-bold text-slate-800 tabular-nums">{money(totals.gstAmount)}</div>
             </div>
-            <div className="rounded-md bg-blue-700 p-3 text-white">
-              <div className="text-xs font-semibold uppercase">Purchase Total</div>
-              <div className="mt-1 text-lg font-semibold">{money(totals.incGstAmount)}</div>
+            <div className="rounded-lg bg-blue-700 p-3">
+              <div className="text-xs font-semibold uppercase tracking-wide text-blue-200">Purchase Total</div>
+              <div className="mt-1.5 text-lg font-bold text-white tabular-nums">{money(totals.incGstAmount)}</div>
             </div>
           </div>
         </section>
 
         <div className="flex flex-wrap gap-2">
           <SubmitButton loading={loading}>Post Purchase</SubmitButton>
-          <button type="button" onClick={reset} className="rounded-md border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-blue-700">
-            Reset Form
-          </button>
+          <button type="button" onClick={reset} className="btn-outline">Reset Form</button>
         </div>
       </form>
     </>

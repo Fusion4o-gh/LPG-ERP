@@ -124,125 +124,138 @@ export function DecantingSaleForm() {
       <form onSubmit={onSubmit} className="space-y-5">
         <ApiError message={error} />
         <SuccessMessage message={success} />
+
         {printDocumentNo ? (
-          <div className="rounded-md border border-blue-100 bg-white px-3 py-2 text-sm text-slate-700">
-            Issue number: <span className="font-semibold text-slate-950">{printDocumentNo}</span>
-            <Link href={`/sale-purchase/decanting-sale/print/${encodeURIComponent(printDocumentNo)}`} className="ml-3 font-semibold text-blue-700 underline">
-              Open printable view
+          <div className="card rounded-lg flex flex-wrap items-center gap-3 px-4 py-3 text-sm">
+            <svg className="h-4 w-4 shrink-0 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            <span className="text-slate-600">Issue number: <span className="font-semibold text-slate-900">{printDocumentNo}</span></span>
+            <Link href={`/sale-purchase/decanting-sale/print/${encodeURIComponent(printDocumentNo)}`} className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
+              Open Print View
             </Link>
           </div>
         ) : null}
 
-        <section className="rounded-lg border border-blue-100 bg-white p-4 shadow-sm">
-          <div className="mb-4 rounded-md bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-800">Decanting Header</div>
-          <div className="grid gap-4 lg:grid-cols-4">
-            <label className="block text-sm text-slate-700 lg:col-span-2">
-              <span className="mb-1 block font-medium">Customer</span>
-              <select value={customerId} onChange={(event) => setCustomerId(event.target.value)} disabled={lookupLoading} className="w-full rounded-md border border-blue-100 bg-white px-3 py-2">
-                <option value="">Select Customer</option>
-                {customers.map((customer) => (
-                  <option key={String(customer.id)} value={String(customer.id)}>
-                    {optionLabel(customer)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block text-sm text-slate-700">
-              <span className="mb-1 block font-medium">Date/Time *</span>
-              <input type="datetime-local" value={transactionDate} onChange={(event) => setTransactionDate(event.target.value)} className="w-full rounded-md border border-blue-100 px-3 py-2" />
-            </label>
-            <label className="block text-sm text-slate-700">
-              <span className="mb-1 block font-medium">Remarks</span>
-              <input value={remarks} onChange={(event) => setRemarks(event.target.value)} className="w-full rounded-md border border-blue-100 px-3 py-2" />
-            </label>
+        {/* Decanting Header */}
+        <section className="card rounded-xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center gap-2">
+            <div className="h-3.5 w-0.5 rounded-full bg-blue-500/60 shrink-0" />
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Decanting Header</h2>
           </div>
-        </section>
-
-        <section className="grid gap-5 lg:grid-cols-2">
-          <div className="rounded-lg border border-blue-100 bg-white p-4 shadow-sm">
-            <div className="mb-4 rounded-md bg-blue-700 px-3 py-2 text-sm font-semibold text-white">Source Filled Stock OUT</div>
-            <div className="grid gap-4">
-              <label className="block text-sm text-slate-700">
-                <span className="mb-1 block font-medium">Source Item *</span>
-                <select value={sourceItemId} onChange={(event) => setSourceItemId(event.target.value)} disabled={lookupLoading} className="w-full rounded-md border border-blue-100 bg-white px-3 py-2">
-                  <option value="">Select Item</option>
-                  {items.map((item) => (
-                    <option key={String(item.id)} value={String(item.id)}>
-                      {optionLabel(item)}
-                    </option>
-                  ))}
+          <div className="p-5">
+            <div className="grid gap-4 lg:grid-cols-4">
+              <div className="lg:col-span-2">
+                <label className="form-label" htmlFor="customerId">Customer</label>
+                <select id="customerId" value={customerId} onChange={(e) => setCustomerId(e.target.value)} disabled={lookupLoading} className="form-input">
+                  <option value="">Select Customer</option>
+                  {customers.map((c) => <option key={String(c.id)} value={String(c.id)}>{optionLabel(c)}</option>)}
                 </select>
-              </label>
-              <label className="block text-sm text-slate-700">
-                <span className="mb-1 block font-medium">Source Quantity *</span>
-                <input type="number" min="1" value={sourceQuantity} onChange={(event) => setSourceQuantity(event.target.value)} className="w-full rounded-md border border-blue-100 px-3 py-2 text-right" />
-              </label>
-            </div>
-          </div>
-
-          <div className="rounded-lg border border-blue-100 bg-white p-4 shadow-sm">
-            <div className="mb-4 rounded-md bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-800">Sale Amount</div>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <label className="block text-sm text-slate-700">
-                <span className="mb-1 block font-medium">Decanted Qty *</span>
-                <input type="number" min="0" value={decantedQuantity} onChange={(event) => setDecantedQuantity(event.target.value)} className="w-full rounded-md border border-blue-100 px-3 py-2 text-right" />
-              </label>
-              <label className="block text-sm text-slate-700">
-                <span className="mb-1 block font-medium">Unit Price</span>
-                <input type="number" min="0" value={unitPrice} onChange={(event) => setUnitPrice(event.target.value)} className="w-full rounded-md border border-blue-100 px-3 py-2 text-right" />
-              </label>
-              <label className="block text-sm text-slate-700">
-                <span className="mb-1 block font-medium">GST %</span>
-                <input type="number" min="0" value={gstPercent} onChange={(event) => setGstPercent(event.target.value)} className="w-full rounded-md border border-blue-100 px-3 py-2 text-right" />
-              </label>
-            </div>
-            <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
-              <div className="rounded-md bg-blue-50 p-3 text-blue-950">
-                <div className="text-xs font-semibold uppercase">Ex-GST</div>
-                <div className="mt-1 text-lg font-semibold">{money(totals.exGstAmount)}</div>
               </div>
-              <div className="rounded-md bg-blue-50 p-3 text-blue-950">
-                <div className="text-xs font-semibold uppercase">GST</div>
-                <div className="mt-1 text-lg font-semibold">{money(totals.gstAmount)}</div>
+              <div>
+                <label className="form-label" htmlFor="transactionDate">Date/Time *</label>
+                <input id="transactionDate" type="datetime-local" value={transactionDate} onChange={(e) => setTransactionDate(e.target.value)} className="form-input" />
               </div>
-              <div className="rounded-md bg-blue-700 p-3 text-white">
-                <div className="text-xs font-semibold uppercase">Total</div>
-                <div className="mt-1 text-lg font-semibold">{money(totals.incGstAmount)}</div>
+              <div>
+                <label className="form-label" htmlFor="remarks">Remarks</label>
+                <input id="remarks" value={remarks} onChange={(e) => setRemarks(e.target.value)} className="form-input" />
               </div>
             </div>
           </div>
         </section>
 
-        <div className="overflow-x-auto rounded-lg border border-blue-100 bg-white shadow-sm">
-          <table className="min-w-[900px] w-full border-collapse text-sm">
-            <thead className="bg-blue-50 text-left text-blue-950">
-              <tr>
-                <th className="border border-blue-100 px-3 py-2">Source Item</th>
-                <th className="border border-blue-100 px-3 py-2 text-right">Source Qty OUT</th>
-                <th className="border border-blue-100 px-3 py-2 text-right">Decanted Qty</th>
-                <th className="border border-blue-100 px-3 py-2 text-right">Unit Price</th>
-                <th className="border border-blue-100 px-3 py-2 text-right">GST %</th>
-                <th className="border border-blue-100 px-3 py-2 text-right">Total Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="border border-blue-100 px-3 py-2">{optionLabel(items.find((item) => item.id === sourceItemId) ?? {}) || "Select Item"}</td>
-                <td className="border border-blue-100 px-3 py-2 text-right tabular-nums">{sourceQuantity || "0"}</td>
-                <td className="border border-blue-100 px-3 py-2 text-right tabular-nums">{decantedQuantity || "0"}</td>
-                <td className="border border-blue-100 px-3 py-2 text-right tabular-nums">{unitPrice || "0"}</td>
-                <td className="border border-blue-100 px-3 py-2 text-right tabular-nums">{gstPercent || "0"}</td>
-                <td className="border border-blue-100 px-3 py-2 text-right font-semibold tabular-nums">{money(totals.incGstAmount)}</td>
-              </tr>
-            </tbody>
-          </table>
+        {/* Source + Sale panels */}
+        <div className="grid gap-5 lg:grid-cols-2">
+          <section className="card rounded-xl overflow-hidden">
+            <div className="px-5 py-3 border-b border-slate-100 bg-blue-700 flex items-center gap-2">
+              <div className="h-3.5 w-0.5 rounded-full bg-white/50 shrink-0" />
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-blue-100">Source Filled Stock OUT</h2>
+            </div>
+            <div className="p-5 grid gap-4">
+              <div>
+                <label className="form-label" htmlFor="sourceItemId">Source Item *</label>
+                <select id="sourceItemId" value={sourceItemId} onChange={(e) => setSourceItemId(e.target.value)} disabled={lookupLoading} className="form-input">
+                  <option value="">Select Item</option>
+                  {items.map((item) => <option key={String(item.id)} value={String(item.id)}>{optionLabel(item)}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="form-label" htmlFor="sourceQuantity">Source Quantity *</label>
+                <input id="sourceQuantity" type="number" min="1" value={sourceQuantity} onChange={(e) => setSourceQuantity(e.target.value)} className="form-input text-right" />
+              </div>
+            </div>
+          </section>
+
+          <section className="card rounded-xl overflow-hidden">
+            <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center gap-2">
+              <div className="h-3.5 w-0.5 rounded-full bg-blue-500/60 shrink-0" />
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Sale Amount</h2>
+            </div>
+            <div className="p-5">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div>
+                  <label className="form-label" htmlFor="decantedQuantity">Decanted Qty *</label>
+                  <input id="decantedQuantity" type="number" min="0" value={decantedQuantity} onChange={(e) => setDecantedQuantity(e.target.value)} className="form-input text-right" />
+                </div>
+                <div>
+                  <label className="form-label" htmlFor="unitPrice">Unit Price</label>
+                  <input id="unitPrice" type="number" min="0" value={unitPrice} onChange={(e) => setUnitPrice(e.target.value)} className="form-input text-right" />
+                </div>
+                <div>
+                  <label className="form-label" htmlFor="gstPercent">GST %</label>
+                  <input id="gstPercent" type="number" min="0" value={gstPercent} onChange={(e) => setGstPercent(e.target.value)} className="form-input text-right" />
+                </div>
+              </div>
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <div className="rounded-lg border border-slate-200 bg-white p-3">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Ex-GST</div>
+                  <div className="mt-1.5 text-lg font-bold text-slate-800 tabular-nums">{money(totals.exGstAmount)}</div>
+                </div>
+                <div className="rounded-lg border border-slate-200 bg-white p-3">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">GST</div>
+                  <div className="mt-1.5 text-lg font-bold text-slate-800 tabular-nums">{money(totals.gstAmount)}</div>
+                </div>
+                <div className="rounded-lg bg-blue-700 p-3">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-blue-200">Total</div>
+                  <div className="mt-1.5 text-lg font-bold text-white tabular-nums">{money(totals.incGstAmount)}</div>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
+
+        {/* Summary Table */}
+        <section className="card rounded-xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center gap-2">
+            <div className="h-3.5 w-0.5 rounded-full bg-blue-500/60 shrink-0" />
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Transaction Summary</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-[700px] w-full border-collapse text-sm">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200">
+                  {["Source Item", "Source Qty OUT", "Decanted Qty", "Unit Price", "GST %", "Total Amount"].map((h, i) => (
+                    <th key={i} className={`whitespace-nowrap px-2.5 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 ${i > 0 ? "text-right" : "text-left"}`}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                <tr className="hover:bg-blue-50/30 transition-colors">
+                  <td className="px-2.5 py-2 text-slate-800">{optionLabel(items.find((item) => item.id === sourceItemId) ?? {}) || <span className="italic text-slate-400">Select Item</span>}</td>
+                  <td className="px-2.5 py-2 text-right tabular-nums text-slate-600">{sourceQuantity || "0"}</td>
+                  <td className="px-2.5 py-2 text-right tabular-nums text-slate-600">{decantedQuantity || "0"}</td>
+                  <td className="px-2.5 py-2 text-right tabular-nums text-slate-600">{unitPrice || "0"}</td>
+                  <td className="px-2.5 py-2 text-right tabular-nums text-slate-600">{gstPercent || "0"}</td>
+                  <td className="px-2.5 py-2 text-right tabular-nums font-semibold text-slate-800">{money(totals.incGstAmount)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
 
         <div className="flex flex-wrap gap-2">
           <SubmitButton loading={loading}>Post Decanting Sale</SubmitButton>
-          <button type="button" onClick={reset} className="rounded-md border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-blue-700">
-            Reset Form
-          </button>
+          <button type="button" onClick={reset} className="btn-outline">Reset Form</button>
         </div>
       </form>
     </>
