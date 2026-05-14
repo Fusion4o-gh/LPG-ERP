@@ -143,119 +143,113 @@ export function BatchSaleForm() {
         <ApiError message={error} />
         <SuccessMessage message={success} />
 
-        <section className="rounded-lg border border-blue-100 bg-white p-4 shadow-sm">
-          <div className="mb-4 rounded-md bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-800">Batch Header</div>
-          <div className="grid gap-4 md:grid-cols-3">
-            <label className="block text-sm text-slate-700">
-              <span className="mb-1 block font-medium">Date *</span>
-              <input type="date" value={transactionDate} onChange={(event) => setTransactionDate(event.target.value)} className="w-full rounded-md border border-blue-100 px-3 py-2" />
-            </label>
-            <label className="block text-sm text-slate-700 md:col-span-2">
-              <span className="mb-1 block font-medium">Remarks</span>
-              <input value={remarks} onChange={(event) => setRemarks(event.target.value)} className="w-full rounded-md border border-blue-100 px-3 py-2" />
-            </label>
+        {/* Batch Header */}
+        <section className="card rounded-xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center gap-2">
+            <div className="h-3.5 w-0.5 rounded-full bg-blue-500/60 shrink-0" />
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Batch Header</h2>
+          </div>
+          <div className="p-5">
+            <div className="grid gap-4 md:grid-cols-3">
+              <div>
+                <label className="form-label" htmlFor="transactionDate">Date *</label>
+                <input id="transactionDate" type="date" value={transactionDate} onChange={(e) => setTransactionDate(e.target.value)} className="form-input" />
+              </div>
+              <div className="md:col-span-2">
+                <label className="form-label" htmlFor="remarks">Remarks</label>
+                <input id="remarks" value={remarks} onChange={(e) => setRemarks(e.target.value)} className="form-input" />
+              </div>
+            </div>
           </div>
         </section>
 
-        <section className="rounded-lg border border-blue-100 bg-white p-4 shadow-sm">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div className="rounded-md bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-800">Batch Rows</div>
-            <button type="button" onClick={() => setRows((current) => [...current, newRow()])} className="rounded-md bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800">
-              Add Row
-            </button>
+        {/* Batch Rows */}
+        <section className="card rounded-xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <div className="h-3.5 w-0.5 rounded-full bg-blue-500/60 shrink-0" />
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Batch Rows</h2>
+            </div>
+            <button type="button" onClick={() => setRows((c) => [...c, newRow()])} className="btn-primary-sm">+ Add Row</button>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-[1480px] border-collapse text-sm">
-              <thead className="bg-blue-50 text-left text-blue-950">
-                <tr>
-                  <th className="border border-blue-100 px-2 py-2">Customer</th>
-                  <th className="border border-blue-100 px-2 py-2 text-right">11.8 KG Price</th>
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200">
+                  <th className="whitespace-nowrap px-2.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Customer</th>
+                  <th className="whitespace-nowrap px-2.5 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">11.8 KG Price</th>
                   {[1, 2, 3].map((slot) => (
-                    <th key={slot} className="border border-blue-100 px-2 py-2">
-                      Item {slot}
-                    </th>
+                    <th key={slot} className="whitespace-nowrap px-2.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Item {slot}</th>
                   ))}
-                  <th className="border border-blue-100 px-2 py-2 text-right">Total</th>
-                  <th className="border border-blue-100 px-2 py-2">Payment</th>
-                  <th className="border border-blue-100 px-2 py-2 text-right">Received</th>
-                  <th className="border border-blue-100 px-2 py-2">Action</th>
+                  <th className="whitespace-nowrap px-2.5 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Total</th>
+                  <th className="whitespace-nowrap px-2.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Payment</th>
+                  <th className="whitespace-nowrap px-2.5 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Received</th>
+                  <th className="whitespace-nowrap px-2.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"></th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-100">
                 {rows.map((row, rowIndex) => (
-                  <tr key={rowIndex}>
-                    <td className="border border-blue-100 px-2 py-2 align-top">
-                      <select value={row.customerId} onChange={(event) => updateRow(rowIndex, { customerId: event.target.value })} disabled={lookupLoading} className="w-56 rounded-md border border-slate-300 bg-white px-2 py-1.5">
+                  <tr key={rowIndex} className="hover:bg-blue-50/30 transition-colors">
+                    <td className="px-2.5 py-2 align-top">
+                      <select value={row.customerId} onChange={(e) => updateRow(rowIndex, { customerId: e.target.value })} disabled={lookupLoading} className="tbl-select w-52">
                         <option value="">Select Customer</option>
-                        {customers.map((customer) => (
-                          <option key={String(customer.id)} value={String(customer.id)}>
-                            {label(customer)}
-                          </option>
-                        ))}
+                        {customers.map((c) => <option key={String(c.id)} value={String(c.id)}>{label(c)}</option>)}
                       </select>
                     </td>
-                    <td className="border border-blue-100 px-2 py-2 align-top">
-                      <input type="number" min="0" value={row.elevenPointEightKgPrice} onChange={(event) => updateRow(rowIndex, { elevenPointEightKgPrice: event.target.value })} className="w-28 rounded-md border border-slate-300 px-2 py-1.5 text-right" />
+                    <td className="px-2.5 py-2 align-top">
+                      <input type="number" min="0" value={row.elevenPointEightKgPrice} onChange={(e) => updateRow(rowIndex, { elevenPointEightKgPrice: e.target.value })} className="tbl-input w-24 text-right" />
                     </td>
                     {row.items.map((slot, slotIndex) => (
-                      <td key={slotIndex} className="border border-blue-100 px-2 py-2 align-top">
-                        <div className="space-y-2">
-                          <select value={slot.itemId} onChange={(event) => updateSlot(rowIndex, slotIndex, { itemId: event.target.value })} disabled={lookupLoading} className="w-52 rounded-md border border-slate-300 bg-white px-2 py-1.5">
+                      <td key={slotIndex} className="px-2.5 py-2 align-top">
+                        <div className="space-y-1.5">
+                          <select value={slot.itemId} onChange={(e) => updateSlot(rowIndex, slotIndex, { itemId: e.target.value })} disabled={lookupLoading} className="tbl-select w-48">
                             <option value="">Select Item</option>
-                            {items.map((item) => (
-                              <option key={String(item.id)} value={String(item.id)}>
-                                {label(item)}
-                              </option>
-                            ))}
+                            {items.map((item) => <option key={String(item.id)} value={String(item.id)}>{label(item)}</option>)}
                           </select>
-                          <div className="flex gap-2">
-                            <input type="number" min="1" placeholder="Qty" value={slot.quantity} onChange={(event) => updateSlot(rowIndex, slotIndex, { quantity: event.target.value })} className="w-20 rounded-md border border-slate-300 px-2 py-1.5 text-right" />
-                            <input type="number" min="0" placeholder="Rate" value={slot.unitPrice} onChange={(event) => updateSlot(rowIndex, slotIndex, { unitPrice: event.target.value })} className="w-24 rounded-md border border-slate-300 px-2 py-1.5 text-right" />
+                          <div className="flex gap-1.5">
+                            <input type="number" min="1" placeholder="Qty" value={slot.quantity} onChange={(e) => updateSlot(rowIndex, slotIndex, { quantity: e.target.value })} className="tbl-input w-16 text-right" />
+                            <input type="number" min="0" placeholder="Rate" value={slot.unitPrice} onChange={(e) => updateSlot(rowIndex, slotIndex, { unitPrice: e.target.value })} className="tbl-input w-20 text-right" />
                           </div>
                         </div>
                       </td>
                     ))}
-                    <td className="border border-blue-100 px-2 py-2 text-right align-top font-semibold tabular-nums">{money(rowTotal(row))}</td>
-                    <td className="border border-blue-100 px-2 py-2 align-top">
-                      <select value={row.paymentType} onChange={(event) => updateRow(rowIndex, { paymentType: event.target.value as Row["paymentType"] })} className="w-28 rounded-md border border-slate-300 bg-white px-2 py-1.5">
+                    <td className="px-2.5 py-2 text-right align-top tabular-nums font-semibold text-slate-800">{money(rowTotal(row))}</td>
+                    <td className="px-2.5 py-2 align-top">
+                      <select value={row.paymentType} onChange={(e) => updateRow(rowIndex, { paymentType: e.target.value as Row["paymentType"] })} className="tbl-select w-24">
                         <option value="Cash">Cash</option>
                         <option value="Credit">Credit</option>
                       </select>
                     </td>
-                    <td className="border border-blue-100 px-2 py-2 align-top">
-                      <input type="number" min="0" value={row.amountReceived} onChange={(event) => updateRow(rowIndex, { amountReceived: event.target.value })} className="w-28 rounded-md border border-slate-300 px-2 py-1.5 text-right" />
+                    <td className="px-2.5 py-2 align-top">
+                      <input type="number" min="0" value={row.amountReceived} onChange={(e) => updateRow(rowIndex, { amountReceived: e.target.value })} className="tbl-input w-24 text-right" />
                     </td>
-                    <td className="border border-blue-100 px-2 py-2 align-top">
-                      <button type="button" onClick={() => removeRow(rowIndex)} disabled={rows.length === 1} className="rounded-md border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-700 disabled:opacity-40">
-                        Remove
-                      </button>
+                    <td className="px-2.5 py-2 align-top">
+                      <button type="button" onClick={() => removeRow(rowIndex)} disabled={rows.length === 1} className="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50 disabled:opacity-40 transition-colors">Remove</button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
-            <div className="rounded-md bg-blue-50 p-3 text-blue-950">
-              <div className="text-xs font-semibold uppercase">Rows</div>
-              <div className="mt-1 text-lg font-semibold">{rows.length}</div>
+          <div className="border-t border-slate-100 bg-slate-50/60 px-5 py-4 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-lg border border-slate-200 bg-white p-3">
+              <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Rows</div>
+              <div className="mt-1.5 text-lg font-bold text-slate-800 tabular-nums">{rows.length}</div>
             </div>
-            <div className="rounded-md bg-blue-50 p-3 text-blue-950">
-              <div className="text-xs font-semibold uppercase">Amount Received</div>
-              <div className="mt-1 text-lg font-semibold">{money(rows.reduce((sum, row) => sum + amount(row.amountReceived), 0))}</div>
+            <div className="rounded-lg border border-slate-200 bg-white p-3">
+              <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Amount Received</div>
+              <div className="mt-1.5 text-lg font-bold text-slate-800 tabular-nums">{money(rows.reduce((sum, row) => sum + amount(row.amountReceived), 0))}</div>
             </div>
-            <div className="rounded-md bg-blue-700 p-3 text-white">
-              <div className="text-xs font-semibold uppercase">Batch Total</div>
-              <div className="mt-1 text-lg font-semibold">{money(batchTotal)}</div>
+            <div className="rounded-lg bg-blue-700 p-3">
+              <div className="text-xs font-semibold uppercase tracking-wide text-blue-200">Batch Total</div>
+              <div className="mt-1.5 text-lg font-bold text-white tabular-nums">{money(batchTotal)}</div>
             </div>
           </div>
         </section>
 
         <div className="flex flex-wrap gap-2">
           <SubmitButton loading={loading}>Post Complete Day Sale</SubmitButton>
-          <button type="button" onClick={() => { setRows([newRow()]); setTransactionDate(""); setRemarks(""); setError(""); setSuccess(""); }} className="rounded-md border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-blue-700">
-            Reset Form
-          </button>
+          <button type="button" onClick={() => { setRows([newRow()]); setTransactionDate(""); setRemarks(""); setError(""); setSuccess(""); }} className="btn-outline">Reset Form</button>
         </div>
       </form>
     </>

@@ -184,134 +184,113 @@ export function SaleLpgForm() {
       <form onSubmit={onSubmit} className="space-y-5">
         <ApiError message={error} />
         <SuccessMessage message={success} />
+
         {printDocumentNo ? (
-          <div className="rounded-md border border-blue-100 bg-white px-3 py-2 text-sm text-slate-700">
-            Document number: <span className="font-semibold text-slate-950">{printDocumentNo}</span>
-            <Link href={`/operations/sale-lpg/print/${encodeURIComponent(printDocumentNo)}`} className="ml-3 font-semibold text-blue-700 underline">
-              Open printable view
+          <div className="card rounded-lg flex flex-wrap items-center gap-3 px-4 py-3 text-sm">
+            <svg className="h-4 w-4 shrink-0 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            <span className="text-slate-600">Issue number: <span className="font-semibold text-slate-900">{printDocumentNo}</span></span>
+            <Link href={`/operations/sale-lpg/print/${encodeURIComponent(printDocumentNo)}`} className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
+              Open Print View
             </Link>
           </div>
         ) : null}
 
-        <section className="rounded-lg border border-blue-100 bg-white p-4 shadow-sm">
-          <div className="mb-4 rounded-md bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-800">Invoice Header</div>
-          <div className="grid gap-4 lg:grid-cols-6">
-            <label className="block text-sm text-slate-700 lg:col-span-2">
-              <span className="mb-1 block font-medium">Customer *</span>
-              <select value={customerId} onChange={(event) => setCustomerId(event.target.value)} disabled={lookupLoading} className="w-full rounded-md border border-blue-100 bg-white px-3 py-2">
-                <option value="">Select Customer</option>
-                {customers.map((customer) => (
-                  <option key={String(customer.id)} value={String(customer.id)}>
-                    {optionLabel(customer)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block text-sm text-slate-700">
-              <span className="mb-1 block font-medium">Date *</span>
-              <input type="date" value={transactionDate} onChange={(event) => setTransactionDate(event.target.value)} className="w-full rounded-md border border-blue-100 px-3 py-2" />
-            </label>
-            <label className="block text-sm text-slate-700">
-              <span className="mb-1 block font-medium">Sale Type</span>
-              <select value={saleType} onChange={(event) => setSaleType(event.target.value)} className="w-full rounded-md border border-blue-100 bg-white px-3 py-2">
-                <option value="Direct">Direct</option>
-              </select>
-            </label>
-            <label className="block text-sm text-slate-700">
-              <span className="mb-1 block font-medium">11.8 KG Price</span>
-              <input type="number" min="0" value={elevenPointEightKgPrice} onChange={(event) => setElevenPointEightKgPrice(event.target.value)} className="w-full rounded-md border border-blue-100 px-3 py-2" />
-            </label>
-            <label className="block text-sm text-slate-700">
-              <span className="mb-1 block font-medium">Invoice Language</span>
-              <select value={invoiceLanguage} onChange={(event) => setInvoiceLanguage(event.target.value)} className="w-full rounded-md border border-blue-100 bg-white px-3 py-2">
-                <option value="English">English</option>
-                <option value="Urdu">Urdu</option>
-              </select>
-            </label>
-            <label className="block text-sm text-slate-700 lg:col-span-4">
-              <span className="mb-1 block font-medium">Remarks</span>
-              <input value={remarks} onChange={(event) => setRemarks(event.target.value)} className="w-full rounded-md border border-blue-100 px-3 py-2" />
-            </label>
-            <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-950 lg:col-span-2">
-              <div className="text-xs font-semibold uppercase">Customer Balance</div>
-              <div className="mt-1">{selectedCustomerBalance}</div>
+        {/* Invoice Header */}
+        <section className="card rounded-xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center gap-2">
+            <div className="h-3.5 w-0.5 rounded-full bg-blue-500/60 shrink-0" />
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Invoice Header</h2>
+          </div>
+          <div className="p-5">
+            <div className="grid gap-4 lg:grid-cols-6">
+              <div className="lg:col-span-2">
+                <label className="form-label" htmlFor="customerId">Customer *</label>
+                <select id="customerId" value={customerId} onChange={(e) => setCustomerId(e.target.value)} disabled={lookupLoading} className="form-input">
+                  <option value="">Select Customer</option>
+                  {customers.map((c) => <option key={String(c.id)} value={String(c.id)}>{optionLabel(c)}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="form-label" htmlFor="transactionDate">Date *</label>
+                <input id="transactionDate" type="date" value={transactionDate} onChange={(e) => setTransactionDate(e.target.value)} className="form-input" />
+              </div>
+              <div>
+                <label className="form-label" htmlFor="saleType">Sale Type</label>
+                <select id="saleType" value={saleType} onChange={(e) => setSaleType(e.target.value)} className="form-input">
+                  <option value="Direct">Direct</option>
+                </select>
+              </div>
+              <div>
+                <label className="form-label" htmlFor="elevenPointEightKgPrice">11.8 KG Price</label>
+                <input id="elevenPointEightKgPrice" type="number" min="0" value={elevenPointEightKgPrice} onChange={(e) => setElevenPointEightKgPrice(e.target.value)} className="form-input" />
+              </div>
+              <div>
+                <label className="form-label" htmlFor="invoiceLanguage">Invoice Language</label>
+                <select id="invoiceLanguage" value={invoiceLanguage} onChange={(e) => setInvoiceLanguage(e.target.value)} className="form-input">
+                  <option value="English">English</option>
+                  <option value="Urdu">Urdu</option>
+                </select>
+              </div>
+              <div className="lg:col-span-4">
+                <label className="form-label" htmlFor="remarks">Remarks</label>
+                <input id="remarks" value={remarks} onChange={(e) => setRemarks(e.target.value)} className="form-input" />
+              </div>
+              <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-3 lg:col-span-2">
+                <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Customer Balance</div>
+                <div className="mt-1 text-sm text-slate-700">{selectedCustomerBalance}</div>
+              </div>
             </div>
           </div>
         </section>
 
-        <section className="rounded-lg border border-blue-100 bg-white p-4 shadow-sm">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div className="rounded-md bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-800">Sale Lines</div>
-            <button type="button" onClick={() => setLines((current) => [...current, { ...emptyLine }])} className="rounded-md bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800">
-              Add Row
-            </button>
+        {/* Sale Lines */}
+        <section className="card rounded-xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <div className="h-3.5 w-0.5 rounded-full bg-blue-500/60 shrink-0" />
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Sale Lines</h2>
+            </div>
+            <button type="button" onClick={() => setLines((c) => [...c, { ...emptyLine }])} className="btn-primary-sm">+ Add Row</button>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-[1260px] border-collapse text-sm">
-              <thead className="bg-blue-50 text-left text-blue-950">
-                <tr>
-                  <th className="border border-blue-100 px-2 py-2">Item</th>
-                  <th className="border border-blue-100 px-2 py-2 text-right">Sale Qty</th>
-                  <th className="border border-blue-100 px-2 py-2 text-right">Unit Price</th>
-                  <th className="border border-blue-100 px-2 py-2 text-right">GST %</th>
-                  <th className="border border-blue-100 px-2 py-2 text-right">Security</th>
-                  <th className="border border-blue-100 px-2 py-2">Empty Return Item</th>
-                  <th className="border border-blue-100 px-2 py-2 text-right">Return Qty</th>
-                  <th className="border border-blue-100 px-2 py-2">Filled Stock</th>
-                  <th className="border border-blue-100 px-2 py-2 text-right">GST Amount</th>
-                  <th className="border border-blue-100 px-2 py-2 text-right">Ex-GST</th>
-                  <th className="border border-blue-100 px-2 py-2 text-right">Inc-GST</th>
-                  <th className="border border-blue-100 px-2 py-2">Action</th>
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200">
+                  {["Item", "Sale Qty", "Unit Price", "GST %", "Security", "Empty Return Item", "Return Qty", "Filled Stock", "GST Amt", "Ex-GST", "Inc-GST", ""].map((h, i) => (
+                    <th key={i} className={`whitespace-nowrap px-2.5 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 ${i >= 1 && i <= 6 ? "text-right" : i >= 8 && i <= 10 ? "text-right" : "text-left"}`}>{h}</th>
+                  ))}
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-100">
                 {lines.map((line, index) => {
                   const current = lineTotals(line);
                   return (
-                    <tr key={index}>
-                      <td className="border border-blue-100 px-2 py-2">
-                        <select value={line.itemId} onChange={(event) => updateLine(index, { itemId: event.target.value, emptyReturnItemId: line.emptyReturnItemId || event.target.value })} disabled={lookupLoading} className="w-56 rounded-md border border-slate-300 bg-white px-2 py-1.5">
+                    <tr key={index} className="hover:bg-blue-50/30 transition-colors">
+                      <td className="px-2.5 py-2">
+                        <select value={line.itemId} onChange={(e) => updateLine(index, { itemId: e.target.value, emptyReturnItemId: line.emptyReturnItemId || e.target.value })} disabled={lookupLoading} className="tbl-select w-52">
                           <option value="">Select Item</option>
-                          {items.map((item) => (
-                            <option key={String(item.id)} value={String(item.id)}>
-                              {optionLabel(item)}
-                            </option>
-                          ))}
+                          {items.map((item) => <option key={String(item.id)} value={String(item.id)}>{optionLabel(item)}</option>)}
                         </select>
                       </td>
-                      <td className="border border-blue-100 px-2 py-2">
-                        <input type="number" min="1" value={line.quantity} onChange={(event) => updateLine(index, { quantity: event.target.value })} className="w-24 rounded-md border border-slate-300 px-2 py-1.5 text-right" />
-                      </td>
-                      <td className="border border-blue-100 px-2 py-2">
-                        <input type="number" min="0" value={line.unitPrice} onChange={(event) => updateLine(index, { unitPrice: event.target.value })} className="w-28 rounded-md border border-slate-300 px-2 py-1.5 text-right" />
-                      </td>
-                      <td className="border border-blue-100 px-2 py-2">
-                        <input type="number" min="0" value={line.gstPercent} onChange={(event) => updateLine(index, { gstPercent: event.target.value })} className="w-20 rounded-md border border-slate-300 px-2 py-1.5 text-right" />
-                      </td>
-                      <td className="border border-blue-100 px-2 py-2">
-                        <input type="number" min="0" value={line.securityDepositAmount} onChange={(event) => updateLine(index, { securityDepositAmount: event.target.value })} className="w-24 rounded-md border border-slate-300 px-2 py-1.5 text-right" />
-                      </td>
-                      <td className="border border-blue-100 px-2 py-2">
-                        <select value={line.emptyReturnItemId} onChange={(event) => updateLine(index, { emptyReturnItemId: event.target.value })} disabled={lookupLoading} className="w-56 rounded-md border border-slate-300 bg-white px-2 py-1.5">
+                      <td className="px-2.5 py-2"><input type="number" min="1" value={line.quantity} onChange={(e) => updateLine(index, { quantity: e.target.value })} className="tbl-input w-20 text-right" /></td>
+                      <td className="px-2.5 py-2"><input type="number" min="0" value={line.unitPrice} onChange={(e) => updateLine(index, { unitPrice: e.target.value })} className="tbl-input w-24 text-right" /></td>
+                      <td className="px-2.5 py-2"><input type="number" min="0" value={line.gstPercent} onChange={(e) => updateLine(index, { gstPercent: e.target.value })} className="tbl-input w-16 text-right" /></td>
+                      <td className="px-2.5 py-2"><input type="number" min="0" value={line.securityDepositAmount} onChange={(e) => updateLine(index, { securityDepositAmount: e.target.value })} className="tbl-input w-20 text-right" /></td>
+                      <td className="px-2.5 py-2">
+                        <select value={line.emptyReturnItemId} onChange={(e) => updateLine(index, { emptyReturnItemId: e.target.value })} disabled={lookupLoading} className="tbl-select w-52">
                           <option value="">Same as sale item</option>
-                          {items.map((item) => (
-                            <option key={String(item.id)} value={String(item.id)}>
-                              {optionLabel(item)}
-                            </option>
-                          ))}
+                          {items.map((item) => <option key={String(item.id)} value={String(item.id)}>{optionLabel(item)}</option>)}
                         </select>
                       </td>
-                      <td className="border border-blue-100 px-2 py-2">
-                        <input type="number" min="0" value={line.emptyReturnQuantity} onChange={(event) => updateLine(index, { emptyReturnQuantity: event.target.value })} className="w-24 rounded-md border border-slate-300 px-2 py-1.5 text-right" />
-                      </td>
-                      <td className="border border-blue-100 px-2 py-2 text-xs text-slate-500">Checked on save</td>
-                      <td className="border border-blue-100 px-2 py-2 text-right tabular-nums">{money(current.gstAmount)}</td>
-                      <td className="border border-blue-100 px-2 py-2 text-right tabular-nums">{money(current.exGstAmount)}</td>
-                      <td className="border border-blue-100 px-2 py-2 text-right tabular-nums">{money(current.incGstAmount)}</td>
-                      <td className="border border-blue-100 px-2 py-2">
-                        <button type="button" onClick={() => removeLine(index)} disabled={lines.length === 1} className="rounded-md border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-700 disabled:opacity-40">
-                          Remove
-                        </button>
+                      <td className="px-2.5 py-2"><input type="number" min="0" value={line.emptyReturnQuantity} onChange={(e) => updateLine(index, { emptyReturnQuantity: e.target.value })} className="tbl-input w-20 text-right" /></td>
+                      <td className="px-2.5 py-2 text-xs text-slate-400 italic">Checked on save</td>
+                      <td className="px-2.5 py-2 text-right tabular-nums text-slate-600">{money(current.gstAmount)}</td>
+                      <td className="px-2.5 py-2 text-right tabular-nums text-slate-600">{money(current.exGstAmount)}</td>
+                      <td className="px-2.5 py-2 text-right tabular-nums font-medium text-slate-800">{money(current.incGstAmount)}</td>
+                      <td className="px-2.5 py-2">
+                        <button type="button" onClick={() => removeLine(index)} disabled={lines.length === 1} className="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50 disabled:opacity-40 transition-colors">Remove</button>
                       </td>
                     </tr>
                   );
@@ -319,31 +298,29 @@ export function SaleLpgForm() {
               </tbody>
             </table>
           </div>
-          <div className="mt-4 grid gap-3 text-sm sm:grid-cols-4">
-            <div className="rounded-md bg-blue-50 p-3 text-blue-950">
-              <div className="text-xs font-semibold uppercase">Ex-GST Total</div>
-              <div className="mt-1 text-lg font-semibold">{money(totals.exGstAmount)}</div>
+          <div className="border-t border-slate-100 bg-slate-50/60 px-5 py-4 grid gap-3 sm:grid-cols-4">
+            <div className="rounded-lg border border-slate-200 bg-white p-3">
+              <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Ex-GST Total</div>
+              <div className="mt-1.5 text-lg font-bold text-slate-800 tabular-nums">{money(totals.exGstAmount)}</div>
             </div>
-            <div className="rounded-md bg-blue-50 p-3 text-blue-950">
-              <div className="text-xs font-semibold uppercase">GST Total</div>
-              <div className="mt-1 text-lg font-semibold">{money(totals.gstAmount)}</div>
+            <div className="rounded-lg border border-slate-200 bg-white p-3">
+              <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">GST Total</div>
+              <div className="mt-1.5 text-lg font-bold text-slate-800 tabular-nums">{money(totals.gstAmount)}</div>
             </div>
-            <div className="rounded-md bg-blue-50 p-3 text-blue-950">
-              <div className="text-xs font-semibold uppercase">Security Total</div>
-              <div className="mt-1 text-lg font-semibold">{money(totals.securityAmount)}</div>
+            <div className="rounded-lg border border-slate-200 bg-white p-3">
+              <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Security Total</div>
+              <div className="mt-1.5 text-lg font-bold text-slate-800 tabular-nums">{money(totals.securityAmount)}</div>
             </div>
-            <div className="rounded-md bg-blue-700 p-3 text-white">
-              <div className="text-xs font-semibold uppercase">Receivable Total</div>
-              <div className="mt-1 text-lg font-semibold">{money(totals.receivableAmount)}</div>
+            <div className="rounded-lg bg-blue-700 p-3">
+              <div className="text-xs font-semibold uppercase tracking-wide text-blue-200">Receivable Total</div>
+              <div className="mt-1.5 text-lg font-bold text-white tabular-nums">{money(totals.receivableAmount)}</div>
             </div>
           </div>
         </section>
 
         <div className="flex flex-wrap gap-2">
           <SubmitButton loading={loading}>Post Sale</SubmitButton>
-          <button type="button" onClick={reset} className="rounded-md border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-blue-700">
-            Reset Form
-          </button>
+          <button type="button" onClick={reset} className="btn-outline">Reset Form</button>
         </div>
       </form>
     </>
