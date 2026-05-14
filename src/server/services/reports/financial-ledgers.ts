@@ -419,6 +419,24 @@ export async function getProfitLossReportCsv(context: Context, input: ReportFilt
   );
 }
 
+export async function getGeneralLedgerReport(context: Context, input: LedgerFilters = {}) {
+  return prisma.$transaction(async (tx) => {
+    await enforcePermission(tx, context.userId, "reports", PermissionAction.VIEW);
+    if (!input.accountId) throw new Error("accountId is required.");
+    const account = await tx.chartAccount.findFirst({
+      where: { id: input.accountId, companyId: context.companyId },
+      select: { id: true, code: true, name: true, normalBalance: true },
+    });
+    if (!account) throw new Error("accountId must reference a valid chart account.");
+    return accountLedger(tx, context, account, input);
+  });
+}
+
+export async function getGeneralLedgerReportCsv(context: Context, input: LedgerFilters = {}) {
+  const report = await getGeneralLedgerReport(context, input);
+  return ledgerRowsCsv(report.rows);
+}
+
 export async function getBalanceSheetReportCsv(context: Context, input: LedgerFilters = {}) {
   const report = await getBalanceSheetReport(context, input);
   return toCsv(
