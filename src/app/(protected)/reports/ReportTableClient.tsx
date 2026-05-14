@@ -107,11 +107,41 @@ export function ReportTableClient({
 
   const activeFilters = Object.entries(filters).filter(([, value]) => value);
 
+  const selectCls = "form-input";
+  const inputCls = "form-input";
+
   return (
     <section data-report-print>
       <div data-print-hidden>
-        <PageHeader title={title} description={description} />
+        <PageHeader
+          title={title}
+          description={description}
+          actions={
+            <>
+              {enableCsv && (
+                <a
+                  href={reportUrl("csv")}
+                  download
+                  className="btn-outline"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  CSV
+                </a>
+              )}
+              <button type="button" onClick={printReport} className="btn-outline">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                Print
+              </button>
+            </>
+          }
+        />
       </div>
+
+      {/* Print-only header */}
       <div className="hidden print:block" data-print-only>
         <h1 className="text-xl font-semibold text-slate-950">{title}</h1>
         <p className="mt-1 text-sm text-slate-700">{description}</p>
@@ -125,93 +155,113 @@ export function ReportTableClient({
           </div>
         </div>
       </div>
-      <form onSubmit={submit} data-print-hidden className="mb-4 grid gap-3 rounded-md border border-slate-200 bg-white p-4 md:grid-cols-5">
-        {showItemFilter ? (
-          <select value={filters.itemId} onChange={(event) => setFilters((current) => ({ ...current, itemId: event.target.value }))} className="rounded-md border border-slate-300 px-3 py-2">
-            <option value="">All Items</option>
-            {items.map((item) => (
-              <option key={item.id} value={item.id}>
-                {[item.code, item.name].filter(Boolean).join(" - ")}
-              </option>
-            ))}
-          </select>
-        ) : null}
-        {showCustomerFilter ? (
-          <select value={filters.customerId} onChange={(event) => setFilters((current) => ({ ...current, customerId: event.target.value }))} className="rounded-md border border-slate-300 px-3 py-2">
-            <option value="">All Customers</option>
-            {customers.map((customer) => (
-              <option key={customer.id} value={customer.id}>
-                {[customer.code, customer.name].filter(Boolean).join(" - ")}
-              </option>
-            ))}
-          </select>
-        ) : null}
-        {showVendorFilter ? (
-          <select value={filters.vendorId} onChange={(event) => setFilters((current) => ({ ...current, vendorId: event.target.value }))} className="rounded-md border border-slate-300 px-3 py-2">
-            <option value="">Select Vendor</option>
-            {vendors.map((vendor) => (
-              <option key={vendor.id} value={vendor.id}>
-                {[vendor.code, vendor.name].filter(Boolean).join(" - ")}
-              </option>
-            ))}
-          </select>
-        ) : null}
-        {showAccountFilter ? (
-          <select value={filters.accountId} onChange={(event) => setFilters((current) => ({ ...current, accountId: event.target.value }))} className="rounded-md border border-slate-300 px-3 py-2">
-            <option value="">{accountFilterLabel}</option>
-            {accounts.map((account) => (
-              <option key={account.id} value={account.id}>
-                {[account.code, account.name].filter(Boolean).join(" - ")}
-              </option>
-            ))}
-          </select>
-        ) : null}
-        {showBankFilter ? (
-          <select value={filters.bankId} onChange={(event) => setFilters((current) => ({ ...current, bankId: event.target.value }))} className="rounded-md border border-slate-300 px-3 py-2">
-            <option value="">Select Bank</option>
-            {banks.map((bank) => (
-              <option key={bank.id} value={bank.id}>
-                {bank.name}
-              </option>
-            ))}
-          </select>
-        ) : null}
-        {showAccountTypeFilter ? (
-          <select value={filters.accountType} onChange={(event) => setFilters((current) => ({ ...current, accountType: event.target.value }))} className="rounded-md border border-slate-300 px-3 py-2">
-            <option value="">All Account Types</option>
-            <option value="ASSET">Assets</option>
-            <option value="LIABILITY">Liabilities</option>
-            <option value="EQUITY">Equity</option>
-            <option value="REVENUE">Revenue</option>
-            <option value="EXPENSE">Expenses</option>
-          </select>
-        ) : null}
+
+      {/* Filter panel */}
+      <form
+        onSubmit={submit}
+        data-print-hidden
+        className="card rounded-xl mb-4 p-4 grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 items-end"
+      >
+        {showItemFilter && (
+          <div>
+            <label className="form-label mb-1">Item</label>
+            <select value={filters.itemId} onChange={(e) => setFilters((f) => ({ ...f, itemId: e.target.value }))} className={selectCls}>
+              <option value="">All Items</option>
+              {items.map((item) => (
+                <option key={item.id} value={item.id}>{[item.code, item.name].filter(Boolean).join(" - ")}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        {showCustomerFilter && (
+          <div>
+            <label className="form-label mb-1">Customer</label>
+            <select value={filters.customerId} onChange={(e) => setFilters((f) => ({ ...f, customerId: e.target.value }))} className={selectCls}>
+              <option value="">All Customers</option>
+              {customers.map((c) => (
+                <option key={c.id} value={c.id}>{[c.code, c.name].filter(Boolean).join(" - ")}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        {showVendorFilter && (
+          <div>
+            <label className="form-label mb-1">Vendor</label>
+            <select value={filters.vendorId} onChange={(e) => setFilters((f) => ({ ...f, vendorId: e.target.value }))} className={selectCls}>
+              <option value="">Select Vendor</option>
+              {vendors.map((v) => (
+                <option key={v.id} value={v.id}>{[v.code, v.name].filter(Boolean).join(" - ")}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        {showAccountFilter && (
+          <div>
+            <label className="form-label mb-1">{accountFilterLabel}</label>
+            <select value={filters.accountId} onChange={(e) => setFilters((f) => ({ ...f, accountId: e.target.value }))} className={selectCls}>
+              <option value="">{accountFilterLabel}</option>
+              {accounts.map((a) => (
+                <option key={a.id} value={a.id}>{[a.code, a.name].filter(Boolean).join(" - ")}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        {showBankFilter && (
+          <div>
+            <label className="form-label mb-1">Bank</label>
+            <select value={filters.bankId} onChange={(e) => setFilters((f) => ({ ...f, bankId: e.target.value }))} className={selectCls}>
+              <option value="">Select Bank</option>
+              {banks.map((b) => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        {showAccountTypeFilter && (
+          <div>
+            <label className="form-label mb-1">Account Type</label>
+            <select value={filters.accountType} onChange={(e) => setFilters((f) => ({ ...f, accountType: e.target.value }))} className={selectCls}>
+              <option value="">All Account Types</option>
+              <option value="ASSET">Assets</option>
+              <option value="LIABILITY">Liabilities</option>
+              <option value="EQUITY">Equity</option>
+              <option value="REVENUE">Revenue</option>
+              <option value="EXPENSE">Expenses</option>
+            </select>
+          </div>
+        )}
         {showAsOfFilter ? (
-          <input
-            type="date"
-            aria-label="As of date"
-            value={filters.asOf}
-            onChange={(event) => setFilters((current) => ({ ...current, asOf: event.target.value }))}
-            className="rounded-md border border-slate-300 px-3 py-2"
-          />
+          <div>
+            <label className="form-label mb-1">As of Date</label>
+            <input
+              type="date"
+              aria-label="As of date"
+              value={filters.asOf}
+              onChange={(e) => setFilters((f) => ({ ...f, asOf: e.target.value }))}
+              className={inputCls}
+            />
+          </div>
         ) : (
           <>
-            <input type="date" value={filters.from} onChange={(event) => setFilters((current) => ({ ...current, from: event.target.value }))} className="rounded-md border border-slate-300 px-3 py-2" />
-            <input type="date" value={filters.to} onChange={(event) => setFilters((current) => ({ ...current, to: event.target.value }))} className="rounded-md border border-slate-300 px-3 py-2" />
+            <div>
+              <label className="form-label mb-1">From</label>
+              <input type="date" value={filters.from} onChange={(e) => setFilters((f) => ({ ...f, from: e.target.value }))} className={inputCls} />
+            </div>
+            <div>
+              <label className="form-label mb-1">To</label>
+              <input type="date" value={filters.to} onChange={(e) => setFilters((f) => ({ ...f, to: e.target.value }))} className={inputCls} />
+            </div>
           </>
         )}
-        <button className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white">Apply Filters</button>
-        {enableCsv ? (
-          <a href={reportUrl("csv")} download className="rounded-md border border-slate-300 px-4 py-2 text-center text-sm font-semibold text-slate-700">
-            Download CSV
-          </a>
-        ) : null}
-        <button type="button" onClick={printReport} className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">
-          Print
-        </button>
+        <div className="flex items-end">
+          <button type="submit" className="btn-primary w-full justify-center">
+            Apply
+          </button>
+        </div>
       </form>
+
       <ApiError message={error} />
-      <DataTable loading={loading} rows={rows} columns={columns} />
+      <DataTable loading={loading} rows={rows} columns={columns} stickyHeader />
     </section>
   );
 }
