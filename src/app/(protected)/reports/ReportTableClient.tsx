@@ -33,6 +33,7 @@ export function ReportTableClient({
   showCustomerFilter = false,
   showVendorFilter = false,
   showAccountFilter = false,
+  accountFilterLabel = "Default Cash Account",
   showAccountTypeFilter = false,
   showAsOfFilter = false,
   enableCsv = true,
@@ -46,6 +47,7 @@ export function ReportTableClient({
   showCustomerFilter?: boolean;
   showVendorFilter?: boolean;
   showAccountFilter?: boolean;
+  accountFilterLabel?: string;
   showAccountTypeFilter?: boolean;
   showAsOfFilter?: boolean;
   enableCsv?: boolean;
@@ -152,7 +154,7 @@ export function ReportTableClient({
         ) : null}
         {showAccountFilter ? (
           <select value={filters.accountId} onChange={(event) => setFilters((current) => ({ ...current, accountId: event.target.value }))} className="rounded-md border border-slate-300 px-3 py-2">
-            <option value="">Default Cash Account</option>
+            <option value="">{accountFilterLabel}</option>
             {accounts.map((account) => (
               <option key={account.id} value={account.id}>
                 {[account.code, account.name].filter(Boolean).join(" - ")}

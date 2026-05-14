@@ -14,6 +14,7 @@ export default function GeneralLedgerReportPage() {
       endpoint="/api/reports/general-ledger"
       dataKey="rows"
       showAccountFilter
+      accountFilterLabel="Select Account"
       columns={[
         { key: "transactionDate", label: "Date", render: (row) => (row.transactionDate ? String(row.transactionDate).slice(0, 10) : "") },
         { key: "voucherNo", label: "Voucher / Opening" },
