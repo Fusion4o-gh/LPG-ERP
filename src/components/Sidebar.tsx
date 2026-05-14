@@ -86,7 +86,7 @@ const groups = [
   },
 ];
 
-export function Sidebar({ permissions }: { permissions: string[] }) {
+export function Sidebar({ permissions, onClose }: { permissions: string[]; onClose?: () => void }) {
   const pathname = usePathname();
 
   const visibleGroups = groups.filter((group) =>
@@ -103,10 +103,22 @@ export function Sidebar({ permissions }: { permissions: string[] }) {
       <div className="px-5 py-5" style={{ borderBottom: "1px solid var(--sidebar-border)" }}>
         <div className="flex items-center gap-3">
           <img src="/fusion4o-logo.png" alt="Fusion4o" className="h-9 w-9 object-contain" />
-          <div>
+          <div className="flex-1 min-w-0">
             <div className="text-[15px] font-bold text-white leading-tight tracking-tight">LPG ERP</div>
             <div className="text-[11px] mt-0.5" style={{ color: "var(--sidebar-text)" }}>Powered by Fusion4o</div>
           </div>
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="md:hidden rounded-md p-1 text-slate-400 hover:text-white transition-colors"
+              aria-label="Close navigation"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
 
