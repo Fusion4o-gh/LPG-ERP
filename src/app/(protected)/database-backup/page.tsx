@@ -1,5 +1,5 @@
-import { ComingSoonPage } from "@/components/ComingSoonPage";
+import { DatabaseBackupClient } from "./DatabaseBackupClient";
 
 export default function DatabaseBackupPage() {
-  return <ComingSoonPage title="Database Backup" section="Database Backup" legacyPath="/Db_backup" />;
+  return <DatabaseBackupClient />;
 }
