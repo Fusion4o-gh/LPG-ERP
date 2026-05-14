@@ -54,7 +54,7 @@ const groups = [
       { label: "Cash Receipt", href: "/payments/cash-receipt", module: "cash-receipts" },
       { label: "Security Receipt", href: "/payments/security-receipt", module: "cash-receipts" },
       { label: "Chart of Account", href: "/accounting/chart-of-accounts", module: "chart-of-accounts" },
-      { label: "Journal Vouchers", href: "/accounting/vouchers", module: "journal-vouchers" },
+      { label: "Journal Vouchers", href: "/payments/journal-vouchers", module: "journal-vouchers" },
       { label: "Bank Payments / Receipt", href: "/payments/bank-payments-receipts", module: "bank-payments" },
     ],
   },

@@ -96,6 +96,11 @@ const documentConfigs: Record<string, DocumentConfig> = {
     module: "cash-receipts",
     sourceType: "SecurityReceipt",
   },
+  "journal-voucher": {
+    type: "Journal Voucher",
+    module: "journal-vouchers",
+    sourceType: "JournalVoucher",
+  },
 };
 
 function isDocumentType(value: string) {
