@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useId, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api-client";
 import { ApiError } from "./ApiError";
 import { PageHeader } from "./PageHeader";
+import { SubmitButton } from "./SubmitButton";
 import { SuccessMessage } from "./SuccessMessage";
 
 type Account = { id: string; code: string; name: string; accountType: string };
@@ -150,172 +151,117 @@ export function MultiLinePaymentForm({ type }: { type: PaymentType }) {
   }
 
   return (
-    <section>
+    <>
       <PageHeader title={config.title} description={config.description} />
       <ApiError message={loadError} />
+      <form id={formId} onSubmit={handleSubmit} className="space-y-5">
+        <ApiError message={formError} />
+        <SuccessMessage message={postedNo ? `${config.title} voucher ${postedNo} posted.` : ""} />
 
-      <div className="rounded-xl border border-blue-100 bg-white p-5 shadow-sm">
-        <h2 className="mb-4 text-base font-semibold text-blue-700">New {config.title} Voucher</h2>
-
-        <form id={formId} onSubmit={handleSubmit}>
-          {/* Header row */}
-          <div className="mb-4 grid gap-3 md:grid-cols-3">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Date</label>
-              <input
-                type="date"
-                required
-                value={voucherDate}
-                onChange={(e) => setVoucherDate(e.target.value)}
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-slate-700">Narration</label>
-              <input
-                type="text"
-                value={narration}
-                onChange={(e) => setNarration(e.target.value)}
-                placeholder="Optional narration"
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-              />
-            </div>
-            {isBankType ? (
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">Bank</label>
-                <select
-                  required
-                  value={bankId}
-                  onChange={(e) => setBankId(e.target.value)}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                >
-                  <option value="">Select Bank</option>
-                  {banks.map((b) => (
-                    <option key={b.id} value={b.id}>{b.name}</option>
-                  ))}
-                </select>
-              </div>
-            ) : (
-              <div className="flex items-end">
-                <p className="text-xs text-slate-500">{config.systemLabel}</p>
-              </div>
-            )}
+        {postedNo ? (
+          <div className="card rounded-lg flex flex-wrap items-center gap-3 px-4 py-3 text-sm">
+            <svg className="h-4 w-4 shrink-0 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            <span className="text-slate-600">Voucher number: <span className="font-semibold text-slate-900">{postedNo}</span></span>
+            <Link href={`${config.printBase}/print/${encodeURIComponent(postedNo)}`} className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
+              Open Print View
+            </Link>
           </div>
+        ) : null}
 
-          {/* Lines table */}
+        {/* Voucher Header */}
+        <section className="card rounded-xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center gap-2">
+            <div className="h-3.5 w-0.5 rounded-full bg-blue-500/60 shrink-0" />
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Voucher Header</h2>
+          </div>
+          <div className="p-5">
+            <div className="grid gap-4 md:grid-cols-3">
+              <div>
+                <label className="form-label" htmlFor="voucherDate">Date *</label>
+                <input id="voucherDate" type="date" required value={voucherDate} onChange={(e) => setVoucherDate(e.target.value)} className="form-input" />
+              </div>
+              <div>
+                <label className="form-label" htmlFor="narration">Narration</label>
+                <input id="narration" type="text" value={narration} onChange={(e) => setNarration(e.target.value)} placeholder="Optional" className="form-input" />
+              </div>
+              {isBankType ? (
+                <div>
+                  <label className="form-label" htmlFor="bankId">Bank *</label>
+                  <select id="bankId" required value={bankId} onChange={(e) => setBankId(e.target.value)} className="form-input">
+                    <option value="">Select Bank</option>
+                    {banks.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                  </select>
+                </div>
+              ) : (
+                <div className="flex items-end pb-1">
+                  <p className="text-xs text-slate-500">{config.systemLabel}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* Payment Lines */}
+        <section className="card rounded-xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <div className="h-3.5 w-0.5 rounded-full bg-blue-500/60 shrink-0" />
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Payment Lines</h2>
+            </div>
+            <button type="button" onClick={addLine} className="btn-primary-sm">+ Add Row</button>
+          </div>
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-sm">
-              <thead className="bg-blue-50 text-left">
-                <tr>
-                  <th className="border border-blue-100 px-3 py-2">Account</th>
-                  <th className="border border-blue-100 px-3 py-2">Description</th>
-                  <th className="border border-blue-100 px-3 py-2 text-right">Amount</th>
-                  <th className="border border-blue-100 px-3 py-2"></th>
+            <table className="min-w-[640px] w-full border-collapse text-sm">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200">
+                  <th className="whitespace-nowrap px-2.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Account</th>
+                  <th className="whitespace-nowrap px-2.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Description</th>
+                  <th className="whitespace-nowrap px-2.5 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Amount</th>
+                  <th className="whitespace-nowrap px-2.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"></th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-100">
                 {lines.map((line) => (
-                  <tr key={line.uid}>
-                    <td className="border border-slate-200 px-2 py-1">
-                      <select
-                        required
-                        value={line.accountId}
-                        onChange={(e) => updateLine(line.uid, "accountId", e.target.value)}
-                        className="w-full rounded border border-slate-300 px-2 py-1 text-sm"
-                      >
+                  <tr key={line.uid} className="hover:bg-blue-50/30 transition-colors">
+                    <td className="px-2.5 py-2">
+                      <select required value={line.accountId} onChange={(e) => updateLine(line.uid, "accountId", e.target.value)} className="tbl-select w-64">
                         <option value="">Select Account</option>
-                        {accounts.map((a) => (
-                          <option key={a.id} value={a.id}>
-                            {a.code} - {a.name}
-                          </option>
-                        ))}
+                        {accounts.map((a) => <option key={a.id} value={a.id}>{a.code} - {a.name}</option>)}
                       </select>
                     </td>
-                    <td className="border border-slate-200 px-2 py-1">
-                      <input
-                        type="text"
-                        value={line.description}
-                        onChange={(e) => updateLine(line.uid, "description", e.target.value)}
-                        placeholder="Description"
-                        className="w-full rounded border border-slate-300 px-2 py-1 text-sm"
-                      />
+                    <td className="px-2.5 py-2">
+                      <input type="text" value={line.description} onChange={(e) => updateLine(line.uid, "description", e.target.value)} placeholder="Description" className="tbl-input w-48" />
                     </td>
-                    <td className="border border-slate-200 px-2 py-1 w-36">
-                      <input
-                        type="number"
-                        min="0.01"
-                        step="0.01"
-                        required
-                        value={line.amount}
-                        onChange={(e) => updateLine(line.uid, "amount", e.target.value)}
-                        className="w-full rounded border border-slate-300 px-2 py-1 text-right text-sm"
-                      />
+                    <td className="px-2.5 py-2">
+                      <input type="number" min="0.01" step="0.01" required value={line.amount} onChange={(e) => updateLine(line.uid, "amount", e.target.value)} className="tbl-input w-28 text-right" />
                     </td>
-                    <td className="border border-slate-200 px-2 py-1 text-center">
-                      <button
-                        type="button"
-                        onClick={() => removeLine(line.uid)}
-                        disabled={lines.length <= 1}
-                        className="rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50 disabled:opacity-40"
-                      >
-                        Remove
-                      </button>
+                    <td className="px-2.5 py-2">
+                      <button type="button" onClick={() => removeLine(line.uid)} disabled={lines.length <= 1} className="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50 disabled:opacity-40 transition-colors">Remove</button>
                     </td>
                   </tr>
                 ))}
               </tbody>
-              <tfoot className="bg-slate-50 font-medium text-sm">
-                <tr>
-                  <td className="border border-slate-200 px-3 py-2" colSpan={2}>
-                    <button
-                      type="button"
-                      onClick={addLine}
-                      className="rounded px-3 py-1 text-sm text-blue-700 hover:bg-blue-50"
-                    >
-                      + Add Row
-                    </button>
-                  </td>
-                  <td className="border border-slate-200 px-3 py-2 text-right">{money(String(total))}</td>
-                  <td className="border border-slate-200 px-3 py-2"></td>
-                </tr>
-              </tfoot>
             </table>
           </div>
-
-          <div className="mt-3 flex items-center gap-4">
-            <label className="flex items-center gap-2 text-xs text-slate-600">
-              <input
-                type="checkbox"
-                checked={allowOverride}
-                onChange={(e) => setAllowOverride(e.target.checked)}
-                className="rounded"
-              />
-              Closed-day override
-            </label>
+          <div className="border-t border-slate-100 bg-slate-50/60 px-5 py-4 flex items-center justify-end">
+            <div className="rounded-lg bg-blue-700 p-3 min-w-[160px]">
+              <div className="text-xs font-semibold uppercase tracking-wide text-blue-200">Total</div>
+              <div className="mt-1.5 text-lg font-bold text-white tabular-nums">{money(String(total))}</div>
+            </div>
           </div>
+        </section>
 
-          <div className="mt-4 flex items-center gap-3">
-            <button
-              type="submit"
-              disabled={!isValid || submitting}
-              className="rounded-md bg-blue-700 px-5 py-2 text-sm font-semibold text-white disabled:opacity-40"
-            >
-              {submitting ? "Posting..." : `Post ${config.title}`}
-            </button>
-            {postedNo ? (
-              <Link
-                href={`${config.printBase}/print/${encodeURIComponent(postedNo)}`}
-                className="text-sm text-blue-700 underline"
-              >
-                Print {postedNo}
-              </Link>
-            ) : null}
-          </div>
-        </form>
-
-        <ApiError message={formError} />
-        <SuccessMessage message={postedNo ? `${config.title} voucher ${postedNo} posted.` : ""} />
-      </div>
-    </section>
+        <div className="flex flex-wrap items-center gap-4">
+          <SubmitButton loading={submitting} disabled={!isValid || submitting}>Post {config.title}</SubmitButton>
+          <button type="button" onClick={() => { setVoucherDate(""); setNarration(""); setBankId(""); setLines([emptyLine()]); setAllowOverride(false); setFormError(""); setPostedNo(""); }} className="btn-outline">Reset Form</button>
+          <label className="flex items-center gap-2 text-xs text-slate-600 ml-auto">
+            <input type="checkbox" checked={allowOverride} onChange={(e) => setAllowOverride(e.target.checked)} className="h-4 w-4 rounded border-slate-300" />
+            Closed-day override
+          </label>
+        </div>
+      </form>
+    </>
   );
 }

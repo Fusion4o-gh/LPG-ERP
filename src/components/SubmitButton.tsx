@@ -1,8 +1,8 @@
-export function SubmitButton({ loading, children }: { loading: boolean; children: React.ReactNode }) {
+export function SubmitButton({ loading, disabled, children }: { loading: boolean; disabled?: boolean; children: React.ReactNode }) {
   return (
     <button
       type="submit"
-      disabled={loading}
+      disabled={loading || disabled}
       className="btn-primary disabled:opacity-60 disabled:cursor-not-allowed"
       style={loading ? { background: "#94a3b8" } : undefined}
     >

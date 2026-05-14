@@ -115,66 +115,78 @@ export function OperationForm({
   return (
     <>
       <PageHeader title={title} description={description} />
-      <form onSubmit={onSubmit} className="max-w-3xl space-y-4">
+      <form onSubmit={onSubmit} className="max-w-3xl space-y-5">
         <ApiError message={error} />
         <SuccessMessage message={success} />
+
         {printableDocumentType && printDocumentNo ? (
-          <div className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
-            Document number: <span className="font-semibold text-slate-950">{printDocumentNo}</span>
-            <Link href={`${printableHrefBase ?? ""}/print/${encodeURIComponent(printDocumentNo)}`} className="ml-3 font-semibold text-slate-950 underline">
-              Open printable view
+          <div className="card rounded-lg flex flex-wrap items-center gap-3 px-4 py-3 text-sm">
+            <svg className="h-4 w-4 shrink-0 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            <span className="text-slate-600">Document number: <span className="font-semibold text-slate-900">{printDocumentNo}</span></span>
+            <Link href={`${printableHrefBase ?? ""}/print/${encodeURIComponent(printDocumentNo)}`} className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
+              Open Print View
             </Link>
           </div>
         ) : null}
+
         <FormSection title={title}>
           <div className="grid gap-4 md:grid-cols-2">
             {fields.map((field) => (
-              <label key={field.name} className={field.type === "checkbox" ? "flex items-center gap-2 text-sm text-slate-700 md:col-span-2" : "block text-sm text-slate-700"}>
-                {field.type === "checkbox" ? null : <span className="mb-1 block font-medium">{field.label}</span>}
-                {field.required && field.type !== "checkbox" ? <span className="text-red-600"> *</span> : null}
-                {field.type === "select" ? (
-                  <select
-                    value={String(values[field.name] ?? "")}
-                    onChange={(event) => setValues((current) => ({ ...current, [field.name]: event.target.value }))}
-                    disabled={lookupLoading}
-                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2"
-                  >
-                    <option value="">Select {field.label}</option>
-                    {(lookups[field.lookup ?? "customers"] ?? []).map((row) => (
-                      <option key={String(row.id)} value={String(row.id)}>
-                        {optionLabel(row)}
-                      </option>
-                    ))}
-                  </select>
-                ) : field.type === "checkbox" ? (
+              <div key={field.name} className={field.type === "checkbox" ? "flex items-center gap-2 md:col-span-2" : "block"}>
+                {field.type === "checkbox" ? (
                   <>
                     <input
                       type="checkbox"
+                      id={field.name}
                       checked={Boolean(values[field.name])}
                       onChange={(event) => setValues((current) => ({ ...current, [field.name]: event.target.checked }))}
                       className="h-4 w-4 rounded border-slate-300"
                     />
-                    <span>{field.label}</span>
+                    <label htmlFor={field.name} className="text-sm text-slate-700">{field.label}</label>
                   </>
                 ) : (
-                  <input
-                    type={field.type}
-                    min={field.min}
-                    value={String(values[field.name] ?? "")}
-                    onChange={(event) => setValues((current) => ({ ...current, [field.name]: event.target.value }))}
-                    className="w-full rounded-md border border-slate-300 px-3 py-2"
-                  />
+                  <>
+                    <label className="form-label" htmlFor={field.name}>
+                      {field.label}{field.required ? " *" : ""}
+                    </label>
+                    {field.type === "select" ? (
+                      <select
+                        id={field.name}
+                        value={String(values[field.name] ?? "")}
+                        onChange={(event) => setValues((current) => ({ ...current, [field.name]: event.target.value }))}
+                        disabled={lookupLoading}
+                        className="form-input"
+                      >
+                        <option value="">Select {field.label}</option>
+                        {(lookups[field.lookup ?? "customers"] ?? []).map((row) => (
+                          <option key={String(row.id)} value={String(row.id)}>
+                            {optionLabel(row)}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        id={field.name}
+                        type={field.type}
+                        min={field.min}
+                        value={String(values[field.name] ?? "")}
+                        onChange={(event) => setValues((current) => ({ ...current, [field.name]: event.target.value }))}
+                        className="form-input"
+                      />
+                    )}
+                    {fieldErrors[field.name] ? <span className="mt-1 block text-xs text-red-600">{fieldErrors[field.name]}</span> : null}
+                  </>
                 )}
-                {fieldErrors[field.name] ? <span className="mt-1 block text-xs text-red-700">{fieldErrors[field.name]}</span> : null}
-              </label>
+              </div>
             ))}
           </div>
         </FormSection>
+
         <div className="flex flex-wrap gap-2">
           <SubmitButton loading={loading}>{submitLabel}</SubmitButton>
-          <button type="button" onClick={() => { setValues({}); setFieldErrors({}); setError(""); setSuccess(""); }} className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">
-            Reset Form
-          </button>
+          <button type="button" onClick={() => { setValues({}); setFieldErrors({}); setError(""); setSuccess(""); }} className="btn-outline">Reset Form</button>
         </div>
       </form>
     </>
