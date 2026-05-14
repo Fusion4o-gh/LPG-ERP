@@ -1,35 +1,63 @@
 # Current ERP Implementation Inventory and Parity Audit Baseline
+Last reviewed: 2026-05-14
 
-Generated: 2026-05-08  
+Generated: 2026-05-14  
 Scope: current Next.js LPG ERP implementation only. No runtime validation was required because this is a source inventory.
 
 ## 1. Navigation Inventory
 
+The sidebar now uses a legacy-style multi-section structure matching the client ERP's menu groups. RBAC filters each link at render time.
+
 | Sidebar section | Submenu | Route path | Page title |
 |---|---|---|---|
 | Dashboard | Dashboard | `/dashboard` | Dashboard |
-| Master Data | Customers | `/masters/customers` | Customers |
-| Master Data | Vendors | `/masters/vendors` | Vendors |
-| Master Data | Items | `/masters/items` | Items |
-| Master Data | Banks | `/banks` | Banks |
-| Master Data | Chart of Accounts | `/accounting/chart-of-accounts` | Chart of Accounts |
-| Master Data | Customer Cylinder Balance | `/customer-cylinder-balances` | Customer Cylinder Balance |
-| Operations | Purchase Filled Cylinder | `/operations/purchase-filled-cylinder` | Purchase Filled Cylinder |
-| Operations | Sale LPG | `/operations/sale-lpg` | Sale LPG |
-| Operations | Complete Day Sale | `/operations/complete-day-sale` | Complete Day Sale |
-| Operations | Cylinder Return | `/operations/cylinder-return` | Cylinder Return |
-| Operations | Day Closing | `/operations/day-closing` | Day Closing |
-| Operations | Reversals | `/operations/reversals` | Transaction Reversals |
-| Payments | Cash Receipt | `/payments/cash-receipt` | Cash Receipt |
-| Payments | Cash Payment | `/payments/cash-payment` | Cash Payment |
-| Payments | Bank Receipt | `/payments/bank-receipt` | Bank Receipt |
-| Payments | Bank Payment | `/payments/bank-payment` | Bank Payment |
-| Payments | Security Receipt | `/payments/security-receipt` | Security Receipt |
-| Reports | Stock Ledger | `/stock-ledger` | Stock Ledger |
-| Reports | Vouchers | `/accounting/vouchers` | Voucher List |
-| Reports | Audit Log | `/audit-log` | Audit Log |
-| Reports | Operational Reports | `/reports` | Operational Reports |
-| Settings | Roles & Permissions | `/settings/roles` | Roles & Permissions |
+| Configuration | Company Information | `/configuration/company-information` | Company Information |
+| Configuration | User Management | `/configuration/user-management` | User Management |
+| Configuration | Cities | `/configuration/cities` | Cities |
+| Configuration | Area | `/configuration/area` | Area |
+| Configuration | Brand Coding | `/configuration/brand-coding` | Brand Coding |
+| Configuration | Category Coding | `/configuration/category-coding` | Category Coding |
+| Configuration | Item Coding | `/masters/items` | Items |
+| Configuration | Customer Coding | `/masters/customers` | Customers |
+| Configuration | Vendor Coding | `/masters/vendors` | Vendors |
+| Configuration | Shop Opening Balance | `/configuration/shop-opening-balance` | Shop Opening Balance |
+| Configuration | Cash Opening | `/configuration/cash-opening` | Cash Opening |
+| Configuration | Day Closing | `/operations/day-closing` | Day Closing |
+| Configuration | Customer Opening Balance | `/configuration/customer-opening-balance` | Customer Opening Balance |
+| Configuration | Expense Type Coding | `/configuration/expense-type-coding` | Expense Type Coding |
+| Sale / Purchase | Purchase Filled Cylinder | `/operations/purchase-filled-cylinder` | Purchase Filled Cylinder |
+| Sale / Purchase | Purchase Empty Cylinder | `/sale-purchase/purchase-empty-cylinder` | Purchase Empty Cylinder |
+| Sale / Purchase | Purchase Other | `/sale-purchase/purchase-other` | Purchase Other |
+| Sale / Purchase | Complete Day Sale | `/operations/complete-day-sale` | Complete Day Sale |
+| Sale / Purchase | Sale LPG | `/operations/sale-lpg` | Sale LPG |
+| Sale / Purchase | Decanting Sale | `/sale-purchase/decanting-sale` | Decanting Sale |
+| Sale / Purchase | Cylinder Conversion | `/sale-purchase/cylinder-conversion` | Cylinder Conversion |
+| Sale / Purchase | Empty Sale | `/sale-purchase/empty-sale` | Empty Sale |
+| Returns | Cylinder Return | `/operations/cylinder-return` | Cylinder Return |
+| Returns | Purchase Return Cylinder | `/returns/purchase-return-cylinder` | Purchase Return Cylinder |
+| Returns | Purchase Return Other | `/returns/purchase-return-other` | Purchase Return Other |
+| Payment / Receipt | Cash Payment | `/payments/cash-payment` | Cash Payment |
+| Payment / Receipt | Cash Receipt | `/payments/cash-receipt` | Cash Receipt |
+| Payment / Receipt | Security Receipt | `/payments/security-receipt` | Security Receipt |
+| Payment / Receipt | Chart of Account | `/accounting/chart-of-accounts` | Chart of Accounts |
+| Payment / Receipt | Journal Vouchers | `/accounting/vouchers` | Voucher List |
+| Payment / Receipt | Bank Payments / Receipt | `/payments/bank-payments-receipts` | Bank Payments/Receipt (placeholder) |
+| Reports | Sale B/W Date | `/reports/sale-between-dates` | Sale B/W Date |
+| Reports | Cylinder Conversion B/W Date | `/reports/cylinder-conversion-between-dates` | Cylinder Conversion B/W Date |
+| Reports | One Customer Sale History | `/reports/one-customer-sale-history` | One Customer Sale History |
+| Reports | Stock Report | `/reports/stock-summary` | Stock Summary |
+| Reports | Cash Book | `/reports/cash-book` | Cash Book |
+| Reports | Vendor Wise Receiving | `/reports/vendor-wise-receiving` | Vendor Wise Receiving |
+| Reports | General Ledger | `/reports/general-ledger` | General Ledger (placeholder) |
+| Reports | Customer Ledger | `/reports/customer-ledger` | Customer Ledger |
+| Reports | Sale Return Report | `/reports/sale-return` | Sale Return Report |
+| Reports | Purchase Return Report | `/reports/purchase-return` | Purchase Return Report |
+| Reports | Customer Stock Ledger | `/reports/customer-stock-ledger` | Customer Stock Ledger |
+| Reports | Daily Activity Report | `/reports/daily-activity` | Daily Activity Report |
+| Reports | Access Cylinders | `/reports/customer-cylinder-balances` | Customer Cylinder Balance |
+| Reports | Salewise Profit | `/reports/salewise-profit` | Salewise Profit (placeholder) |
+| Reports | Profit / Loss Report | `/reports/profit-loss` | Profit & Loss |
+| Database | Database Backup | `/database-backup` | Database Backup |
 
 Additional implemented routes not directly listed as sidebar submenus:
 
@@ -40,9 +68,17 @@ Additional implemented routes not directly listed as sidebar submenus:
 | `/company` | Company Setup | Setup route present under `(setup)`; not in current sidebar. |
 | `/financial-years` | Financial Years | Setup route present under `(setup)`; not in current sidebar. |
 | `/accounting/vouchers/[id]` | Voucher Detail | Voucher line detail view. |
+| `/configuration/user-management/[id]/map-area` | Map Area | Assign area access to a user. |
 | `/operations/purchase-filled-cylinder/print/[documentNo]` | Purchase Filled Cylinder Receipt | Printable transaction document. |
 | `/operations/sale-lpg/print/[documentNo]` | Sale LPG Invoice | Printable transaction document. |
 | `/operations/cylinder-return/print/[documentNo]` | Cylinder Return Receipt | Printable transaction document. |
+| `/sale-purchase/purchase-empty-cylinder/print/[documentNo]` | Purchase Empty Cylinder Receipt | Printable transaction document. |
+| `/sale-purchase/purchase-other/print/[documentNo]` | Purchase Other Receipt | Printable transaction document. |
+| `/sale-purchase/cylinder-conversion/print/[documentNo]` | Cylinder Conversion Receipt | Printable transaction document. |
+| `/sale-purchase/empty-sale/print/[documentNo]` | Empty Sale Receipt | Printable transaction document. |
+| `/sale-purchase/decanting-sale/print/[documentNo]` | Decanting Sale Receipt | Printable transaction document. |
+| `/returns/purchase-return-cylinder/print/[documentNo]` | Purchase Return Cylinder Receipt | Printable transaction document. |
+| `/returns/purchase-return-other/print/[documentNo]` | Purchase Return Other Receipt | Printable transaction document. |
 | `/payments/cash-receipt/print/[documentNo]` | Cash Receipt Voucher | Printable transaction document. |
 | `/payments/cash-payment/print/[documentNo]` | Cash Payment Voucher | Printable transaction document. |
 | `/payments/bank-receipt/print/[documentNo]` | Bank Receipt Voucher | Printable transaction document. |
@@ -57,53 +93,80 @@ Additional implemented routes not directly listed as sidebar submenus:
 | `/reports/trial-balance` | Trial Balance | Report screen. |
 | `/reports/profit-loss` | Profit & Loss | Report screen. |
 | `/reports/balance-sheet` | Balance Sheet | Report screen. |
+| `/stock-ledger` | Stock Ledger | Operational stock ledger. |
+| `/audit-log` | Audit Log | Audit log viewer. |
+| `/operations/reversals` | Transaction Reversals | Reversal entry form. |
+| `/settings/roles` | Roles & Permissions | Role and permission management. |
+| `/banks` | Banks | Bank account master. |
+| `/customer-cylinder-balances` | Customer Cylinder Balance | Balance summary screen. |
 
 ## 2. Screen Inventory
 
 | Screen | Route | Purpose | Page type | Filters available | Actions available | Print support | CSV support | API endpoints used |
 |---|---|---|---|---|---|---|---|---|
-| Dashboard | `/dashboard` | Placeholder operational KPI cards and sidebar guidance. | Dashboard | None | None | No | No | None |
+| Dashboard | `/dashboard` | Live KPI tiles, bank position, current stock, sale stats, and quick links. API-backed. | Dashboard | None | Navigate via quick links | No | No | `GET /api/dashboard` |
 | Login | `/login` | Authenticate user and create session cookie. | Form | None | Login | No | No | `POST /api/auth/login` |
-| Customers | `/masters/customers` | Customer master records for sales, receipts, and cylinder accountability. | List + form | None; loads all rows via `?all=1`. | Create, edit, reset | No | No | `GET /api/customers?all=1`, `POST /api/customers`, `PUT /api/customers/[id]` |
-| Vendors | `/masters/vendors` | Vendor master records for filled-cylinder purchases and payables. | List + form | None; loads all rows via `?all=1`. | Create, edit, reset | No | No | `GET /api/vendors?all=1`, `POST /api/vendors`, `PUT /api/vendors/[id]` |
+| Customers | `/masters/customers` | Customer master records. | List + form | None; loads all rows via `?all=1`. | Create, edit, reset | No | No | `GET /api/customers?all=1`, `POST /api/customers`, `PUT /api/customers/[id]` |
+| Vendors | `/masters/vendors` | Vendor master records. | List + form | None; loads all rows via `?all=1`. | Create, edit, reset | No | No | `GET /api/vendors?all=1`, `POST /api/vendors`, `PUT /api/vendors/[id]` |
 | Items | `/masters/items` | LPG cylinder item list. | List + form | None; loads all rows via `?all=1`. | Create, edit with high-risk confirmation, reset | No | No | `GET /api/items?all=1`, `POST /api/items`, `PUT /api/items/[id]` |
-| Banks | `/banks` | Bank accounts used by bank receipt/payment vouchers. | List + form | None; loads all rows via `?all=1`. | Create, edit with high-risk confirmation, reset | No | No | `GET /api/banks?all=1`, `POST /api/banks`, `PUT /api/banks/[id]` |
-| Chart of Accounts | `/accounting/chart-of-accounts` | Account list used by vouchers and financial transactions. | List + form | None; loads all rows via `?all=1`. | Create, edit with high-risk confirmation, reset | No | No | `GET /api/chart-of-accounts?all=1`, `POST /api/chart-of-accounts`, `PUT /api/chart-of-accounts/[id]` |
-| Customer Cylinder Balance | `/customer-cylinder-balances` | Customer/item filled outstanding, empty owed, security held, and last movement. | List page | None in UI | View only | No | No | `GET /api/customer-cylinder-balances` |
-| Purchase Filled Cylinder | `/operations/purchase-filled-cylinder` | Receive filled cylinders from vendor; posts stock ledger, vendor payable voucher, vendor empty due, audit log. | Form page | Lookup selects for vendor and item | Post purchase, reset, open printable view after save | Yes, via print route after save | No | `GET /api/vendors`, `GET /api/items`, `POST /api/purchases/filled-cylinder` |
-| Sale LPG | `/operations/sale-lpg` | Post single LPG sale; posts customer receivable voucher, filled stock OUT, customer cylinder balance, audit log. | Form page | Lookup selects for customer and item | Post sale, reset, open printable view after save | Yes, via print route after save | No | `GET /api/customers`, `GET /api/items`, `POST /api/sales/lpg` |
-| Complete Day Sale | `/operations/complete-day-sale` | Batch-post multiple sale issues. | Form page | Lookup selects for customers and items | Add row, post complete day sale | No dedicated batch print | No | `GET /api/customers`, `GET /api/items`, `POST /api/sales/lpg/batch` |
-| Cylinder Return | `/operations/cylinder-return` | Receive empty cylinders from customer; posts empty stock IN and customer cylinder balance decrement. | Form page | Lookup selects for customer and item | Post return, reset, open printable view after save | Yes, via print route after save | No | `GET /api/customers`, `GET /api/items`, `POST /api/returns/cylinder` |
-| Day Closing | `/operations/day-closing` | View closing status, close day, and reopen latest/selected day through service controls. | Control form | Current status only | Close day, reopen/request reopen depending API payload | No | No | `GET /api/day-closing`, `POST /api/day-closing`, `POST /api/day-closing/reopen` |
-| Transaction Reversals | `/operations/reversals` | Create compensating reversal by kind and document number. | Form page | Kind select | Create reversal request | No visible print link | No | `POST /api/reversals` |
-| Cash Receipt | `/payments/cash-receipt` | Receive customer cash; posts balanced cash receipt voucher and audit log. | Form page | Customer lookup | Post cash receipt, reset, open printable view after save | Yes, via print route after save | No | `GET /api/customers`, `POST /api/payments/cash-receipt` |
-| Cash Payment | `/payments/cash-payment` | Pay vendor by cash; posts balanced cash payment voucher and audit log. | Form page | Vendor lookup | Post cash payment, reset, open printable view after save | Yes, via print route after save | No | `GET /api/vendors`, `POST /api/payments/cash-payment` |
-| Bank Receipt | `/payments/bank-receipt` | Receive customer payment into bank; posts balanced bank receipt voucher and audit log. | Form page | Customer and bank lookups | Post bank receipt, reset, open printable view after save | Yes, via print route after save | No | `GET /api/customers`, `GET /api/banks`, `POST /api/payments/bank-receipt` |
-| Bank Payment | `/payments/bank-payment` | Pay vendor from bank; posts balanced bank payment voucher and audit log. | Form page | Vendor and bank lookups | Post bank payment, reset, open printable view after save | Yes, via print route after save | No | `GET /api/vendors`, `GET /api/banks`, `POST /api/payments/bank-payment` |
-| Security Receipt | `/payments/security-receipt` | Receive cylinder security deposit; posts cash/bank receipt style voucher and updates customer cylinder security. | Form page | Customer, item, optional bank lookups | Post security receipt, reset, open printable view after save | Yes, via print route after save | No | `GET /api/customers`, `GET /api/items`, `GET /api/banks`, `POST /api/payments/security-receipt` |
+| Banks | `/banks` | Bank accounts for bank receipt/payment vouchers. | List + form | None; loads all rows via `?all=1`. | Create, edit with high-risk confirmation, reset | No | No | `GET /api/banks?all=1`, `POST /api/banks`, `PUT /api/banks/[id]` |
+| Chart of Accounts | `/accounting/chart-of-accounts` | Account list used by vouchers. | List + form | None; loads all rows via `?all=1`. | Create, edit with high-risk confirmation, reset | No | No | `GET /api/chart-of-accounts?all=1`, `POST /api/chart-of-accounts`, `PUT /api/chart-of-accounts/[id]` |
+| Customer Cylinder Balance | `/customer-cylinder-balances` | Customer/item filled outstanding, empty owed, security held, last movement. | List page | None in UI | View only | No | No | `GET /api/customer-cylinder-balances` |
+| Company Information | `/configuration/company-information` | Edit company name, address, NTN, and contact details. | Form | None | Save | No | No | `GET /api/configuration/company-information`, `PUT /api/configuration/company-information` |
+| User Management | `/configuration/user-management` | User CRUD, role assignment, and password reset. | List + form | None | Create user, edit user, assign roles, reset password, navigate to Map Area | No | No | `GET /api/configuration/user-management`, `POST /api/configuration/user-management`, `PUT /api/configuration/user-management/[id]`, `POST /api/configuration/user-management/[id]/reset-password` |
+| Map Area | `/configuration/user-management/[id]/map-area` | Assign area-level access to a user. | Form | User id from route | Save area mapping | No | No | `GET /api/configuration/user-management/[id]/map-area`, `PUT /api/configuration/user-management/[id]/map-area` |
+| Cities | `/configuration/cities` | City master records. | List + form | None | Create, edit | No | No | `GET /api/configuration/cities`, `POST /api/configuration/cities`, `PUT /api/configuration/cities/[id]` |
+| Area | `/configuration/area` | Area master records. | List + form | None | Create, edit | No | No | `GET /api/configuration/area`, `POST /api/configuration/area`, `PUT /api/configuration/area/[id]` |
+| Brand Coding | `/configuration/brand-coding` | Brand master records. | List + form | None | Create, edit | No | No | `GET /api/configuration/brand-coding`, `POST /api/configuration/brand-coding`, `PUT /api/configuration/brand-coding/[id]` |
+| Category Coding | `/configuration/category-coding` | Category master records. | List + form | None | Create, edit | No | No | `GET /api/configuration/category-coding`, `POST /api/configuration/category-coding`, `PUT /api/configuration/category-coding/[id]` |
+| Expense Type Coding | `/configuration/expense-type-coding` | Expense type master records. | List + form | None | Create, edit | No | No | `GET /api/configuration/expense-type-coding`, `POST /api/configuration/expense-type-coding`, `PUT /api/configuration/expense-type-coding/[id]` |
+| Shop Opening Balance | `/configuration/shop-opening-balance` | Set opening stock per item and cylinder state. Supports create, edit, and delete. | List + form | None | Create entry, edit entry, delete entry | No | No | `GET /api/configuration/shop-opening-balance`, `POST /api/configuration/shop-opening-balance`, `PUT /api/configuration/shop-opening-balance/[id]` |
+| Cash Opening | `/configuration/cash-opening` | Set opening cash balance entries. | List + form | None | Create entry, edit entry | No | No | `GET /api/configuration/cash-opening`, `POST /api/configuration/cash-opening`, `PUT /api/configuration/cash-opening/[id]` |
+| Customer Opening Balance | `/configuration/customer-opening-balance` | Set customer opening receivable balances. | List + form | None | Create entry, edit entry | No | No | `GET /api/configuration/customer-opening-balance`, `POST /api/configuration/customer-opening-balance`, `PUT /api/configuration/customer-opening-balance/[id]` |
+| Purchase Filled Cylinder | `/operations/purchase-filled-cylinder` | Multi-line receive filled cylinders from vendor. Posts stock, payable voucher, GST, vendor empty due, audit log, document number per line. | Form page (multi-line) | Vendor lookup | Add line, remove line, post purchase, reset, print after save | Yes, via print route after save | No | `GET /api/vendors`, `GET /api/items`, `POST /api/purchases/filled-cylinder` |
+| Purchase Empty Cylinder | `/sale-purchase/purchase-empty-cylinder` | Multi-line purchase of empty cylinders from vendor. Posts empty stock IN, vendor payable voucher, audit log. | Form page (multi-line) | Vendor and account lookups | Add line, remove line, post purchase, reset, print after save | Yes, via print route after save | No | `GET /api/vendors`, `GET /api/items`, `GET /api/chart-of-accounts`, `POST /api/purchases/empty-cylinder` |
+| Purchase Other | `/sale-purchase/purchase-other` | Multi-line non-cylinder purchase from vendor. Posts expense voucher and audit log. | Form page (multi-line) | Vendor and account lookups | Add line, remove line, post purchase, reset, print after save | Yes, via print route after save | No | `GET /api/vendors`, `GET /api/chart-of-accounts`, `POST /api/purchases/other` |
+| Sale LPG | `/operations/sale-lpg` | Multi-line LPG sale. Posts customer receivable voucher, filled stock OUT, optional per-line empty return, optional security deposit, GST, customer cylinder balance, audit log, document number. | Form page (multi-line) | Customer lookup | Add line, remove line, post sale, reset, print after save | Yes, via print route after save | No | `GET /api/customers`, `GET /api/items`, `POST /api/sales/lpg` |
+| Complete Day Sale | `/operations/complete-day-sale` | Batch multiple customer sales in one document. Each row supports payment type (Cash/Credit), amount received, and up to 3 item slots. Posts sale vouchers and cash receipts where applicable. | Form page (multi-row, multi-item) | Customer lookups per row | Add row, remove row, post complete day sale, reset | No dedicated batch print | No | `GET /api/customers`, `GET /api/items`, `POST /api/sales/lpg/batch` |
+| Cylinder Return | `/operations/cylinder-return` | Multi-line customer cylinder return. Supports both filled and empty return types. Empty returns decrement customer empty owed; filled returns create credit voucher. | Form page (multi-line) | Customer lookup | Add line, remove line, post return, reset, print after save | Yes, via print route after save | No | `GET /api/customers`, `GET /api/items`, `POST /api/returns/cylinder` |
+| Purchase Return Cylinder | `/returns/purchase-return-cylinder` | Return filled/empty cylinders to vendor. Posts stock adjustment and credit/debit note voucher. | Form page (multi-line) | Vendor lookup | Add line, remove line, post return, reset, print after save | Yes, via print route after save | No | `GET /api/vendors`, `GET /api/items`, `POST /api/returns/purchase-return-cylinder` |
+| Purchase Return Other | `/returns/purchase-return-other` | Return other purchase items to vendor. Posts expense reversal voucher. | Form page (multi-line) | Vendor and account lookups | Add line, remove line, post return, reset, print after save | Yes, via print route after save | No | `GET /api/vendors`, `GET /api/chart-of-accounts`, `POST /api/returns/purchase-return-other` |
+| Cylinder Conversion | `/sale-purchase/cylinder-conversion` | Convert cylinders from one item/state to another. Posts stock OUT and stock IN adjustment, audit log, document number. | Form page | Item lookups | Post conversion, reset, print after save | Yes, via print route after save | No | `GET /api/items`, `POST /api/sale-purchase/cylinder-conversion` |
+| Empty Sale | `/sale-purchase/empty-sale` | Multi-line sale of empty cylinders to customer. Posts empty stock OUT, customer receivable voucher, GST, audit log. | Form page (multi-line) | Customer lookup | Add line, remove line, post sale, reset, print after save | Yes, via print route after save | No | `GET /api/customers`, `GET /api/items`, `POST /api/sale-purchase/empty-sale` |
+| Decanting Sale | `/sale-purchase/decanting-sale` | Decant/refill from a source cylinder and sell to customer. Posts source stock adjustment, sale voucher, customer receivable, GST, audit log. | Form page | Customer and item lookups | Post decanting sale, reset, print after save | Yes, via print route after save | No | `GET /api/customers`, `GET /api/items`, `POST /api/sale-purchase/decanting-sale` |
+| Day Closing | `/operations/day-closing` | View closing status, close day, reopen latest/selected day. | Control form | Current status only | Close day, reopen depending on API payload | No | No | `GET /api/day-closing`, `POST /api/day-closing`, `POST /api/day-closing/reopen` |
+| Transaction Reversals | `/operations/reversals` | Create compensating reversal by kind and document number. | Form page | Kind select | Create reversal | No | No | `POST /api/reversals` |
+| Cash Receipt | `/payments/cash-receipt` | Receive customer cash; posts balanced voucher and audit log. | Form page | Customer lookup | Post, reset, print after save | Yes | No | `GET /api/customers`, `POST /api/payments/cash-receipt` |
+| Cash Payment | `/payments/cash-payment` | Pay vendor by cash; posts balanced voucher and audit log. | Form page | Vendor lookup | Post, reset, print after save | Yes | No | `GET /api/vendors`, `POST /api/payments/cash-payment` |
+| Bank Receipt | `/payments/bank-receipt` | Receive customer payment into bank. | Form page | Customer and bank lookups | Post, reset, print after save | Yes | No | `GET /api/customers`, `GET /api/banks`, `POST /api/payments/bank-receipt` |
+| Bank Payment | `/payments/bank-payment` | Pay vendor from bank. | Form page | Vendor and bank lookups | Post, reset, print after save | Yes | No | `GET /api/vendors`, `GET /api/banks`, `POST /api/payments/bank-payment` |
+| Security Receipt | `/payments/security-receipt` | Receive cylinder security deposit. | Form page | Customer, item, optional bank lookups | Post, reset, print after save | Yes | No | `GET /api/customers`, `GET /api/items`, `GET /api/banks`, `POST /api/payments/security-receipt` |
+| Bank Payments / Receipt | `/payments/bank-payments-receipts` | Placeholder; redirects user to separate bank payment/receipt screens. | ComingSoonPage | None | None | No | No | None |
 | Stock Ledger | `/stock-ledger` | Immutable filled/empty cylinder movements by item, date, source document. | List page | Item, from date, to date | Apply filters | No | No | `GET /api/items`, `GET /api/stock-ledger` |
 | Voucher List | `/accounting/vouchers` | Accounting vouchers created by operational transactions. | List page | None | Open voucher detail | No | No | `GET /api/accounting/vouchers` |
 | Voucher Detail | `/accounting/vouchers/[id]` | Voucher lines for one accounting voucher. | Detail list | Voucher id from route | View only | No | No | `GET /api/accounting/vouchers/[id]` |
 | Audit Log | `/audit-log` | Review operational changes with before/after summaries. | List page | Module, action, user id, from date, to date | Filter | No | No | `GET /api/audit-logs` |
-| Operational Reports | `/reports` | Report index cards. | Navigation list | None | Open report | No | No | None |
-| Roles & Permissions | `/settings/roles` | Manage roles, permission assignments, and user assignments. | List + form | None | Create role, update role, reset, view/edit | No | No | `GET /api/rbac/roles`, `GET /api/rbac/permissions`, `POST /api/rbac/roles`, `PUT /api/rbac/roles/[id]` |
-| Printable Transaction Document | `/operations/*/print/[documentNo]`, `/payments/*/print/[documentNo]` | Generic printable document for transaction stock entries and voucher lines. | Print page | Document type and number from route | Print | Yes | No | `GET /api/transaction-documents/[documentType]/[documentNo]` |
+| Roles & Permissions | `/settings/roles` | Manage roles, permission assignments, and user assignments. | List + form | None | Create role, update role, view/edit | No | No | `GET /api/rbac/roles`, `GET /api/rbac/permissions`, `POST /api/rbac/roles`, `PUT /api/rbac/roles/[id]` |
+| Database Backup | `/database-backup` | Trigger database backup, list existing backup files, download backups. | Control + list | None | Trigger backup, download file | No | No | `GET /api/database-backup`, `POST /api/database-backup`, `GET /api/database-backup/download/[filename]` |
+| General Ledger | `/reports/general-ledger` | Placeholder; links to customer/vendor ledger screens. | ComingSoonPage | None | None | No | No | None |
+| Salewise Profit | `/reports/salewise-profit` | Placeholder. | ComingSoonPage | None | None | No | No | None |
+| Printable Transaction Document | `/operations/*/print/[documentNo]`, `/payments/*/print/[documentNo]`, `/sale-purchase/*/print/[documentNo]`, `/returns/*/print/[documentNo]` | Generic printable document for transaction stock entries and voucher lines. | Print page | Document type and number from route | Print | Yes | No | `GET /api/transaction-documents/[documentType]/[documentNo]` |
 
 ## 3. Transaction Modules Implemented
 
 | Module | Status | Current implementation |
 |---|---|---|
-| Purchases | Partial | `Purchase Filled Cylinder` is implemented. It posts filled stock IN, vendor payable voucher, GST receivable when supplied, vendor empty return balance increment, document number, closed-day guard, RBAC, and audit log. Legacy purchase empty, purchase other, purchase returns, multi-line GIRN, empty return inside purchase, and 11.8kg global price behavior are missing. |
-| Sales | Partial | Single `Sale LPG` and simplified `Complete Day Sale` batch are implemented. They post filled stock OUT, sales/receivable voucher, GST payable, optional security liability, customer empty owed/security, document numbers, closed-day guard, RBAC, and audit log. Legacy same-sale empty return, multi-line sale, direct/cash/credit payment type, invoice language, inline stock checks, and sale list/history are missing. |
-| Returns | Partial | Customer `Cylinder Return` is implemented for empty returns only, with empty stock IN and customer empty owed decrement. Filled sale returns, purchase returns, return valuation, and approval workflow are missing. |
-| Decanting | Missing | No route, schema entity, service, API endpoint, stock source type, report, or UI screen exists. |
-| Cylinder conversion | Missing | No route, schema entity, service, API endpoint, stock source type, report, or UI screen exists. |
-| Empty sale | Missing | No route, schema entity, service, API endpoint, stock source type, report, or UI screen exists. |
-| Payments | Partial | Cash payment and bank payment to vendors are implemented as balanced vouchers with audit and closed-day guard. Expense payments, multi-line payments, account-to-account flexibility, and payment list/history are missing. |
-| Receipts | Partial | Cash receipt, bank receipt, and security receipt are implemented as balanced vouchers. Multi-line receipt vouchers, receipt list/history, received amount integration inside complete-day sales, and security quantity capture are missing. |
-| Reversals | Partial | Compensating reversals exist for sale, purchase, cash receipt, cash payment, bank receipt, bank payment, and cylinder return. They create reversal voucher/stock adjustment where applicable and write audit logs. There is no dedicated Reversal table, no reversal list/status screen, and the UI still describes the panel as a policy stub. |
-| Day closing | Partial | Close day, sequential close enforcement, closed-day write blocking, reopen request, and reopen are implemented. UI exposes close/reopen basics. Cash reconciliation details, day close reports, approval queue, and historical close list are missing. |
-| Opening balances | Partial | Schema and seed support opening stock via `StockSourceType.OPENING_BALANCE` and opening ledger rows are calculated in reports from prior voucher lines. There is no UI/API for shop opening balance, cash opening, customer opening balances, vendor opening balances, or locked one-time migration entry. |
+| Purchases | Substantial | `Purchase Filled Cylinder` is multi-line: supports multiple line items, per-line cylinderState (FILLED/EMPTY), per-line GST percent, per-line empty return quantity, global 11.8kg price field, remarks, vendor lookup, document number, closed-day guard, RBAC, and audit log. `Purchase Empty Cylinder` and `Purchase Other` are implemented as multi-line forms with account selection and print support. |
+| Sales | Substantial | `Sale LPG` is multi-line: supports multiple sale lines each with item, quantity, unit price, GST percent, security deposit amount, and per-line same-sale empty return. Posts filled stock OUT, customer receivable voucher, GST payable, empty stock IN per return line, customer cylinder balance, document numbers, closed-day guard, RBAC, and audit log. `Complete Day Sale` batch now supports per-row paymentType (Cash/Credit), amountReceived, and up to 3 item slots per row. `Decanting Sale` and `Empty Sale` are implemented. |
+| Returns | Substantial | Customer `Cylinder Return` is multi-line and handles both filled and empty return types per line. Filled returns create a credit voucher; empty returns decrement customer empty owed. `Purchase Return Cylinder` and `Purchase Return Other` are implemented with multi-line support, stock adjustment, and credit/debit note vouchers. |
+| Cylinder Conversion | Complete | Route, API endpoint, service, stock adjustment (OUT source + IN destination), document number, print support, audit log, and UI form are implemented. |
+| Decanting Sale | Complete | Route, API endpoint, service, source stock decrement, customer sale voucher, GST, document number, print support, audit log, and UI form are implemented. |
+| Empty Sale | Complete | Route, API endpoint, service, empty stock OUT, customer receivable voucher, GST, document number, multi-line, print support, audit log, and UI form are implemented. |
+| Payments | Partial | Cash payment and bank payment to vendors are implemented as balanced vouchers. Expense payments, multi-line payment vouchers, and payment list/history are missing. |
+| Receipts | Partial | Cash receipt, bank receipt, and security receipt are implemented as balanced vouchers. Multi-line receipts, receipt list/history, and security quantity capture remain incomplete. |
+| Reversals | Partial | Compensating reversals exist for sale, purchase, cash receipt, cash payment, bank receipt, bank payment, and cylinder return. No dedicated Reversal table, reversal list/status screen, or workflow lifecycle exists. |
+| Day closing | Partial | Close day, sequential close enforcement, closed-day write blocking, reopen request, and reopen are implemented. Cash reconciliation details, day close reports, approval queue, and historical close list are missing. |
+| Opening balances | Partial | Shop Opening Balance, Cash Opening, and Customer Opening Balance all have UI and API screens. Vendor Opening Balance screen is missing. One-time migration lock is missing. |
 
 ## 4. Reports Inventory
 
@@ -111,43 +174,44 @@ All report screens use `ReportTableClient`, which supports date/as-of/select fil
 
 | Report | Route | Filters | CSV support | Print support | Status |
 |---|---|---|---|---|---|
-| Operational Reports index | `/reports` | None | No | No | Complete as index only |
-| Stock Summary | `/reports/stock-summary` | Item, from date, to date | Yes, `/api/reports/stock-summary?format=csv` | Yes | Partial; summary by item from stock ledger only |
-| Customer Cylinder Balance Report | `/reports/customer-cylinder-balances` | Customer, item, from date, to date | Yes, `/api/reports/customer-cylinder-balances?format=csv` | Yes | Partial; outstanding empty cylinders and last movement |
-| Daily Activity Report | `/reports/daily-activity` | From date, to date | Yes, `/api/reports/daily-activity?format=csv` | Yes | Partial; count summary only, not full DAR layout |
-| Customer Ledger Report | `/reports/customer-ledger` | Customer, from date, to date | Yes, `/api/reports/customer-ledger?format=csv` | Yes | Partial; requires customer selection and voucher-line ledger |
-| Vendor Ledger Report | `/reports/vendor-ledger` | Vendor, from date, to date | Yes, `/api/reports/vendor-ledger?format=csv` | Yes | Partial; requires vendor selection and voucher-line ledger |
-| Cash Book Report | `/reports/cash-book` | Cash/bank account, from date, to date | Yes, `/api/reports/cash-book?format=csv` | Yes | Partial; combines cash and selected bank movement; no separate bank book screen |
-| Trial Balance | `/reports/trial-balance` | Account type, from date, to date | Yes, `/api/reports/trial-balance?format=csv` | Yes | Partial; account totals only |
-| Profit & Loss | `/reports/profit-loss` | From date, to date | Yes, `/api/reports/profit-loss?format=csv` | Yes | Partial; revenue/expense voucher-line report |
-| Balance Sheet | `/reports/balance-sheet` | As-of date | Yes, `/api/reports/balance-sheet?format=csv` | Yes | Partial; asset/liability/equity voucher-line report |
+| Sale B/W Date | `/reports/sale-between-dates` | Customer, item, from date, to date | Yes | Yes | Partial; tabular list of sale invoices; matches legacy Sale B/W Date layout |
+| Cylinder Conversion B/W Date | `/reports/cylinder-conversion-between-dates` | Item, from date, to date | Yes | Yes | Partial; tabular list of conversion records |
+| One Customer Sale History | `/reports/one-customer-sale-history` | Customer, item, from date, to date | Yes | Yes | Partial; same columns as Sale B/W Date filtered to one customer |
+| Stock Summary | `/reports/stock-summary` | Item, from date, to date | Yes | Yes | Partial; summary by item from stock ledger |
+| Cash Book | `/reports/cash-book` | Cash/bank account, from date, to date | Yes | Yes | Partial; combines cash and selected bank movement; no separate bank book screen |
+| Vendor Wise Receiving | `/reports/vendor-wise-receiving` | Vendor, item, from date, to date | Yes | Yes | Partial; filled/empty cylinder receipts from vendors |
+| General Ledger | `/reports/general-ledger` | None | No | No | Placeholder (ComingSoonPage); links to customer/vendor ledger |
+| Customer Ledger | `/reports/customer-ledger` | Customer, from date, to date | Yes | Yes | Partial; requires customer selection; voucher-line ledger |
+| Sale Return Report | `/reports/sale-return` | Customer, item, from date, to date | Yes | Yes | Partial; cylinder return records from customers |
+| Purchase Return Report | `/reports/purchase-return` | Vendor, item, from date, to date | Yes | Yes | Partial; cylinder and other purchase returns to vendors |
+| Customer Stock Ledger | `/reports/customer-stock-ledger` | Customer, item, from date, to date | Yes | Yes | Partial; all cylinder movements for a customer |
+| Daily Activity Report | `/reports/daily-activity` | From date, to date | Yes | Yes | Partial; count summary only, not full DAR layout |
+| Access Cylinders | `/reports/customer-cylinder-balances` | Customer, item, from date, to date | Yes | Yes | Partial; outstanding empty cylinders and last movement |
+| Salewise Profit | `/reports/salewise-profit` | None | No | No | Placeholder (ComingSoonPage) |
+| Profit / Loss Report | `/reports/profit-loss` | From date, to date | Yes | Yes | Partial; revenue/expense voucher-line report |
+| Vendor Ledger | `/reports/vendor-ledger` | Vendor, from date, to date | Yes | Yes | Partial; requires vendor selection; voucher-line ledger |
+| Trial Balance | `/reports/trial-balance` | Account type, from date, to date | Yes | Yes | Partial; account totals only |
+| Balance Sheet | `/reports/balance-sheet` | As-of date | Yes | Yes | Partial; asset/liability/equity voucher-line report |
 | Stock Ledger | `/stock-ledger` | Item, from date, to date | No | No | Partial; operational ledger screen, not under report index |
 | Audit Log | `/audit-log` | Module, action, user, from date, to date | No | No | Partial; control report only |
 | Voucher List | `/accounting/vouchers` | None | No | No | Partial; accounting voucher list only |
 
-Legacy/client reports not implemented as current report screens:
+Legacy/client reports remaining not implemented as full-parity screens:
 
 | Legacy/client report | Current status |
 |---|---|
-| Sale B/W Date with type/segment/item/brand/date and multiple output modes | Missing |
-| Cylinder Conversion B/W Date | Missing |
-| One Customer Sale History | Missing |
-| Vendor Wise Receiving Report | Missing |
-| General Ledger for arbitrary account | Missing |
-| Sale Return Report | Missing |
-| Purchase Return Report | Missing |
-| Customer Stock Ledger | Missing |
-| Access Cylinders by Customers and Own Business | Partial via Customer Cylinder Balance and Stock Summary, but not parity |
-| Salewise Profit | Missing |
-| Month/year Profit Report layout | Partial via Profit & Loss, but not parity |
-| Bank Book as separate report | Missing; cash book can select bank/cash account |
+| General Ledger for arbitrary account | Placeholder (ComingSoonPage); customer/vendor ledgers exist |
+| Salewise Profit | Placeholder (ComingSoonPage) |
+| Bank Book as separate report | Missing; cash book report can select a bank account |
+| Month/year Profit Report layout | Partial via Profit & Loss, but not parity layout |
+| Sale B/W Date — output modes (item-wise, amount-wise, type-wise) | Single flat table; multi-mode output not implemented |
 
 ## 5. Accounting Inventory
 
 | Accounting area | Status | Notes |
 |---|---|---|
 | Chart of accounts | Partial | CRUD screen exists for code, name, account type, normal balance, status. Schema supports parent tree, level, control/system flags. UI does not expose parent, level, hierarchy view, or account search. |
-| Vouchers | Partial | Operational services create balanced vouchers for sales, purchases, payments, security receipts, and reversals. Voucher list/detail are read-only. No manual journal voucher creation screen exists. |
+| Vouchers | Partial | Operational services create balanced vouchers for sales, purchases, returns, decanting, empty sale, cylinder conversion, payments, security receipts, and reversals. Voucher list/detail are read-only. No manual journal voucher creation screen exists. |
 | Ledgers | Partial | Customer, vendor, and cash/bank ledger reports exist with opening row calculation from prior voucher lines. No arbitrary general ledger screen exists. |
 | Trial balance | Partial | Service-backed report with account type filter, print, CSV. |
 | Profit/loss | Partial | Service-backed report from revenue and expense voucher lines, print, CSV. |
@@ -160,78 +224,76 @@ Legacy/client reports not implemented as current report screens:
 
 | Control | Status | Current behavior |
 |---|---|---|
-| RBAC | Partial/strong foundation | Permissions are module/action based, seeded for many modules, enforced in services/API for major writes and reports. Sidebar hides links based on permissions. Role management UI can assign permissions/users and protects last admin access. Some read/list API routes use request context but not all enforce explicit module permissions. |
+| RBAC | Partial/strong foundation | Permissions are module/action based, seeded for many modules, enforced in services/API for major writes and reports. Sidebar hides links based on permissions. Role management UI can assign permissions/users and protects last admin access. |
 | Audit logs | Partial | Services write audit logs for master data, transactions, roles, day closing, and reversals. Audit log viewer supports filters. Login/logout audit entries are not visibly written in current auth routes. |
 | Day close | Partial | DayClosing model and service support status, sequential closing, cash balance, notes, and audit trail. Writes use `assertWritableBusinessDate`. |
 | Reopen | Partial | Reopen request and direct reopen exist via API/service with audit trail and permission `day-closing.reopen:APPROVE`. UI exposes a basic reopen action but not a full approval queue. |
-| Reversals | Partial | Compensating reversal logic exists; unsafe delete is explicitly blocked. No dedicated reversal table/list/status lifecycle exists. |
-| Session/auth | Partial | Cookie-backed 12-hour session, login/logout endpoints, protected layout redirect, active-user and financial-year context. No password reset, user management UI, 2FA, session list, or login audit visible. |
+| Reversals | Partial | Compensating reversal logic exists for all major transaction kinds; unsafe delete is explicitly blocked. No dedicated reversal table/list/status lifecycle exists. |
+| Session/auth | Partial | Cookie-backed 12-hour session, login/logout endpoints, protected layout redirect, active-user and financial-year context. No password reset self-service, 2FA, or session list exists. User Management screen provides admin-level password reset. |
+| User management | Partial | Full user CRUD, role assignment, password reset (admin-initiated), status toggle, and Map Area assignment exist in the Configuration section. Self-service profile and password change are missing. |
+| Opening balances | Partial | Shop Opening Balance, Cash Opening, and Customer Opening Balance UI/API screens exist. Vendor Opening Balance and locked one-time migration enforcement are missing. |
+| Database backup | Partial | Trigger backup, list backup files, and download existing backup files via UI. Restore from backup and scheduled/automated backup are missing. |
 
 ## 7. UI Structure
 
 | Area | Current pattern |
 |---|---|
-| Sidebar layout | `AppShell` renders a fixed-width left sidebar on desktop (`md:w-72`) and main content area. Sidebar groups are RBAC-filtered, show the LPG ERP brand block, section labels, text links, and logout button. |
-| Dashboard layout | Placeholder KPI card grid with seven operational cards and a simple guidance panel. No live dashboard API is wired. |
-| Form patterns | `OperationForm` provides page header, API error, success message, lookup selects, text/number/date/checkbox inputs, reset, submit, and optional printable link after save. `MasterDataManager` provides side-by-side form plus table for CRUD-like master data. |
+| Sidebar layout | `AppShell` renders a fixed-width left sidebar on desktop (`md:w-72`) and main content area. Sidebar uses legacy-style multi-section groups (Configuration, Sale/Purchase, Returns, Payment/Receipt, Reports, Database) with RBAC filtering per link. |
+| Dashboard layout | Live API-backed KPI tile grid, bank position table, current stock table, sale stats widget, and quick-links grid. Calls `GET /api/dashboard` on load. |
+| Form patterns | `OperationForm` provides page header, API error, success message, lookup selects, text/number/date/checkbox inputs, reset, submit, and optional printable link after save. Multi-line forms (Purchase Filled Cylinder, Sale LPG, Cylinder Return, etc.) use internal line arrays with add/remove controls. `MasterDataManager` provides side-by-side form plus table for CRUD-like master data. |
 | Table patterns | `DataTable` is a simple horizontal-scroll table with loading and empty states. Numeric-like columns are right-aligned by label heuristics. No pagination, sort, column search, or density controls. |
 | Print layout pattern | Printable transactions and reports use `data-print-hidden`, `data-print-only`, `window.print()`, and regular HTML tables. Transaction print pages load generic voucher and stock data from `/api/transaction-documents/...`. |
+| ComingSoonPage | Reusable placeholder for sidebar-linked routes not yet fully implemented. Shows title, legacy path reference, and related links. |
 
 ## 8. Known Gaps
 
-### Missing modules compared to legacy/client ERP
+### Remaining missing or placeholder modules
 
-- Company Information management screen is not in active sidebar.
-- User Management screen is missing; roles exist, but user CRUD and area assignment are absent.
-- Cities, Areas, Brands, Categories, Expense Types, Item Prices, and Customer/Vendor opening balance screens are missing.
-- Shop Opening Balance, Cash Opening, Customer Opening Balance, Vendor Opening Balance workflows are missing.
-- Purchase Empty Cylinder, Purchase Other, Purchase Return Cylinder, and Purchase Return Other are missing.
-- Decanting Sale, Cylinder Conversion, and Empty Sale are missing.
-- Manual Journal Voucher creation is missing.
-- Database Backup screen is missing.
-- Bank coding is simplified to bank name/status only.
-
-### Placeholder screens and routes
-
-- Dashboard cards are placeholders (`--`) and do not call a dashboard API.
-- `GET /api/health`, `GET /api/setup/status`, and `GET /api/accounting/chart-of-accounts` return placeholder status responses.
-- Setup routes exist for company and financial years, but are outside current sidebar and were not observed as complete parity screens in the current source inventory.
+- Bank Payments / Receipt unified screen is a `ComingSoonPage`; individual Bank Payment and Bank Receipt screens are functional.
+- General Ledger arbitrary account report is a `ComingSoonPage`; customer/vendor ledgers are functional.
+- Salewise Profit report is a `ComingSoonPage`.
+- Manual Journal Voucher creation screen is missing; voucher type `JV` exists only through operational services.
+- Vendor Opening Balance screen is missing; only customer, cash, and shop opening balances have UI.
+- Financial Years and Company Setup routes exist under `(setup)` but are outside the sidebar.
+- Bank coding is simplified to bank name/status only; branch/account number fields are absent.
 
 ### Partial workflows
 
-- Purchase Filled Cylinder is single-line and lacks same-transaction empty return, global 11.8kg pricing, remarks, GST percent, and multi-line GIRN behavior.
-- Sale LPG is single-line and lacks same-sale empty return, sale type, remarks, invoice language, customer outstanding inline display, stock availability display, multi-line invoice, and list/history screens.
-- Complete Day Sale is simplified; it posts multiple rows but lacks legacy cash/credit payment type, amount received, per-row multi-item support, shared date/remarks, and automatic cash receipt for cash rows.
-- Cylinder Return handles empty returns only; filled returns and valued sale returns are missing.
-- Payments/receipts are single-party/single-line and do not support expense-account payments or multi-line vouchers.
-- Reversals are functional compensating entries but lack a durable reversal table and workflow/status UI.
-- Reports have generic table/CSV/print support but do not match many legacy report-specific filters and layouts.
+- Purchase Filled Cylinder multi-line GIRN: global 11.8kg price field exists but per-line pricing still required for different cylinder sizes.
+- Sale LPG: customer outstanding inline display and stock availability inline check are missing; sale type/invoice language selection is absent.
+- Complete Day Sale: shared date and remarks per batch are supported; automatic cash receipt posting for Cash rows depends on service implementation.
+- Cylinder Return: approval workflow for valued returns is missing.
+- Payments/receipts: single-party/single-line only; expense-account payments and multi-line vouchers are missing.
+- Reversals: functional compensating entries but no dedicated Reversal table, reversal list, or status lifecycle UI.
+- Day closing: cash reconciliation details, day close reports, and historical close list are missing.
+- Database backup: restore from backup and scheduled backup are missing.
 
 ### Missing reports
 
-- Sale B/W Date, one-customer sale history, customer stock ledger, vendor-wise receiving, sale return, purchase return, conversion report, salewise profit, access cylinders by own business, and arbitrary general ledger are missing.
-- Bank Book is only indirectly covered by Cash Book account filtering.
+- Bank Book as a separate dedicated report screen.
+- Sale B/W Date multi-mode output (item-wise, amount-wise, type-wise, segment-wise).
+- Salewise Profit (placeholder).
+- General Ledger for arbitrary account (placeholder).
+- Month/year profit layout parity.
 
 ### Workflow mismatches
 
-- Legacy purchase and sale screens are multi-line LPG operational documents; current purchase/sale forms are mostly single-item documents.
-- Legacy customer cylinder accountability includes simultaneous empty return during sale and vendor empty return during purchase; current implementation separates customer cylinder return and only increments vendor empty due during purchase.
-- Legacy complete-day sale supports cash/credit workflows; current batch sale always creates sale vouchers and does not create immediate receipts.
 - Legacy print language selection is absent.
-- Legacy current-stock and sale-stat widgets are absent.
-- Legacy area/user access controls are modeled but not surfaced in current operational UI.
+- Legacy area/user access controls are modeled in Map Area but not surfaced in per-transaction routing or RBAC filters.
+- Vendor Opening Balance screen is missing.
+- One-time migration lock for opening balances is not enforced.
 
 ## 9. Client ERP Parity Estimate
 
-These estimates compare the current implementation against the legacy/client ERP described in the reverse-engineering notes. They are baseline estimates for planning, not measured test results.
+These estimates compare the current implementation against the legacy/client ERP described in the reverse-engineering notes. They are estimates for planning, not measured test results.
 
 | Parity area | Estimate | Rationale |
 |---|---:|---|
-| Functional parity | 35% | Core foundations exist for auth, RBAC, master data, filled purchase, sale, empty return, payments, stock ledger, vouchers, reports, day close, and reversals. Several legacy modules and detailed LPG workflows are absent. |
-| Workflow parity | 25% | Current workflows are service-backed and safer, but many legacy operational shortcuts and multi-line document behaviors are not yet replicated. |
-| Reporting parity | 40% | Nine service-backed reports plus stock/audit/voucher lists exist with CSV/print on report pages, but many legacy report types and report-specific filters are missing. |
-| Navigation parity | 45% | Current sidebar covers the main foundation areas, but legacy Configuration, Sale/Purchase, Return, Payment/Receipt, Reports, and Backup menus have many missing or consolidated routes. |
+| Functional parity | 65% | All major transaction modules now exist: multi-line purchase (filled, empty, other), multi-line sale LPG, complete day sale with cash/credit, cylinder return (filled/empty), purchase returns (cylinder/other), cylinder conversion, decanting sale, empty sale, opening balances (shop/cash/customer), user management, database backup, and all payment/receipt types. Major remaining gaps are manual journal, vendor opening balance, bank book, salewise profit report, and general ledger. |
+| Workflow parity | 55% | Multi-line documents, per-line same-transaction returns, cash/credit payment types, opening balance workflows, and user/area management are now implemented. Remaining gaps are valued return approval workflows, expense-account payments, legacy print language, and manual journals. |
+| Reporting parity | 70% | Sale B/W Date, vendor wise receiving, sale return, purchase return, customer stock ledger, cylinder conversion, and one-customer sale history are now service-backed ReportTableClient screens. Remaining gaps are general ledger (placeholder), salewise profit (placeholder), bank book (indirect only), and DAR full layout. |
+| Navigation parity | 90% | Sidebar closely mirrors the legacy menu structure with Configuration, Sale/Purchase, Returns, Payment/Receipt, Reports, and Database sections. Most links are functional screens; two are ComingSoonPage placeholders (Bank Payments/Receipt combined, General Ledger). |
 
 ## Baseline Summary
 
-The current ERP is a solid service-backed rebuild foundation rather than a full client ERP clone. It has the right architectural direction: API routes call services, writes are centralized, stock movements are immutable, vouchers are balanced, RBAC is service-enforced on important flows, and day close/reversal controls exist. The largest parity gaps are operational depth: multi-line LPG documents, opening balances, customer/vendor area workflows, purchase/sale returns, decanting/conversion/empty sale, manual journals, backup, detailed legacy reports, and dashboard live metrics.
+The current ERP has progressed from a foundation rebuild to a substantially operational system. All major LPG transaction flows have service-backed implementations: multi-line purchases, multi-line sales with same-transaction empty returns, cylinder conversion, decanting, empty sale, purchase returns, cylinder returns with filled/empty support, and complete day sale with cash/credit behavior. Configuration is complete for company information, master data, opening balances, and user management with area assignment. The dashboard is live-data backed. Reporting coverage is broad, covering 16 distinct reports including all major operational and accounting reports. The primary remaining gaps are manual journal voucher UI, vendor opening balance, bank book as a standalone report, two placeholder reports (salewise profit, general ledger), and several workflow refinements (reversal lifecycle, expense payments, day close reconciliation details).
