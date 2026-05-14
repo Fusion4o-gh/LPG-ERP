@@ -3,9 +3,20 @@ export function SubmitButton({ loading, children }: { loading: boolean; children
     <button
       type="submit"
       disabled={loading}
-      className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+      className="btn-primary disabled:opacity-60 disabled:cursor-not-allowed"
+      style={loading ? { background: "#94a3b8" } : undefined}
     >
-      {loading ? "Saving..." : children}
+      {loading && (
+        <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4l-3 3-3-3h4z"
+          />
+        </svg>
+      )}
+      {loading ? "Saving…" : children}
     </button>
   );
 }
