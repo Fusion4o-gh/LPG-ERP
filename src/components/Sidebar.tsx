@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { canAccess, canAny } from "@/lib/permissions";
+import type { AppShellContext } from "@/server/auth/app-shell-context";
 import { LogoutButton } from "./LogoutButton";
 
 const groups = [
@@ -86,7 +87,15 @@ const groups = [
   },
 ];
 
-export function Sidebar({ permissions, onClose }: { permissions: string[]; onClose?: () => void }) {
+export function Sidebar({
+  permissions,
+  shell,
+  onClose,
+}: {
+  permissions: string[];
+  shell: AppShellContext;
+  onClose?: () => void;
+}) {
   const pathname = usePathname();
 
   const visibleGroups = groups.filter((group) =>
@@ -104,8 +113,10 @@ export function Sidebar({ permissions, onClose }: { permissions: string[]; onClo
         <div className="flex items-center gap-3">
           <img src="/fusion4o-logo.png" alt="Fusion4o" className="h-9 w-9 object-contain" />
           <div className="flex-1 min-w-0">
-            <div className="text-[15px] font-bold text-white leading-tight tracking-tight">LPG ERP</div>
-            <div className="text-[11px] mt-0.5" style={{ color: "var(--sidebar-text)" }}>Powered by Fusion4o</div>
+            <div className="truncate text-[15px] font-bold text-white leading-tight tracking-tight">{shell.companyName}</div>
+            <div className="text-[11px] mt-0.5" style={{ color: "var(--sidebar-text)" }}>
+              LPG ERP · FY {shell.financialYearLabel}
+            </div>
           </div>
           {onClose && (
             <button
@@ -159,8 +170,28 @@ export function Sidebar({ permissions, onClose }: { permissions: string[]; onClo
         })}
       </nav>
 
-      {/* Logout */}
-      <div className="px-3 py-4" style={{ borderTop: "1px solid var(--sidebar-border)" }}>
+      {/* User + logout */}
+      <div className="px-3 py-4 space-y-3" style={{ borderTop: "1px solid var(--sidebar-border)" }}>
+        <div className="flex items-center gap-3 px-2">
+          <div
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+            style={{ background: "var(--fusion-gradient)" }}
+            aria-hidden
+          >
+            {shell.userName
+              .split(/\s+/)
+              .map((part) => part[0])
+              .join("")
+              .slice(0, 2)
+              .toUpperCase()}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold text-white leading-tight">{shell.userName}</p>
+            <p className="truncate text-[11px]" style={{ color: "var(--sidebar-text)" }}>
+              {shell.loginId}
+            </p>
+          </div>
+        </div>
         <LogoutButton />
       </div>
     </aside>

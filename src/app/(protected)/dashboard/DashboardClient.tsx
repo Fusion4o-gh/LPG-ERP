@@ -45,16 +45,16 @@ type DashboardData = {
 };
 
 const QUICK_LINKS = [
-  { label: "Single Sale", href: "/transactions/single-sale" },
-  { label: "Complete Day Sale", href: "/transactions/complete-day-sale" },
-  { label: "Purchase", href: "/transactions/purchase" },
-  { label: "Payment", href: "/transactions/payment" },
-  { label: "Receipt", href: "/transactions/receipt" },
-  { label: "Cylinder Return", href: "/transactions/cylinder-return" },
+  { label: "Single Sale", href: "/operations/sale-lpg" },
+  { label: "Complete Day Sale", href: "/operations/complete-day-sale" },
+  { label: "Purchase", href: "/operations/purchase-filled-cylinder" },
+  { label: "Payment", href: "/payments/cash-payment" },
+  { label: "Receipt", href: "/payments/cash-receipt" },
+  { label: "Cylinder Return", href: "/operations/cylinder-return" },
   { label: "Customer Ledger", href: "/reports/customer-ledger" },
   { label: "Stock Report", href: "/reports/stock-summary" },
   { label: "Daily Activity", href: "/reports/daily-activity" },
-  { label: "Customer Stock Ledger", href: "/reports/customer-cylinder-balances" },
+  { label: "Customer Stock Ledger", href: "/reports/customer-stock-ledger" },
   { label: "Cash Book", href: "/reports/cash-book" },
   { label: "Profit/Loss Report", href: "/reports/profit-loss" },
 ];
