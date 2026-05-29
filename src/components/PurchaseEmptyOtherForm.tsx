@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api-client";
+import { emptySettlement } from "@/lib/settlement";
 import { ApiError } from "./ApiError";
 import { PageHeader } from "./PageHeader";
+import { SettlementPanel } from "./SettlementPanel";
 import { SubmitButton } from "./SubmitButton";
 import { SuccessMessage } from "./SuccessMessage";
 
@@ -61,17 +63,36 @@ export function PurchaseEmptyOtherForm({ kind }: { kind: PurchaseKind }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [printDocumentNo, setPrintDocumentNo] = useState("");
+  const [banks, setBanks] = useState<{ id: string; name: string }[]>([]);
+  const [settlement, setSettlement] = useState(emptySettlement());
+  const [vendorBalance, setVendorBalance] = useState<{ payableBalance: number } | null>(null);
 
   useEffect(() => {
-    Promise.all([apiGet<{ vendors: Lookup[] }>("/api/vendors"), apiGet<{ items: Lookup[] }>("/api/items"), apiGet<{ accounts: Lookup[] }>("/api/accounting/chart-of-accounts")])
-      .then(([vendorData, itemData, accountData]) => {
+    Promise.all([
+      apiGet<{ vendors: Lookup[] }>("/api/vendors"),
+      apiGet<{ items: Lookup[] }>("/api/items"),
+      apiGet<{ accounts: Lookup[] }>("/api/accounting/chart-of-accounts"),
+      apiGet<{ banks: { id: string; name: string }[] }>("/api/banks"),
+    ])
+      .then(([vendorData, itemData, accountData, bankData]) => {
         setVendors(vendorData.vendors);
         setItems(itemData.items);
         setAccounts(accountData.accounts);
+        setBanks(bankData.banks);
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLookupLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!vendorId) {
+      setVendorBalance(null);
+      return;
+    }
+    apiGet<{ vendorBalance: { payableBalance: number } | null }>(`/api/purchases/filled-cylinder/context?vendorId=${vendorId}`)
+      .then((data) => setVendorBalance(data.vendorBalance))
+      .catch(() => setVendorBalance(null));
+  }, [vendorId]);
 
   const totals = useMemo(
     () =>
@@ -99,6 +120,8 @@ export function PurchaseEmptyOtherForm({ kind }: { kind: PurchaseKind }) {
     setRemarks("");
     setLines([emptyLine(kind)]);
     setPrintDocumentNo("");
+    setSettlement(emptySettlement());
+    setVendorBalance(null);
   }
 
   function payload() {
@@ -119,7 +142,18 @@ export function PurchaseEmptyOtherForm({ kind }: { kind: PurchaseKind }) {
         ? { itemId: line.itemId, quantity, unitPrice, gstPercent }
         : { accountId: line.accountId || undefined, itemId: line.itemId || undefined, description: line.description || undefined, quantity: quantity || undefined, unitPrice: unitPrice || undefined, amount: amt || undefined, gstPercent };
     });
-    return { vendorId, transactionDate, remarks, lines: preparedLines };
+    return {
+      vendorId,
+      transactionDate,
+      remarks,
+      lines: preparedLines,
+      discount: numberValue(settlement.discount),
+      amountPaid: numberValue(settlement.amountReceived),
+      payMode: settlement.receiveMode,
+      bankId: settlement.bankId || undefined,
+      chequeNo: settlement.chequeNo || undefined,
+      chequeDate: settlement.chequeDate || undefined,
+    };
   }
 
   async function onSubmit(event: FormEvent) {
@@ -189,6 +223,14 @@ export function PurchaseEmptyOtherForm({ kind }: { kind: PurchaseKind }) {
               <div>
                 <label className="form-label" htmlFor="remarks">Remarks</label>
                 <input id="remarks" value={remarks} onChange={(e) => setRemarks(e.target.value)} className="form-input" />
+              </div>
+              <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-3 lg:col-span-4 lg:max-w-xs">
+                <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Vendor Balance</div>
+                {vendorBalance ? (
+                  <div className="mt-1 text-sm font-medium tabular-nums text-slate-700">Payable: {money(vendorBalance.payableBalance)}</div>
+                ) : (
+                  <div className="mt-1 text-sm text-slate-500">Select vendor to load balance.</div>
+                )}
               </div>
             </div>
           </div>
@@ -275,6 +317,14 @@ export function PurchaseEmptyOtherForm({ kind }: { kind: PurchaseKind }) {
             </div>
           </div>
         </section>
+
+        <SettlementPanel
+          variant="payment"
+          totalBill={totals.incGstAmount}
+          fields={settlement}
+          onChange={(patch) => setSettlement((current) => ({ ...current, ...patch }))}
+          banks={banks}
+        />
 
         <div className="flex flex-wrap gap-2">
           <SubmitButton loading={loading}>Post Purchase</SubmitButton>

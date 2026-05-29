@@ -14,6 +14,12 @@ export type CompanyInformationInput = {
   email?: string;
   taxRegistrationNumber?: string;
   nationalTaxNumber?: string;
+  stockAvailableCheck?: boolean;
+  centralizedPricing?: boolean;
+  showDefaultDate?: boolean;
+  redirectOnSamePage?: boolean;
+  workStartTime?: string;
+  workEndTime?: string;
   workingDays?: Record<string, boolean>;
 };
 
@@ -56,6 +62,12 @@ const companySelect = {
   locale: true,
   timeZone: true,
   workingDays: true,
+  stockAvailableCheck: true,
+  centralizedPricing: true,
+  showDefaultDate: true,
+  redirectOnSamePage: true,
+  workStartTime: true,
+  workEndTime: true,
   status: true,
 } satisfies Prisma.CompanySelect;
 
@@ -82,6 +94,12 @@ export async function updateCompanyInformation(context: Context, input: CompanyI
         email: cleanEmail(input.email),
         taxRegistrationNumber: optionalString(input.taxRegistrationNumber),
         nationalTaxNumber: optionalString(input.nationalTaxNumber),
+        ...(input.stockAvailableCheck === undefined ? {} : { stockAvailableCheck: input.stockAvailableCheck }),
+        ...(input.centralizedPricing === undefined ? {} : { centralizedPricing: input.centralizedPricing }),
+        ...(input.showDefaultDate === undefined ? {} : { showDefaultDate: input.showDefaultDate }),
+        ...(input.redirectOnSamePage === undefined ? {} : { redirectOnSamePage: input.redirectOnSamePage }),
+        ...(input.workStartTime === undefined ? {} : { workStartTime: optionalString(input.workStartTime) }),
+        ...(input.workEndTime === undefined ? {} : { workEndTime: optionalString(input.workEndTime) }),
         ...(workingDays === undefined ? {} : { workingDays }),
       },
       select: companySelect,

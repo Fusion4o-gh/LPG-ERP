@@ -194,20 +194,34 @@ export async function multiLineBankPayment(input: MultiLinePaymentInput & { bank
   });
 }
 
-export async function securityReceipt(input: BasePaymentInput & { receiptNo: string; customerId: string; itemId: string; bankId?: string }) {
+export async function securityReceipt(
+  input: BasePaymentInput & {
+    receiptNo: string;
+    customerId: string;
+    itemId: string;
+    bankId?: string;
+    quantity?: number;
+    receiveMode?: string;
+    chequeNo?: string;
+  },
+) {
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, input.userId, "cash-receipts", PermissionAction.CREATE);
     await assertWritableBusinessDate(tx, input);
 
-    const debitAccountId = input.bankId ? await getBankAccountId(tx, input.bankId) : await getCashAccountId(tx, input.companyId);
+    const receiveMode = String(input.receiveMode ?? (input.bankId ? "Bank" : "Cash")).toLowerCase();
+    const useBank = receiveMode === "bank" || Boolean(input.bankId);
+    const debitAccountId = useBank ? await getBankAccountId(tx, input.bankId!) : await getCashAccountId(tx, input.companyId);
+    if (useBank && !input.bankId) throw new Error("bankId is required for bank receipt.");
     const securityLiabilityAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.securityLiability);
 
     const voucher = await createBalancedVoucher(tx, {
       companyId: input.companyId,
       financialYearId: input.financialYearId,
       voucherNo: input.receiptNo,
-      voucherType: input.bankId ? VoucherType.BR : VoucherType.CR,
+      voucherType: useBank ? VoucherType.BR : VoucherType.CR,
       voucherDate: input.transactionDate,
+      narration: input.chequeNo ? `Cheque ${input.chequeNo}` : undefined,
       sourceType: "SecurityReceipt",
       sourceId: input.receiptNo,
       createdById: input.userId,
@@ -217,6 +231,7 @@ export async function securityReceipt(input: BasePaymentInput & { receiptNo: str
       ],
     });
 
+    const quantity = input.quantity && input.quantity > 0 ? input.quantity : 1;
     await tx.customerCylinderBalance.upsert({
       where: { customerId_itemId: { customerId: input.customerId, itemId: input.itemId } },
       update: { securityHeld: { increment: input.amount } },
@@ -228,7 +243,7 @@ export async function securityReceipt(input: BasePaymentInput & { receiptNo: str
       userId: input.userId,
       entityType: "SecurityReceipt",
       entityId: input.receiptNo,
-      after: { ...input, amount: String(input.amount) },
+      after: { ...input, amount: String(input.amount), quantity, receiveMode: input.receiveMode ?? (useBank ? "Bank" : "Cash") },
     });
 
     return { voucher };

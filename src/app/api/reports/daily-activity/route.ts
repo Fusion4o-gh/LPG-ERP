@@ -22,8 +22,8 @@ export async function GET(request: Request) {
     if (params.get("format") === "csv") {
       return csvResponse(await getDailyActivityReportCsv(context, filters));
     }
-    const summary = await getDailyActivityReport(context, filters);
-    return ok({ summary, rows: [summary] });
+    const report = await getDailyActivityReport(context, filters);
+    return ok(report);
   } catch (error) {
     return serviceError(error);
   }

@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api-client";
+import { emptySettlement } from "@/lib/settlement";
 import { ApiError } from "./ApiError";
 import { PageHeader } from "./PageHeader";
+import { SettlementPanel } from "./SettlementPanel";
 import { SubmitButton } from "./SubmitButton";
 import { SuccessMessage } from "./SuccessMessage";
 
@@ -50,12 +52,19 @@ export function CylinderReturnForm() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [printDocumentNo, setPrintDocumentNo] = useState("");
+  const [banks, setBanks] = useState<{ id: string; name: string }[]>([]);
+  const [settlement, setSettlement] = useState(emptySettlement());
 
   useEffect(() => {
-    Promise.all([apiGet<{ customers: Lookup[] }>("/api/customers"), apiGet<{ items: Lookup[] }>("/api/items")])
-      .then(([customerData, itemData]) => {
+    Promise.all([
+      apiGet<{ customers: Lookup[] }>("/api/customers"),
+      apiGet<{ items: Lookup[] }>("/api/items"),
+      apiGet<{ banks: { id: string; name: string }[] }>("/api/banks"),
+    ])
+      .then(([customerData, itemData, bankData]) => {
         setCustomers(customerData.customers);
         setItems(itemData.items);
+        setBanks(bankData.banks);
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLookupLoading(false));
@@ -77,6 +86,7 @@ export function CylinderReturnForm() {
     setRemarks("");
     setLines([{ ...emptyLine }]);
     setPrintDocumentNo("");
+    setSettlement(emptySettlement());
   }
 
   function payload() {
@@ -92,7 +102,18 @@ export function CylinderReturnForm() {
       if (gstPercent < 0) throw new Error(`Line ${index + 1}: GST % cannot be negative.`);
       return { itemId: line.itemId, returnType: line.returnType, quantity, unitPrice: line.returnType === "Filled" ? unitPrice : undefined, gstPercent: line.returnType === "Filled" ? gstPercent : undefined };
     });
-    return { customerId, transactionDate, remarks, lines: preparedLines };
+    return {
+      customerId,
+      transactionDate,
+      remarks,
+      lines: preparedLines,
+      discount: amount(settlement.discount),
+      amountPaid: amount(settlement.amountReceived),
+      payMode: settlement.receiveMode,
+      bankId: settlement.bankId || undefined,
+      chequeNo: settlement.chequeNo || undefined,
+      chequeDate: settlement.chequeDate || undefined,
+    };
   }
 
   async function onSubmit(event: FormEvent) {
@@ -215,6 +236,17 @@ export function CylinderReturnForm() {
             </div>
           </div>
         </section>
+
+        {total > 0 ? (
+          <SettlementPanel
+            variant="payment"
+            title="Refund & Settlement"
+            totalBill={total}
+            fields={settlement}
+            onChange={(patch) => setSettlement((current) => ({ ...current, ...patch }))}
+            banks={banks}
+          />
+        ) : null}
 
         <div className="flex flex-wrap gap-2">
           <SubmitButton loading={loading}>Post Return</SubmitButton>

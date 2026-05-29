@@ -12,8 +12,10 @@ type ItemSlot = { itemId: string; quantity: string; unitPrice: string };
 type Row = {
   customerId: string;
   elevenPointEightKgPrice: string;
-  paymentType: "Cash" | "Credit";
+  receiveMode: "Credit" | "Cash" | "Bank";
   amountReceived: string;
+  bankId: string;
+  chequeNo: string;
   items: [ItemSlot, ItemSlot, ItemSlot];
 };
 
@@ -21,8 +23,10 @@ const emptySlot: ItemSlot = { itemId: "", quantity: "", unitPrice: "" };
 const emptyRow: Row = {
   customerId: "",
   elevenPointEightKgPrice: "",
-  paymentType: "Credit",
+  receiveMode: "Credit",
   amountReceived: "0",
+  bankId: "",
+  chequeNo: "",
   items: [{ ...emptySlot }, { ...emptySlot }, { ...emptySlot }],
 };
 
@@ -50,6 +54,7 @@ function money(value: number) {
 export function BatchSaleForm() {
   const [customers, setCustomers] = useState<Lookup[]>([]);
   const [items, setItems] = useState<Lookup[]>([]);
+  const [banks, setBanks] = useState<{ id: string; name: string }[]>([]);
   const [transactionDate, setTransactionDate] = useState("");
   const [remarks, setRemarks] = useState("");
   const [rows, setRows] = useState<Row[]>([{ ...emptyRow, items: [{ ...emptySlot }, { ...emptySlot }, { ...emptySlot }] }]);
@@ -59,10 +64,15 @@ export function BatchSaleForm() {
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
-    Promise.all([apiGet<{ customers: Lookup[] }>("/api/customers"), apiGet<{ items: Lookup[] }>("/api/items")])
-      .then(([customerData, itemData]) => {
+    Promise.all([
+      apiGet<{ customers: Lookup[] }>("/api/customers"),
+      apiGet<{ items: Lookup[] }>("/api/items"),
+      apiGet<{ banks: { id: string; name: string }[] }>("/api/banks"),
+    ])
+      .then(([customerData, itemData, bankData]) => {
         setCustomers(customerData.customers);
         setItems(itemData.items);
+        setBanks(bankData.banks);
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLookupLoading(false));
@@ -107,11 +117,17 @@ export function BatchSaleForm() {
           return { itemId: slot.itemId, quantity, unitPrice };
         });
       if (preparedItems.length === 0) throw new Error(`Row ${rowIndex + 1}: at least one item is required.`);
+      if (row.receiveMode === "Bank" && amount(row.amountReceived) > 0 && !row.bankId) {
+        throw new Error(`Row ${rowIndex + 1}: bank is required for bank receipt.`);
+      }
       return {
         customerId: row.customerId,
         elevenPointEightKgPrice: row.elevenPointEightKgPrice ? Number(row.elevenPointEightKgPrice) : undefined,
-        paymentType: row.paymentType,
+        paymentType: row.receiveMode,
+        receiveMode: row.receiveMode,
         amountReceived: Number(row.amountReceived || 0),
+        bankId: row.receiveMode === "Bank" ? row.bankId || undefined : undefined,
+        chequeNo: row.receiveMode === "Bank" ? row.chequeNo || undefined : undefined,
         items: preparedItems,
       };
     });
@@ -173,7 +189,7 @@ export function BatchSaleForm() {
             <button type="button" onClick={() => setRows((c) => [...c, newRow()])} className="btn-primary-sm">+ Add Row</button>
           </div>
           <div className="overflow-x-auto">
-            <table className="min-w-[1480px] border-collapse text-sm">
+            <table className="min-w-[1680px] border-collapse text-sm">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
                   <th className="whitespace-nowrap px-2.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Customer</th>
@@ -182,8 +198,9 @@ export function BatchSaleForm() {
                     <th key={slot} className="whitespace-nowrap px-2.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Item {slot}</th>
                   ))}
                   <th className="whitespace-nowrap px-2.5 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Total</th>
-                  <th className="whitespace-nowrap px-2.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Payment</th>
+                  <th className="whitespace-nowrap px-2.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Receive Mode</th>
                   <th className="whitespace-nowrap px-2.5 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Received</th>
+                  <th className="whitespace-nowrap px-2.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Bank / Cheque</th>
                   <th className="whitespace-nowrap px-2.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"></th>
                 </tr>
               </thead>
@@ -215,13 +232,31 @@ export function BatchSaleForm() {
                     ))}
                     <td className="px-2.5 py-2 text-right align-top tabular-nums font-semibold text-slate-800">{money(rowTotal(row))}</td>
                     <td className="px-2.5 py-2 align-top">
-                      <select value={row.paymentType} onChange={(e) => updateRow(rowIndex, { paymentType: e.target.value as Row["paymentType"] })} className="tbl-select w-24">
-                        <option value="Cash">Cash</option>
+                      <select value={row.receiveMode} onChange={(e) => updateRow(rowIndex, { receiveMode: e.target.value as Row["receiveMode"] })} className="tbl-select w-24">
                         <option value="Credit">Credit</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Bank">Bank</option>
                       </select>
                     </td>
                     <td className="px-2.5 py-2 align-top">
-                      <input type="number" min="0" value={row.amountReceived} onChange={(e) => updateRow(rowIndex, { amountReceived: e.target.value })} className="tbl-input w-24 text-right" />
+                      <input type="number" min="0" value={row.amountReceived} onChange={(e) => updateRow(rowIndex, { amountReceived: e.target.value })} className="tbl-input w-24 text-right" disabled={row.receiveMode === "Credit"} />
+                    </td>
+                    <td className="px-2.5 py-2 align-top">
+                      {row.receiveMode === "Bank" ? (
+                        <div className="space-y-1.5">
+                          <select value={row.bankId} onChange={(e) => updateRow(rowIndex, { bankId: e.target.value })} className="tbl-select w-40">
+                            <option value="">Select Bank</option>
+                            {banks.map((bank) => (
+                              <option key={bank.id} value={bank.id}>
+                                {bank.name}
+                              </option>
+                            ))}
+                          </select>
+                          <input placeholder="Cheque No" value={row.chequeNo} onChange={(e) => updateRow(rowIndex, { chequeNo: e.target.value })} className="tbl-input w-40" />
+                        </div>
+                      ) : (
+                        <span className="text-xs text-slate-400">—</span>
+                      )}
                     </td>
                     <td className="px-2.5 py-2 align-top">
                       <button type="button" onClick={() => removeRow(rowIndex)} disabled={rows.length === 1} className="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50 disabled:opacity-40 transition-colors">Remove</button>

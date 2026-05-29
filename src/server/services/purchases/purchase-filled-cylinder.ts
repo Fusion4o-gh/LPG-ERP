@@ -1,6 +1,7 @@
 import { CylinderState, PartyType, PermissionAction, Prisma, StockDirection, StockSourceType, VoucherType } from "@prisma/client";
 import { prisma } from "../../../lib/prisma.ts";
-import { ACCOUNT_CODES, getAccountIdByCode } from "../accounting/accounts.ts";
+import { DOCUMENT_PREFIXES, nextDocumentNumberInTransaction } from "../accounting/document-numbers.ts";
+import { ACCOUNT_CODES, getAccountIdByCode, getBankAccountId, getCashAccountId } from "../accounting/accounts.ts";
 import { createBalancedVoucher } from "../accounting/vouchers.ts";
 import { writeAuditLog } from "../audit/audit-log.ts";
 import { assertWritableBusinessDate } from "../inventory/day-closing.ts";
@@ -23,6 +24,12 @@ type PurchaseFilledCylinderInput = {
   lines?: PurchaseFilledCylinderLineInput[];
   transactionDate: string | Date;
   allowClosedDayOverride?: boolean;
+  discount?: string | number;
+  amountPaid?: string | number;
+  payMode?: "Credit" | "Cash" | "Bank" | string;
+  bankId?: string;
+  chequeNo?: string;
+  chequeDate?: string | Date;
 };
 
 type PurchaseFilledCylinderLineInput = {
@@ -100,6 +107,15 @@ export async function purchaseFilledCylinder(input: PurchaseFilledCylinderInput)
     const grossAmount = lines.reduce((sum, line) => sum.plus(line.exGstAmount), new Prisma.Decimal(0));
     const gstAmount = lines.reduce((sum, line) => sum.plus(line.gstAmount), new Prisma.Decimal(0));
     const payableAmount = grossAmount.plus(gstAmount);
+    const discountRaw = decimal(input.discount);
+    const discountAmount = discountRaw.gt(payableAmount) ? payableAmount : discountRaw;
+    const netPayableAmount = payableAmount.minus(discountAmount);
+    let purchaseDiscountAccountId: string | null = null;
+    try {
+      purchaseDiscountAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.purchaseDiscount);
+    } catch {
+      purchaseDiscountAccountId = null;
+    }
     const stockEntries = [];
 
     for (const line of lines) {
@@ -151,6 +167,7 @@ export async function purchaseFilledCylinder(input: PurchaseFilledCylinderInput)
       }
     }
 
+    const stockCredit = discountAmount.gt(0) && !purchaseDiscountAccountId ? grossAmount.minus(discountAmount) : grossAmount;
     const voucher = await createBalancedVoucher(tx, {
       companyId: input.companyId,
       financialYearId: input.financialYearId,
@@ -162,9 +179,10 @@ export async function purchaseFilledCylinder(input: PurchaseFilledCylinderInput)
       sourceId: input.issueNo,
       createdById: input.userId,
       lines: [
-        { accountId: stockAccountId, debit: grossAmount },
+        { accountId: stockAccountId, debit: stockCredit },
         ...(gstAmount.gt(0) ? [{ accountId: gstReceivableAccountId, debit: gstAmount }] : []),
-        { accountId: vendor.accountId, credit: payableAmount },
+        ...(discountAmount.gt(0) && purchaseDiscountAccountId ? [{ accountId: purchaseDiscountAccountId, credit: discountAmount }] : []),
+        { accountId: vendor.accountId, credit: netPayableAmount },
       ],
     });
 
@@ -182,6 +200,10 @@ export async function purchaseFilledCylinder(input: PurchaseFilledCylinderInput)
         totalExGstAmount: String(grossAmount),
         totalGstAmount: String(gstAmount),
         totalIncGstAmount: String(payableAmount),
+        discountAmount: String(discountAmount),
+        netPayableAmount: String(netPayableAmount),
+        amountPaid: String(input.amountPaid ?? 0),
+        payMode: input.payMode ?? "Credit",
         lines: lines.map((line) => {
           const item = itemById.get(line.itemId);
           return {
@@ -200,13 +222,74 @@ export async function purchaseFilledCylinder(input: PurchaseFilledCylinderInput)
       },
     });
 
+    const amountPaid = decimal(input.amountPaid);
+    const payMode = String(input.payMode ?? "Credit");
+    let paymentVoucher = null;
+    if (amountPaid.gt(0)) {
+      if (amountPaid.gt(netPayableAmount)) throw new Error("amountPaid cannot exceed net payable after discount.");
+      if (payMode.toLowerCase() === "bank") {
+        if (!input.bankId) throw new Error("bankId is required for bank payment.");
+        const voucherNo = await nextDocumentNumberInTransaction(tx, {
+          companyId: input.companyId,
+          financialYearId: input.financialYearId,
+          prefix: DOCUMENT_PREFIXES.bankPaymentVoucher,
+        });
+        const bankAccountId = await getBankAccountId(tx, input.bankId);
+        const narration = input.chequeNo ? `Cheque ${input.chequeNo}` : undefined;
+        paymentVoucher = (
+          await createBalancedVoucher(tx, {
+            companyId: input.companyId,
+            financialYearId: input.financialYearId,
+            voucherNo,
+            voucherType: VoucherType.BP,
+            voucherDate: input.transactionDate,
+            narration,
+            sourceType: "BankPayment",
+            sourceId: voucherNo,
+            createdById: input.userId,
+            lines: [
+              { accountId: vendor.accountId, debit: amountPaid },
+              { accountId: bankAccountId, credit: amountPaid },
+            ],
+          })
+        ).voucher;
+      } else {
+        const voucherNo = await nextDocumentNumberInTransaction(tx, {
+          companyId: input.companyId,
+          financialYearId: input.financialYearId,
+          prefix: DOCUMENT_PREFIXES.cashPaymentVoucher,
+        });
+        const cashAccountId = await getCashAccountId(tx, input.companyId);
+        paymentVoucher = (
+          await createBalancedVoucher(tx, {
+            companyId: input.companyId,
+            financialYearId: input.financialYearId,
+            voucherNo,
+            voucherType: VoucherType.CP,
+            voucherDate: input.transactionDate,
+            sourceType: "CashPayment",
+            sourceId: voucherNo,
+            createdById: input.userId,
+            lines: [
+              { accountId: vendor.accountId, debit: amountPaid },
+              { accountId: cashAccountId, credit: amountPaid },
+            ],
+          })
+        ).voucher;
+      }
+    }
+
     return {
       issueNo: input.issueNo,
       voucher,
+      paymentVoucher,
       stockEntries,
       totalExGstAmount: grossAmount,
       totalGstAmount: gstAmount,
       totalIncGstAmount: payableAmount,
+      discountAmount,
+      netPayableAmount,
+      amountPaid,
     };
   });
 }

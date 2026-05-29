@@ -33,9 +33,21 @@ export async function POST(request: Request) {
       lines,
       transactionDate: dateField(body, "transactionDate"),
       allowClosedDayOverride: booleanField(body, "allowClosedDayOverride"),
+      discount: optionalPositiveNumberField(body, "discount"),
+      amountPaid: optionalPositiveNumberField(body, "amountPaid"),
+      payMode: optionalStringField(body, "payMode"),
+      bankId: optionalStringField(body, "bankId"),
+      chequeNo: optionalStringField(body, "chequeNo"),
+      chequeDate: optionalStringField(body, "chequeDate"),
     });
 
-    return ok({ issueNo, voucherNo: result.voucher.voucherNo, ids: { voucherId: result.voucher.id, stockEntryIds: result.stockEntries.map((entry) => entry.id) } });
+    return ok({
+      issueNo,
+      voucherNo: result.voucher.voucherNo,
+      paymentVoucherNo: result.paymentVoucher?.voucherNo ?? null,
+      netPayableAmount: String(result.netPayableAmount),
+      ids: { voucherId: result.voucher.id, stockEntryIds: result.stockEntries.map((entry) => entry.id) },
+    });
   } catch (error) {
     return error instanceof Error && error.message.includes("required") ? fail(error.message) : serviceError(error);
   }

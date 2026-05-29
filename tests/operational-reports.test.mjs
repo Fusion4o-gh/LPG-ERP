@@ -229,16 +229,19 @@ test("daily activity report aggregates source counts, voucher counts, and stock 
     ],
   });
 
-  const summary = await reports.getDailyActivityReport(
+  const report = await reports.getDailyActivityReport(
     { companyId: company.id, financialYearId: financialYear.id, userId: user.id },
     { from: date, to: date },
   );
-  assert.equal(summary.salesCount, 1);
-  assert.equal(summary.purchaseCount, 1);
-  assert.equal(summary.cylinderReturnsCount, 1);
-  assert.equal(summary.cashVoucherCount, 1);
-  assert.equal(summary.bankVoucherCount, 1);
-  assert.equal(summary.stockMovements, 3);
+  assert.equal(report.summary.salesCount, 1);
+  assert.equal(report.summary.purchaseCount, 1);
+  assert.equal(report.summary.cylinderReturnsCount, 1);
+  assert.equal(report.summary.cashVoucherCount, 1);
+  assert.equal(report.summary.bankVoucherCount, 1);
+  assert.equal(report.summary.stockMovements, 3);
+  assert.equal(report.sales.length, 1);
+  assert.equal(report.purchases.length, 1);
+  assert.equal(report.cylinderReturns.length, 1);
 });
 
 test("report API rejects invalid date filters", async () => {
@@ -348,21 +351,15 @@ test("daily activity CSV matches JSON report calculation for the same filters", 
     },
   });
 
-  const summary = await reports.getDailyActivityReport({ companyId: company.id, financialYearId: financialYear.id, userId: user.id }, { from: date, to: date });
+  const report = await reports.getDailyActivityReport({ companyId: company.id, financialYearId: financialYear.id, userId: user.id }, { from: date, to: date });
   const request = await authedGet(user, `http://localhost/api/reports/daily-activity?format=csv&from=${date}&to=${date}`);
   const response = await dailyActivityRoute.GET(request);
   const parsed = csvRows(await response.text());
 
   assert.equal(response.status, 200);
-  assert.deepEqual(parsed[0], ["Sales Count", "Purchase Count", "Cylinder Returns Count", "Cash Voucher Count", "Bank Voucher Count", "Stock Movements"]);
-  assert.deepEqual(parsed[1], [
-    String(summary.salesCount),
-    String(summary.purchaseCount),
-    String(summary.cylinderReturnsCount),
-    String(summary.cashVoucherCount),
-    String(summary.bankVoucherCount),
-    String(summary.stockMovements),
-  ]);
+  assert.deepEqual(parsed[0], ["Section", "Count"]);
+  assert.deepEqual(parsed[1], ["Sales", String(report.summary.salesCount)]);
+  assert.deepEqual(parsed[2], ["Purchases", String(report.summary.purchaseCount)]);
 });
 
 test("unauthorized CSV report request is denied", async () => {

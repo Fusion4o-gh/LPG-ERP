@@ -45,7 +45,7 @@ test("Phase 3B operational pages are wired to existing APIs", async () => {
 
   for (const route of routes) {
     await exists(route);
-    assert.match(await file(route), /OperationForm|BatchSaleForm|PurchaseFilledCylinderForm|SaleLpgForm|CylinderReturnForm/);
+    assert.match(await file(route), /OperationForm|BatchSaleForm|PurchaseFilledCylinderForm|SaleLpgForm|CylinderReturnForm|SecurityReceiptForm/);
   }
 });
 
@@ -97,7 +97,6 @@ test("report pages with table formatters keep callbacks inside the client bounda
     "src/app/(protected)/reports/cash-book/page.tsx",
     "src/app/(protected)/reports/customer-cylinder-balances/page.tsx",
     "src/app/(protected)/reports/customer-ledger/page.tsx",
-    "src/app/(protected)/reports/profit-loss/page.tsx",
     "src/app/(protected)/reports/stock-summary/page.tsx",
     "src/app/(protected)/reports/trial-balance/page.tsx",
     "src/app/(protected)/reports/vendor-ledger/page.tsx",
@@ -134,7 +133,14 @@ test("report pages include shared print action and print metadata", async () => 
 
   for (const route of reportPages) {
     await exists(route);
-    assert.match(await file(route), /ReportTableClient/);
+    const page = await file(route);
+    if (route.endsWith("daily-activity/page.tsx")) {
+      assert.match(page, /DailyActivityReportClient/);
+    } else if (route.endsWith("profit-loss/page.tsx")) {
+      assert.match(page, /ProfitLossReportClient/);
+    } else {
+      assert.match(page, /ReportTableClient/);
+    }
   }
 });
 

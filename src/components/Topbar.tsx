@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { AppShellContext } from "@/server/auth/app-shell-context";
+import { FinancialYearSwitcher } from "./FinancialYearSwitcher";
 
 const SEGMENT_LABELS: Record<string, string> = {
   dashboard: "Dashboard",
@@ -20,6 +21,7 @@ const SEGMENT_LABELS: Record<string, string> = {
   cities: "Cities",
   area: "Area",
   "brand-coding": "Brand Coding",
+  "bank-coding": "Bank Coding",
   "category-coding": "Category Coding",
   items: "Item Coding",
   customers: "Customer Coding",
@@ -170,12 +172,7 @@ export function Topbar({ shell }: { shell: AppShellContext }) {
           />
         </div>
 
-        <span
-          className="hidden rounded-md border border-blue-100 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-800 sm:inline"
-          title="Active financial year"
-        >
-          FY {shell.financialYearLabel}
-        </span>
+        <FinancialYearSwitcher currentLabel={shell.financialYearLabel} />
 
         <span className="hidden text-xs text-slate-500 whitespace-nowrap xl:inline">{formatToday()}</span>
 
@@ -194,7 +191,11 @@ export function Topbar({ shell }: { shell: AppShellContext }) {
           </div>
           <div className="hidden min-w-0 sm:block">
             <p className="truncate text-sm font-semibold text-slate-800 leading-tight">{shell.userName}</p>
-            <p className="truncate text-[11px] text-slate-500">{shell.loginId}</p>
+            <p className="truncate text-[11px] text-slate-500">
+              <Link href="/configuration/change-password" className="hover:text-blue-700">
+                {shell.loginId}
+              </Link>
+            </p>
           </div>
         </div>
       </div>

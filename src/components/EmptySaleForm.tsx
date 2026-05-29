@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api-client";
+import { emptySettlement } from "@/lib/settlement";
 import { ApiError } from "./ApiError";
 import { PageHeader } from "./PageHeader";
+import { SettlementPanel } from "./SettlementPanel";
 import { SubmitButton } from "./SubmitButton";
 import { SuccessMessage } from "./SuccessMessage";
 
@@ -49,12 +51,19 @@ export function EmptySaleForm() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [printDocumentNo, setPrintDocumentNo] = useState("");
+  const [banks, setBanks] = useState<{ id: string; name: string }[]>([]);
+  const [settlement, setSettlement] = useState(emptySettlement());
 
   useEffect(() => {
-    Promise.all([apiGet<{ customers: Lookup[] }>("/api/customers"), apiGet<{ items: Lookup[] }>("/api/items")])
-      .then(([customerData, itemData]) => {
+    Promise.all([
+      apiGet<{ customers: Lookup[] }>("/api/customers"),
+      apiGet<{ items: Lookup[] }>("/api/items"),
+      apiGet<{ banks: { id: string; name: string }[] }>("/api/banks"),
+    ])
+      .then(([customerData, itemData, bankData]) => {
         setCustomers(customerData.customers);
         setItems(itemData.items);
+        setBanks(bankData.banks);
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLookupLoading(false));
@@ -90,6 +99,7 @@ export function EmptySaleForm() {
     setRemarks("");
     setLines([{ ...blankLine }]);
     setPrintDocumentNo("");
+    setSettlement(emptySettlement());
   }
 
   function payload() {
@@ -105,7 +115,18 @@ export function EmptySaleForm() {
       if (gstPercent < 0) throw new Error(`Line ${index + 1}: GST % cannot be negative.`);
       return { itemId: line.itemId, quantity, unitPrice, gstPercent };
     });
-    return { customerId, transactionDate, remarks, lines: preparedLines };
+    return {
+      customerId,
+      transactionDate,
+      remarks,
+      lines: preparedLines,
+      discount: numberValue(settlement.discount),
+      amountReceived: numberValue(settlement.amountReceived),
+      receiveMode: settlement.receiveMode,
+      bankId: settlement.bankId || undefined,
+      chequeNo: settlement.chequeNo || undefined,
+      chequeDate: settlement.chequeDate || undefined,
+    };
   }
 
   async function onSubmit(event: FormEvent) {
@@ -234,6 +255,13 @@ export function EmptySaleForm() {
             </div>
           </div>
         </section>
+
+        <SettlementPanel
+          totalBill={totals.incGstAmount}
+          fields={settlement}
+          onChange={(patch) => setSettlement((current) => ({ ...current, ...patch }))}
+          banks={banks}
+        />
 
         <div className="flex flex-wrap gap-2">
           <SubmitButton loading={loading}>Post Empty Sale</SubmitButton>

@@ -5,6 +5,124 @@ import { parseReportFilters, type ReportFilters } from "./operational-reports.ts
 
 type Context = { companyId: string; financialYearId: string; userId: string };
 type LedgerFilters = ReportFilters & { vendorId?: string; accountId?: string; bankId?: string; accountType?: string; asOf?: string };
+export type ProfitLossFilters = ReportFilters & { breakdown?: string };
+
+type ProfitLossRow = {
+  id: string;
+  accountCode: string;
+  accountName: string;
+  accountType: string;
+  debit: number;
+  credit: number;
+  amount: number;
+  monthlyAmounts?: Record<string, number>;
+};
+
+function monthKey(value: Date | string) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString().slice(0, 7);
+}
+
+function lineAmount(accountType: AccountType, debit: number, credit: number) {
+  return accountType === AccountType.REVENUE ? credit - debit : debit - credit;
+}
+
+function buildProfitLossRows(
+  grouped: Array<{ accountId: string; _sum: { debit: Prisma.Decimal | null; credit: Prisma.Decimal | null } }>,
+  accountById: Map<string, { id: string; code: string; name: string; accountType: AccountType }>,
+) {
+  return grouped
+    .map((row) => {
+      const account = accountById.get(row.accountId);
+      const debit = amount(row._sum.debit);
+      const credit = amount(row._sum.credit);
+      const accountType = account?.accountType ?? AccountType.EXPENSE;
+      return {
+        id: row.accountId,
+        accountCode: account?.code ?? "",
+        accountName: account?.name ?? "",
+        accountType,
+        debit,
+        credit,
+        amount: lineAmount(accountType, debit, credit),
+      };
+    })
+    .sort((a, b) => `${a.accountType}-${a.accountCode}`.localeCompare(`${b.accountType}-${b.accountCode}`));
+}
+
+async function loadProfitLossMonthly(
+  tx: Prisma.TransactionClient,
+  context: Context,
+  filters: ReturnType<typeof parseReportFilters>,
+) {
+  const lines = await tx.accountingVoucherLine.findMany({
+    where: {
+      voucher: {
+        companyId: context.companyId,
+        financialYearId: context.financialYearId,
+        isPosted: true,
+        voucherDate: voucherDateWhere(filters),
+      },
+      account: {
+        companyId: context.companyId,
+        accountType: { in: [AccountType.REVENUE, AccountType.EXPENSE] },
+      },
+    },
+    select: {
+      accountId: true,
+      debit: true,
+      credit: true,
+      voucher: { select: { voucherDate: true } },
+      account: { select: { id: true, code: true, name: true, accountType: true } },
+    },
+  });
+
+  const monthSet = new Set<string>();
+  const byAccountMonth = new Map<string, Map<string, number>>();
+  const accountMeta = new Map<string, { id: string; code: string; name: string; accountType: AccountType }>();
+
+  for (const line of lines) {
+    const key = monthKey(line.voucher.voucherDate);
+    if (!key) continue;
+    monthSet.add(key);
+    accountMeta.set(line.accountId, line.account);
+    const debit = amount(line.debit);
+    const credit = amount(line.credit);
+    const value = lineAmount(line.account.accountType, debit, credit);
+    const accountMonths = byAccountMonth.get(line.accountId) ?? new Map<string, number>();
+    accountMonths.set(key, (accountMonths.get(key) ?? 0) + value);
+    byAccountMonth.set(line.accountId, accountMonths);
+  }
+
+  const months = [...monthSet].sort();
+  const rows: ProfitLossRow[] = [...byAccountMonth.entries()].map(([accountId, monthlyMap]) => {
+    const account = accountMeta.get(accountId)!;
+    const monthlyAmounts = Object.fromEntries(months.map((month) => [month, monthlyMap.get(month) ?? 0]));
+    const amountTotal = months.reduce((sum, month) => sum + (monthlyMap.get(month) ?? 0), 0);
+    return {
+      id: accountId,
+      accountCode: account.code,
+      accountName: account.name,
+      accountType: account.accountType,
+      debit: 0,
+      credit: 0,
+      amount: amountTotal,
+      monthlyAmounts,
+    };
+  });
+
+  return { months, rows: rows.sort((a, b) => `${a.accountType}-${a.accountCode}`.localeCompare(`${b.accountType}-${b.accountCode}`)) };
+}
+
+function monthlyTotals(rows: ProfitLossRow[], months: string[], accountType: AccountType) {
+  const filtered = rows.filter((row) => row.accountType === accountType);
+  const totals: Record<string, number> = {};
+  for (const month of months) {
+    totals[month] = filtered.reduce((sum, row) => sum + (row.monthlyAmounts?.[month] ?? 0), 0);
+  }
+  return totals;
+}
 type AccountRef = { id: string; code: string; name: string; normalBalance: NormalBalance };
 type LedgerRow = {
   id: string;
@@ -226,49 +344,56 @@ export async function getTrialBalanceReport(context: Context, input: LedgerFilte
   });
 }
 
-export async function getProfitLossReport(context: Context, input: ReportFilters = {}) {
+export async function getProfitLossReport(context: Context, input: ProfitLossFilters = {}) {
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "reports", PermissionAction.VIEW);
     const filters = parseReportFilters(input);
-    const grouped = await tx.accountingVoucherLine.groupBy({
-      by: ["accountId"],
-      where: {
-        voucher: {
-          companyId: context.companyId,
-          financialYearId: context.financialYearId,
-          isPosted: true,
-          voucherDate: voucherDateWhere(filters),
+    const useMonthly = String(input.breakdown ?? "").toLowerCase() === "month";
+
+    let rows: ProfitLossRow[];
+    let months: string[] | undefined;
+    let monthlyTotalsBlock: { revenue: Record<string, number>; expenses: Record<string, number>; net: Record<string, number> } | undefined;
+
+    if (useMonthly) {
+      const monthly = await loadProfitLossMonthly(tx, context, filters);
+      rows = monthly.rows;
+      months = monthly.months;
+      monthlyTotalsBlock = {
+        revenue: monthlyTotals(rows, months, AccountType.REVENUE),
+        expenses: monthlyTotals(rows, months, AccountType.EXPENSE),
+        net: Object.fromEntries(
+          months.map((month) => [
+            month,
+            (monthlyTotals(rows, months, AccountType.REVENUE)[month] ?? 0) - (monthlyTotals(rows, months, AccountType.EXPENSE)[month] ?? 0),
+          ]),
+        ),
+      };
+    } else {
+      const grouped = await tx.accountingVoucherLine.groupBy({
+        by: ["accountId"],
+        where: {
+          voucher: {
+            companyId: context.companyId,
+            financialYearId: context.financialYearId,
+            isPosted: true,
+            voucherDate: voucherDateWhere(filters),
+          },
+          account: {
+            companyId: context.companyId,
+            accountType: { in: [AccountType.REVENUE, AccountType.EXPENSE] },
+          },
         },
-        account: {
-          companyId: context.companyId,
-          accountType: { in: [AccountType.REVENUE, AccountType.EXPENSE] },
-        },
-      },
-      _sum: { debit: true, credit: true },
-      orderBy: { accountId: "asc" },
-    });
-    const accounts = await tx.chartAccount.findMany({
-      where: { companyId: context.companyId, id: { in: grouped.map((row) => row.accountId) } },
-      select: { id: true, code: true, name: true, accountType: true },
-    });
-    const accountById = new Map(accounts.map((account) => [account.id, account]));
-    const rows = grouped
-      .map((row) => {
-        const account = accountById.get(row.accountId);
-        const debit = amount(row._sum.debit);
-        const credit = amount(row._sum.credit);
-        const value = account?.accountType === AccountType.REVENUE ? credit - debit : debit - credit;
-        return {
-          id: row.accountId,
-          accountCode: account?.code ?? "",
-          accountName: account?.name ?? "",
-          accountType: account?.accountType ?? "",
-          debit,
-          credit,
-          amount: value,
-        };
-      })
-      .sort((a, b) => `${a.accountType}-${a.accountCode}`.localeCompare(`${b.accountType}-${b.accountCode}`));
+        _sum: { debit: true, credit: true },
+        orderBy: { accountId: "asc" },
+      });
+      const accounts = await tx.chartAccount.findMany({
+        where: { companyId: context.companyId, id: { in: grouped.map((row) => row.accountId) } },
+        select: { id: true, code: true, name: true, accountType: true },
+      });
+      const accountById = new Map(accounts.map((account) => [account.id, account]));
+      rows = buildProfitLossRows(grouped, accountById);
+    }
+
     const revenueRows = rows.filter((row) => row.accountType === AccountType.REVENUE);
     const expenseRows = rows.filter((row) => row.accountType === AccountType.EXPENSE);
     const totalRevenue = revenueRows.reduce((total, row) => total + row.amount, 0);
@@ -279,6 +404,8 @@ export async function getProfitLossReport(context: Context, input: ReportFilters
       revenueRows,
       expenseRows,
       rows,
+      months,
+      monthlyTotals: monthlyTotalsBlock,
       totalRevenue,
       totalExpenses,
       netProfit,
@@ -399,22 +526,40 @@ export async function getTrialBalanceReportCsv(context: Context, input: LedgerFi
   );
 }
 
-export async function getProfitLossReportCsv(context: Context, input: ReportFilters = {}) {
+export async function getProfitLossReportCsv(context: Context, input: ProfitLossFilters = {}) {
   const report = await getProfitLossReport(context, input);
+  if (report.months?.length) {
+    const headers = ["Section", "Account Code", "Account Name", ...report.months, "Period Total"];
+    const revenueLines = report.revenueRows.map((row) => [
+      "Revenue",
+      row.accountCode,
+      row.accountName,
+      ...report.months!.map((month) => formatMoney(row.monthlyAmounts?.[month])),
+      formatMoney(row.amount),
+    ]);
+    const expenseLines = report.expenseRows.map((row) => [
+      "Expenses",
+      row.accountCode,
+      row.accountName,
+      ...report.months!.map((month) => formatMoney(row.monthlyAmounts?.[month])),
+      formatMoney(row.amount),
+    ]);
+    return toCsv(headers, [
+      ...revenueLines,
+      ["Revenue", "", "Total Revenue", ...report.months.map((month) => formatMoney(report.monthlyTotals?.revenue[month])), formatMoney(report.totalRevenue)],
+      ...expenseLines,
+      ["Expenses", "", "Total Expenses", ...report.months.map((month) => formatMoney(report.monthlyTotals?.expenses[month])), formatMoney(report.totalExpenses)],
+      [report.result, "", `Net ${report.result}`, ...report.months.map((month) => formatMoney(report.monthlyTotals?.net[month])), formatMoney(report.netProfit)],
+    ]);
+  }
   return toCsv(
-    ["Category", "Account Code", "Account Name", "Debit", "Credit", "Amount"],
+    ["Section", "Account Code", "Account Name", "Amount"],
     [
-      ...report.rows.map((row) => [
-        row.accountType,
-        row.accountCode,
-        row.accountName,
-        formatMoney(row.debit),
-        formatMoney(row.credit),
-        formatMoney(row.amount),
-      ]),
-      ["Total Revenue", "", "", "", "", formatMoney(report.totalRevenue)],
-      ["Total Expenses", "", "", "", "", formatMoney(report.totalExpenses)],
-      [report.result, "", "", "", "", formatMoney(report.netProfit)],
+      ...report.revenueRows.map((row) => ["Revenue", row.accountCode, row.accountName, formatMoney(row.amount)]),
+      ["Revenue", "", "Total Revenue", formatMoney(report.totalRevenue)],
+      ...report.expenseRows.map((row) => ["Expenses", row.accountCode, row.accountName, formatMoney(row.amount)]),
+      ["Expenses", "", "Total Expenses", formatMoney(report.totalExpenses)],
+      [report.result, "", `Net ${report.result}`, formatMoney(report.netProfit >= 0 ? report.netProfit : -report.netLoss)],
     ],
   );
 }

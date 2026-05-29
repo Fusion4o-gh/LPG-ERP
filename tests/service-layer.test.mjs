@@ -379,8 +379,9 @@ test("complete day sale batch supports multi-item rows, cash receipts, credit ro
   assert.equal(result.sales.length, 2);
   assert.equal(result.issueNos.length, 2);
   assert.notEqual(result.issueNos[0], result.issueNos[1]);
-  assert.equal(result.cashReceipts.length, 1);
-  assert.equal(Number(result.cashReceipts[0].voucher.totalDebit), 4000);
+  assert.ok(result.sales[0].receiptVoucher);
+  assert.equal(Number(result.sales[0].receiptVoucher.totalDebit), 4000);
+  assert.equal(result.sales[1].receiptVoucher, null);
   assert.equal(Number(result.sales[0].voucher.totalDebit), 8000);
   assert.equal(Number(result.sales[1].voucher.totalDebit), 3200);
 
@@ -527,7 +528,7 @@ test("multi-line cylinder return supports empty and filled returns with one retu
   const filledBalance = await prisma.customerCylinderBalance.findUniqueOrThrow({
     where: { customerId_itemId: { customerId: customer.id, itemId: secondItem.id } },
   });
-  assert.equal(filledBalance.emptyOwed, 0);
+  assert.equal(filledBalance.emptyOwed, 1, "filled return does not reduce empty owed; only empty returns do");
 
   const audit = await prisma.auditLog.findFirstOrThrow({ where: { entityType: "CylinderReturn", entityId: returnNo } });
   assert.equal(audit.after.lines.length, 2);

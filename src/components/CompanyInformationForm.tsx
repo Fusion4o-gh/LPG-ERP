@@ -18,6 +18,12 @@ type CompanyInfo = {
   email?: string | null;
   taxRegistrationNumber?: string | null;
   nationalTaxNumber?: string | null;
+  stockAvailableCheck?: boolean;
+  centralizedPricing?: boolean;
+  showDefaultDate?: boolean;
+  redirectOnSamePage?: boolean;
+  workStartTime?: string | null;
+  workEndTime?: string | null;
   workingDays?: WorkingDays | null;
 };
 
@@ -30,6 +36,12 @@ type FormValues = {
   email: string;
   taxRegistrationNumber: string;
   nationalTaxNumber: string;
+  stockAvailableCheck: boolean;
+  centralizedPricing: boolean;
+  showDefaultDate: boolean;
+  redirectOnSamePage: boolean;
+  workStartTime: string;
+  workEndTime: string;
   workingDays: WorkingDays;
 };
 
@@ -55,6 +67,12 @@ function emptyValues(): FormValues {
     email: "",
     taxRegistrationNumber: "",
     nationalTaxNumber: "",
+    stockAvailableCheck: true,
+    centralizedPricing: false,
+    showDefaultDate: true,
+    redirectOnSamePage: false,
+    workStartTime: "",
+    workEndTime: "",
     workingDays: defaultWorkingDays,
   };
 }
@@ -69,6 +87,12 @@ function valuesFromCompany(company: CompanyInfo): FormValues {
     email: company.email ?? "",
     taxRegistrationNumber: company.taxRegistrationNumber ?? "",
     nationalTaxNumber: company.nationalTaxNumber ?? "",
+    stockAvailableCheck: company.stockAvailableCheck !== false,
+    centralizedPricing: company.centralizedPricing === true,
+    showDefaultDate: company.showDefaultDate !== false,
+    redirectOnSamePage: company.redirectOnSamePage === true,
+    workStartTime: company.workStartTime ?? "",
+    workEndTime: company.workEndTime ?? "",
     workingDays: { ...defaultWorkingDays, ...(company.workingDays ?? {}) },
   };
 }
@@ -163,6 +187,34 @@ export function CompanyInformationForm() {
               </Field>
             </div>
           )}
+        </FormSection>
+        <FormSection title="Operational Settings">
+          <div className="grid gap-4 md:grid-cols-2">
+            {[
+              ["stockAvailableCheck", "Stock Available Check"],
+              ["centralizedPricing", "Centralized Pricing"],
+              ["showDefaultDate", "Show Default Date"],
+              ["redirectOnSamePage", "Redirect on Same Page After Save"],
+            ].map(([key, label]) => (
+              <label key={key} className="flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={values[key as keyof FormValues] === true}
+                  onChange={(event) =>
+                    setValues((current) => ({ ...current, [key]: event.target.checked }))
+                  }
+                  className="h-4 w-4 accent-blue-700"
+                />
+                {label}
+              </label>
+            ))}
+            <Field label="Start Time">
+              <input type="time" value={values.workStartTime} onChange={(e) => setField("workStartTime", e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2" />
+            </Field>
+            <Field label="End Time">
+              <input type="time" value={values.workEndTime} onChange={(e) => setField("workEndTime", e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2" />
+            </Field>
+          </div>
         </FormSection>
         <FormSection title="Working Days">
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">

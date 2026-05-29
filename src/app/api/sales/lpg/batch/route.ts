@@ -34,6 +34,9 @@ export async function POST(request: Request) {
               elevenPointEightKgPrice: optionalPositiveNumberField(sale, "elevenPointEightKgPrice"),
               paymentType: optionalStringField(sale, "paymentType") ?? "Credit",
               amountReceived: optionalPositiveNumberField(sale, "amountReceived"),
+              receiveMode: optionalStringField(sale, "receiveMode"),
+              bankId: optionalStringField(sale, "bankId"),
+              chequeNo: optionalStringField(sale, "chequeNo"),
               lines: lineItems,
               transactionDate: sale.transactionDate ? dateField(sale, "transactionDate") : headerDate,
             }
@@ -55,7 +58,7 @@ export async function POST(request: Request) {
       issueNos: result.issueNos,
       ids: {
         voucherIds: result.sales.map((sale) => sale.voucher.id),
-        cashReceiptVoucherIds: result.cashReceipts.map((receipt) => receipt.voucher.id),
+        receiptVoucherIds: result.sales.map((sale) => sale.receiptVoucher?.id).filter(Boolean),
       },
     });
   } catch (error) {

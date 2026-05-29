@@ -17,6 +17,7 @@ export async function GET(request: Request) {
       to: params.get("to") ?? undefined,
       itemId: params.get("itemId") ?? undefined,
       customerId: params.get("customerId") ?? undefined,
+      mode: params.get("mode") ?? undefined,
     };
     if (params.get("format") === "csv") return csvResponse(await getSaleBetweenDatesReportCsv(context, filters));
     const rows = await getSaleBetweenDatesReport(context, filters);

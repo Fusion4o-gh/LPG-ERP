@@ -9,6 +9,7 @@ export async function POST(request: Request) {
     const body = await readJson(request);
     const loginId = stringField(body, "loginId");
     const password = stringField(body, "password");
+    const financialYearId = typeof body.financialYearId === "string" && body.financialYearId ? body.financialYearId : undefined;
     const user = await prisma.user.findFirst({
       where: { loginId, status: "ACTIVE" },
       select: { id: true, name: true, loginId: true, companyId: true, financialYearId: true, passwordHash: true },
@@ -16,6 +17,14 @@ export async function POST(request: Request) {
 
     if (!user || !(await verifyPassword(password, user.passwordHash))) {
       return fail("Invalid login ID or password.", 401, "INVALID_LOGIN");
+    }
+
+    if (financialYearId) {
+      const financialYear = await prisma.financialYear.findFirst({
+        where: { id: financialYearId, companyId: user.companyId, isClosed: false },
+      });
+      if (!financialYear) return fail("Selected financial year is not available.");
+      await prisma.user.update({ where: { id: user.id }, data: { financialYearId } });
     }
 
     const session = await createSession(user.id);

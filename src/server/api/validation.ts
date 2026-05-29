@@ -1,4 +1,4 @@
-type Body = Record<string, unknown>;
+export type Body = Record<string, unknown>;
 
 export async function readJson(request: Request): Promise<Body> {
   try {

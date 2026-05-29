@@ -1,5 +1,6 @@
 import { AccountType, CylinderState, PermissionAction, StockDirection, type Prisma } from "@prisma/client";
 import { prisma } from "../../../lib/prisma.ts";
+import { listBackupFiles } from "../backup/database-backup.ts";
 import { enforcePermission } from "../rbac/enforce.ts";
 
 type Tx = Prisma.TransactionClient;
@@ -72,7 +73,15 @@ async function computeBankPosition(tx: Tx, context: Context) {
       });
       const totalDebit = n(agg._sum.debit);
       const totalCredit = n(agg._sum.credit);
-      return { id: bank.id, name: bank.name, accountCode: bank.account.code, totalDebit, totalCredit, balance: totalDebit - totalCredit };
+      return {
+        id: bank.id,
+        accountId: bank.accountId,
+        name: bank.name,
+        accountCode: bank.account.code,
+        totalDebit,
+        totalCredit,
+        balance: totalDebit - totalCredit,
+      };
     }),
   );
 }
@@ -130,12 +139,27 @@ export async function getDashboardData(context: Context) {
     await enforcePermission(tx, context.userId, "reports", PermissionAction.VIEW);
     const today = todayUtc();
     const monthStart = monthStartUtc();
-    const [kpis, bankPosition, currentStock, saleStats] = await Promise.all([
+    const [kpis, bankPosition, currentStock, saleStats, backups] = await Promise.all([
       computeKpis(tx, context, today, monthStart),
       computeBankPosition(tx, context),
       computeCurrentStock(tx, context),
       computeSaleStats(tx, context, today, monthStart),
+      Promise.resolve(listBackupFiles()),
     ]);
-    return { kpis, bankPosition, currentStock, saleStats };
+    const lastBackupAt = backups[0]?.createdAt ?? null;
+    const backupStaleDays = lastBackupAt
+      ? Math.floor((Date.now() - new Date(lastBackupAt).getTime()) / (1000 * 60 * 60 * 24))
+      : null;
+    return {
+      kpis,
+      bankPosition,
+      currentStock,
+      saleStats,
+      backup: {
+        lastBackupAt,
+        backupStaleDays,
+        isStale: backupStaleDays === null || backupStaleDays > 7,
+      },
+    };
   });
 }

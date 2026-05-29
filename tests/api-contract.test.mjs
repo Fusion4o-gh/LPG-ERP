@@ -278,7 +278,7 @@ test("complete day sale API accepts legacy batch rows with up to three item slot
   assert.match(body.batchNo, /^BSI-/);
   assert.equal(body.issueNos.length, 1);
   assert.equal(body.ids.voucherIds.length, 1);
-  assert.equal(body.ids.cashReceiptVoucherIds.length, 1);
+  assert.equal(body.ids.receiptVoucherIds.length, 1);
 });
 
 test("cylinder return API accepts legacy multi-line empty and filled return payload", async () => {

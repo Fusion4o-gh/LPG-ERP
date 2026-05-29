@@ -147,30 +147,102 @@ export async function getDailyActivityReport(context: Context, input: ReportFilt
       financialYearId: context.financialYearId,
       voucherDate: dateWhere(filters),
     };
-    const [stockSources, voucherTypes, stockMovements] = await Promise.all([
-      tx.stockLedgerEntry.groupBy({
-        by: ["sourceType", "sourceId"],
-        where: { ...stockWhere, sourceType: { in: [StockSourceType.SALE_LPG, StockSourceType.PURCHASE_FILLED, StockSourceType.CYLINDER_RETURN] } },
-      }),
-      tx.accountingVoucher.groupBy({
-        by: ["voucherType"],
-        where: { ...voucherWhere, voucherType: { in: [VoucherType.CR, VoucherType.CP, VoucherType.BR, VoucherType.BP] } },
-        _count: { _all: true },
-      }),
-      tx.stockLedgerEntry.count({ where: stockWhere }),
-    ]);
 
-    const sourceCount = (sourceType: StockSourceType) => stockSources.filter((source) => source.sourceType === sourceType).length;
-    const voucherCount = (types: VoucherType[]) =>
-      voucherTypes.filter((row) => types.includes(row.voucherType)).reduce((total, row) => total + row._count._all, 0);
+    const stockEntries = await tx.stockLedgerEntry.findMany({
+      where: stockWhere,
+      orderBy: [{ transactionDate: "asc" }, { createdAt: "asc" }],
+      include: {
+        item: { select: { code: true, name: true } },
+        customer: { select: { code: true, name: true } },
+        vendor: { select: { code: true, name: true } },
+      },
+      take: 500,
+    });
+
+    const vouchers = await tx.accountingVoucher.findMany({
+      where: voucherWhere,
+      orderBy: [{ voucherDate: "asc" }, { createdAt: "asc" }],
+      take: 500,
+    });
+
+    const sales = stockEntries
+      .filter((row) => row.sourceType === StockSourceType.SALE_LPG)
+      .map((row) => ({
+        id: row.id,
+        documentNo: row.sourceId,
+        transactionDate: formatDate(row.transactionDate),
+        party: row.customer ? [row.customer.code, row.customer.name].filter(Boolean).join(" - ") : "",
+        item: row.item ? [row.item.code, row.item.name].filter(Boolean).join(" - ") : "",
+        cylinderState: row.cylinderState,
+        quantity: row.quantity,
+        direction: row.direction,
+      }));
+
+    const purchases = stockEntries
+      .filter((row) => row.sourceType === StockSourceType.PURCHASE_FILLED)
+      .map((row) => ({
+        id: row.id,
+        documentNo: row.sourceId,
+        transactionDate: formatDate(row.transactionDate),
+        party: row.vendor ? [row.vendor.code, row.vendor.name].filter(Boolean).join(" - ") : "",
+        item: row.item ? [row.item.code, row.item.name].filter(Boolean).join(" - ") : "",
+        cylinderState: row.cylinderState,
+        quantity: row.quantity,
+        direction: row.direction,
+      }));
+
+    const cylinderReturns = stockEntries
+      .filter((row) => row.sourceType === StockSourceType.CYLINDER_RETURN)
+      .map((row) => ({
+        id: row.id,
+        documentNo: row.sourceId,
+        transactionDate: formatDate(row.transactionDate),
+        party: row.customer ? [row.customer.code, row.customer.name].filter(Boolean).join(" - ") : "",
+        item: row.item ? [row.item.code, row.item.name].filter(Boolean).join(" - ") : "",
+        cylinderState: row.cylinderState,
+        quantity: row.quantity,
+        direction: row.direction,
+      }));
+
+    const cashVouchers = vouchers
+      .filter((row) => row.voucherType === VoucherType.CR || row.voucherType === VoucherType.CP)
+      .map((row) => ({
+        id: row.id,
+        voucherNo: row.voucherNo,
+        voucherType: row.voucherType,
+        transactionDate: formatDate(row.voucherDate),
+        amount: Number(row.totalDebit),
+        narration: row.narration ?? "",
+      }));
+
+    const bankVouchers = vouchers
+      .filter((row) => row.voucherType === VoucherType.BR || row.voucherType === VoucherType.BP)
+      .map((row) => ({
+        id: row.id,
+        voucherNo: row.voucherNo,
+        voucherType: row.voucherType,
+        transactionDate: formatDate(row.voucherDate),
+        amount: Number(row.totalDebit),
+        narration: row.narration ?? "",
+      }));
+
+    const stockSummary = await getStockSummaryReport(context, input);
 
     return {
-      salesCount: sourceCount(StockSourceType.SALE_LPG),
-      purchaseCount: sourceCount(StockSourceType.PURCHASE_FILLED),
-      cylinderReturnsCount: sourceCount(StockSourceType.CYLINDER_RETURN),
-      cashVoucherCount: voucherCount([VoucherType.CR, VoucherType.CP]),
-      bankVoucherCount: voucherCount([VoucherType.BR, VoucherType.BP]),
-      stockMovements,
+      summary: {
+        salesCount: new Set(sales.map((row) => row.documentNo)).size,
+        purchaseCount: new Set(purchases.map((row) => row.documentNo)).size,
+        cylinderReturnsCount: new Set(cylinderReturns.map((row) => row.documentNo)).size,
+        cashVoucherCount: cashVouchers.length,
+        bankVoucherCount: bankVouchers.length,
+        stockMovements: stockEntries.length,
+      },
+      sales,
+      purchases,
+      cylinderReturns,
+      cashVouchers,
+      bankVouchers,
+      stockSummary,
     };
   });
 }
@@ -199,9 +271,26 @@ export async function getCustomerCylinderBalanceReportCsv(context: Context, inpu
 }
 
 export async function getDailyActivityReportCsv(context: Context, input: ReportFilters = {}) {
-  const summary = await getDailyActivityReport(context, input);
-  return toCsv(
-    ["Sales Count", "Purchase Count", "Cylinder Returns Count", "Cash Voucher Count", "Bank Voucher Count", "Stock Movements"],
-    [[summary.salesCount, summary.purchaseCount, summary.cylinderReturnsCount, summary.cashVoucherCount, summary.bankVoucherCount, summary.stockMovements]],
+  const report = await getDailyActivityReport(context, input);
+  const lines: string[] = [];
+  lines.push(
+    toCsv(
+      ["Section", "Count"],
+      [
+        ["Sales", report.summary.salesCount],
+        ["Purchases", report.summary.purchaseCount],
+        ["Cylinder Returns", report.summary.cylinderReturnsCount],
+        ["Cash Vouchers", report.summary.cashVoucherCount],
+        ["Bank Vouchers", report.summary.bankVoucherCount],
+        ["Stock Movements", report.summary.stockMovements],
+      ],
+    ).trimEnd(),
   );
+  lines.push(
+    toCsv(
+      ["Sale Doc", "Date", "Customer", "Item", "State", "Qty", "Direction"],
+      report.sales.map((row) => [row.documentNo, row.transactionDate, row.party, row.item, row.cylinderState, row.quantity, row.direction]),
+    ).trimEnd(),
+  );
+  return lines.join("\r\n") + "\r\n";
 }

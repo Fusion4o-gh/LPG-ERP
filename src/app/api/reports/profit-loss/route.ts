@@ -18,6 +18,7 @@ export async function GET(request: Request) {
     const filters = {
       from: params.get("from") ?? undefined,
       to: params.get("to") ?? undefined,
+      breakdown: params.get("breakdown") ?? undefined,
     };
     if (params.get("format") === "csv") {
       return csvResponse(await getProfitLossReportCsv(context, filters));

@@ -1,8 +1,23 @@
 import { DOCUMENT_PREFIXES, nextDocumentNumber } from "../../../../server/services/accounting/document-numbers.ts";
-import { saleLpgSingle } from "../../../../server/services/sales/sale-lpg.ts";
+import { listSaleLpg, saleLpgSingle } from "../../../../server/services/sales/sale-lpg.ts";
 import { getRequestContext } from "../../../../server/api/request-context.ts";
 import { fail, ok, serviceError } from "../../../../server/api/responses.ts";
 import { arrayField, booleanField, dateField, optionalPositiveNumberField, optionalStringField, positiveIntegerField, positiveNumberField, readJson, stringField } from "../../../../server/api/validation.ts";
+
+export async function GET(request: Request) {
+  try {
+    const context = await getRequestContext(request);
+    const url = new URL(request.url);
+    const sales = await listSaleLpg(context, {
+      from: url.searchParams.get("from") ?? undefined,
+      to: url.searchParams.get("to") ?? undefined,
+      limit: url.searchParams.get("limit") ? Number(url.searchParams.get("limit")) : 50,
+    });
+    return ok({ sales });
+  } catch (error) {
+    return serviceError(error);
+  }
+}
 
 export async function POST(request: Request) {
   try {
@@ -38,9 +53,23 @@ export async function POST(request: Request) {
       lines,
       transactionDate: dateField(body, "transactionDate"),
       allowClosedDayOverride: booleanField(body, "allowClosedDayOverride"),
+      discount: optionalPositiveNumberField(body, "discount"),
+      amountReceived: optionalPositiveNumberField(body, "amountReceived"),
+      receiveMode: optionalStringField(body, "receiveMode"),
+      bankId: optionalStringField(body, "bankId"),
+      chequeNo: optionalStringField(body, "chequeNo"),
+      chequeDate: optionalStringField(body, "chequeDate"),
+      returnGasKg: optionalPositiveNumberField(body, "returnGasKg"),
+      gasReturnRate: optionalPositiveNumberField(body, "gasReturnRate"),
     });
 
-    return ok({ issueNo, voucherNo: result.voucher.voucherNo, ids: { voucherId: result.voucher.id, stockEntryIds: result.stockEntries.map((entry) => entry.id) } });
+    return ok({
+      issueNo,
+      voucherNo: result.voucher.voucherNo,
+      receiptVoucherNo: result.receiptVoucher?.voucherNo ?? null,
+      netReceivableAmount: String(result.netReceivableAmount),
+      ids: { voucherId: result.voucher.id, stockEntryIds: result.stockEntries.map((entry) => entry.id) },
+    });
   } catch (error) {
     return error instanceof Error && error.message.includes("required") ? fail(error.message) : serviceError(error);
   }

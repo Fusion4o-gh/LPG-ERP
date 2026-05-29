@@ -1,6 +1,7 @@
 import { CylinderState, PartyType, PermissionAction, Prisma, StockDirection, StockSourceType, VoucherType } from "@prisma/client";
 import { prisma } from "../../../lib/prisma.ts";
 import { ACCOUNT_CODES, getAccountIdByCode } from "../accounting/accounts.ts";
+import { capDiscount, postVendorPayment } from "../accounting/settlement-vouchers.ts";
 import { createBalancedVoucher } from "../accounting/vouchers.ts";
 import { writeAuditLog } from "../audit/audit-log.ts";
 import { assertWritableBusinessDate } from "../inventory/day-closing.ts";
@@ -16,6 +17,11 @@ type BasePurchaseInput = {
   remarks?: string;
   transactionDate: string | Date;
   allowClosedDayOverride?: boolean;
+  discount?: string | number;
+  amountPaid?: string | number;
+  payMode?: string;
+  bankId?: string;
+  chequeNo?: string;
 };
 
 type PurchaseEmptyCylinderInput = BasePurchaseInput & {
@@ -159,6 +165,14 @@ export async function purchaseEmptyCylinder(input: PurchaseEmptyCylinderInput) {
     const totalExGstAmount = lines.reduce((sum, line) => sum.plus(line.exGstAmount), new Prisma.Decimal(0));
     const totalGstAmount = lines.reduce((sum, line) => sum.plus(line.gstAmount), new Prisma.Decimal(0));
     const totalIncGstAmount = totalExGstAmount.plus(totalGstAmount);
+    const discountAmount = capDiscount(totalIncGstAmount, input.discount);
+    const netPayableAmount = totalIncGstAmount.minus(discountAmount);
+    let purchaseDiscountAccountId: string | null = null;
+    try {
+      purchaseDiscountAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.purchaseDiscount);
+    } catch {
+      purchaseDiscountAccountId = null;
+    }
     const stockEntries = [];
 
     for (const line of lines) {
@@ -193,8 +207,24 @@ export async function purchaseEmptyCylinder(input: PurchaseEmptyCylinderInput) {
       lines: [
         { accountId: stockAccountId, debit: totalExGstAmount },
         ...(totalGstAmount.gt(0) ? [{ accountId: gstReceivableAccountId, debit: totalGstAmount }] : []),
-        { accountId: vendor.accountId, credit: totalIncGstAmount },
+        ...(discountAmount.gt(0) && purchaseDiscountAccountId ? [{ accountId: purchaseDiscountAccountId, credit: discountAmount }] : []),
+        { accountId: vendor.accountId, credit: netPayableAmount },
       ],
+    });
+
+    const amountPaid = decimal(input.amountPaid);
+    if (amountPaid.gt(netPayableAmount)) throw new Error("amountPaid cannot exceed net payable after discount.");
+    const paymentVoucher = await postVendorPayment(tx, {
+      companyId: input.companyId,
+      financialYearId: input.financialYearId,
+      userId: input.userId,
+      transactionDate: input.transactionDate,
+      allowClosedDayOverride: input.allowClosedDayOverride,
+      partyAccountId: vendor.accountId,
+      amount: amountPaid,
+      payMode: input.payMode,
+      bankId: input.bankId,
+      chequeNo: input.chequeNo,
     });
 
     await writeAuditLog(tx, {
@@ -211,6 +241,10 @@ export async function purchaseEmptyCylinder(input: PurchaseEmptyCylinderInput) {
         totalExGstAmount: String(totalExGstAmount),
         totalGstAmount: String(totalGstAmount),
         totalIncGstAmount: String(totalIncGstAmount),
+        discountAmount: String(discountAmount),
+        netPayableAmount: String(netPayableAmount),
+        amountPaid: String(input.amountPaid ?? 0),
+        payMode: input.payMode ?? "Credit",
         lines: lines.map((line) => ({
           itemId: line.itemId,
           item: label(itemById.get(line.itemId), line.itemId),
@@ -226,7 +260,7 @@ export async function purchaseEmptyCylinder(input: PurchaseEmptyCylinderInput) {
       },
     });
 
-    return { receiptNo: input.receiptNo, stockEntries, voucher, totalExGstAmount, totalGstAmount, totalIncGstAmount };
+    return { receiptNo: input.receiptNo, stockEntries, voucher, paymentVoucher, totalExGstAmount, totalGstAmount, totalIncGstAmount, discountAmount, netPayableAmount, amountPaid };
   });
 }
 
@@ -252,6 +286,14 @@ export async function purchaseOther(input: PurchaseOtherInput) {
     const totalExGstAmount = lines.reduce((sum, line) => sum.plus(line.amount), new Prisma.Decimal(0));
     const totalGstAmount = lines.reduce((sum, line) => sum.plus(line.gstAmount), new Prisma.Decimal(0));
     const totalIncGstAmount = totalExGstAmount.plus(totalGstAmount);
+    const discountAmount = capDiscount(totalIncGstAmount, input.discount);
+    const netPayableAmount = totalIncGstAmount.minus(discountAmount);
+    let purchaseDiscountAccountId: string | null = null;
+    try {
+      purchaseDiscountAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.purchaseDiscount);
+    } catch {
+      purchaseDiscountAccountId = null;
+    }
     const debitByAccount = new Map<string, Prisma.Decimal>();
     const stockEntries = [];
 
@@ -291,8 +333,24 @@ export async function purchaseOther(input: PurchaseOtherInput) {
       lines: [
         ...[...debitByAccount.entries()].map(([accountId, debit]) => ({ accountId, debit })),
         ...(totalGstAmount.gt(0) ? [{ accountId: gstReceivableAccountId, debit: totalGstAmount }] : []),
-        { accountId: vendor.accountId, credit: totalIncGstAmount },
+        ...(discountAmount.gt(0) && purchaseDiscountAccountId ? [{ accountId: purchaseDiscountAccountId, credit: discountAmount }] : []),
+        { accountId: vendor.accountId, credit: netPayableAmount },
       ],
+    });
+
+    const amountPaid = decimal(input.amountPaid);
+    if (amountPaid.gt(netPayableAmount)) throw new Error("amountPaid cannot exceed net payable after discount.");
+    const paymentVoucher = await postVendorPayment(tx, {
+      companyId: input.companyId,
+      financialYearId: input.financialYearId,
+      userId: input.userId,
+      transactionDate: input.transactionDate,
+      allowClosedDayOverride: input.allowClosedDayOverride,
+      partyAccountId: vendor.accountId,
+      amount: amountPaid,
+      payMode: input.payMode,
+      bankId: input.bankId,
+      chequeNo: input.chequeNo,
     });
 
     await writeAuditLog(tx, {
@@ -309,6 +367,10 @@ export async function purchaseOther(input: PurchaseOtherInput) {
         totalExGstAmount: String(totalExGstAmount),
         totalGstAmount: String(totalGstAmount),
         totalIncGstAmount: String(totalIncGstAmount),
+        discountAmount: String(discountAmount),
+        netPayableAmount: String(netPayableAmount),
+        amountPaid: String(input.amountPaid ?? 0),
+        payMode: input.payMode ?? "Credit",
         lines: lines.map((line) => ({
           accountId: line.accountId,
           account: line.accountId ? label(accountById.get(line.accountId), line.accountId) : "Stock",
@@ -327,6 +389,6 @@ export async function purchaseOther(input: PurchaseOtherInput) {
       },
     });
 
-    return { receiptNo: input.receiptNo, stockEntries, voucher, totalExGstAmount, totalGstAmount, totalIncGstAmount };
+    return { receiptNo: input.receiptNo, stockEntries, voucher, paymentVoucher, totalExGstAmount, totalGstAmount, totalIncGstAmount, discountAmount, netPayableAmount, amountPaid };
   });
 }

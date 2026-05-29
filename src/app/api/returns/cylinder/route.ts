@@ -32,6 +32,11 @@ export async function POST(request: Request) {
       lines,
       transactionDate: dateField(body, "transactionDate"),
       allowClosedDayOverride: booleanField(body, "allowClosedDayOverride"),
+      discount: optionalPositiveNumberField(body, "discount"),
+      amountPaid: optionalPositiveNumberField(body, "amountPaid"),
+      payMode: optionalStringField(body, "payMode"),
+      bankId: optionalStringField(body, "bankId"),
+      chequeNo: optionalStringField(body, "chequeNo"),
     });
     return ok({ returnNo, ids: { stockEntryIds: result.stockEntries.map((entry) => entry.id), voucherId: result.voucher?.id } });
   } catch (error) {

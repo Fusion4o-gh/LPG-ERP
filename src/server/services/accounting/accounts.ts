@@ -6,6 +6,8 @@ export const ACCOUNT_CODES = {
   cash: "2003010001",
   stock: "2003001001",
   sales: "3001001001",
+  salesDiscount: "4001001501",
+  purchaseDiscount: "4001001502",
   gstReceivable: "2004003001",
   gstPayable: "1001003001",
   securityLiability: "1001002001",

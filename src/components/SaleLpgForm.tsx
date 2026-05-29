@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api-client";
+import { emptySettlement } from "@/lib/settlement";
 import { ApiError } from "./ApiError";
 import { PageHeader } from "./PageHeader";
+import { SettlementPanel } from "./SettlementPanel";
 import { SubmitButton } from "./SubmitButton";
 import { SuccessMessage } from "./SuccessMessage";
 
@@ -64,22 +66,58 @@ export function SaleLpgForm() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [printDocumentNo, setPrintDocumentNo] = useState("");
+  const [previewIssueNo, setPreviewIssueNo] = useState("");
+  const [banks, setBanks] = useState<{ id: string; name: string }[]>([]);
+  const [settlement, setSettlement] = useState(emptySettlement);
+  const [gasReturn, setGasReturn] = useState({ returnGasKg: "", rate: "" });
+  const [customerBalance, setCustomerBalance] = useState<{
+    receivableBalance: number;
+    emptyOwed: number;
+    filledOutstanding: number;
+  } | null>(null);
+  const [filledStock, setFilledStock] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    Promise.all([apiGet<{ customers: Lookup[] }>("/api/customers"), apiGet<{ items: Lookup[] }>("/api/items")])
-      .then(([customerData, itemData]) => {
+    Promise.all([
+      apiGet<{ customers: Lookup[] }>("/api/customers"),
+      apiGet<{ items: Lookup[] }>("/api/items"),
+      apiGet<{ banks: { id: string; name: string }[] }>("/api/banks"),
+      apiGet<{ documentNo: string }>("/api/documents/next-number?kind=sale-issue"),
+    ])
+      .then(([customerData, itemData, bankData, preview]) => {
         setCustomers(customerData.customers);
         setItems(itemData.items);
+        setBanks(bankData.banks);
+        setPreviewIssueNo(preview.documentNo);
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLookupLoading(false));
   }, []);
 
-  const selectedCustomerBalance = useMemo(() => {
-    if (!customerId) return "Select customer to view balance context.";
-    const customer = customers.find((row) => String(row.id) === customerId);
-    return customer ? optionLabel(customer) : "Customer selected.";
-  }, [customerId, customers]);
+  useEffect(() => {
+    if (!customerId && lines.every((line) => !line.itemId)) {
+      setCustomerBalance(null);
+      setFilledStock({});
+      return;
+    }
+    const params = new URLSearchParams();
+    if (customerId) params.set("customerId", customerId);
+    for (const line of lines) {
+      if (line.itemId) params.append("itemId", line.itemId);
+    }
+    apiGet<{
+      customerBalance: { receivableBalance: number; emptyOwed: number; filledOutstanding: number } | null;
+      filledStock: Record<string, number>;
+    }>(`/api/sales/lpg/context?${params.toString()}`)
+      .then((data) => {
+        setCustomerBalance(data.customerBalance);
+        setFilledStock(data.filledStock);
+      })
+      .catch(() => {
+        setCustomerBalance(null);
+        setFilledStock({});
+      });
+  }, [customerId, lines]);
 
   const totals = useMemo(
     () =>
@@ -115,6 +153,10 @@ export function SaleLpgForm() {
     setInvoiceLanguage("English");
     setLines([{ ...emptyLine }]);
     setPrintDocumentNo("");
+    setSettlement(emptySettlement());
+    setGasReturn({ returnGasKg: "", rate: "" });
+    setCustomerBalance(null);
+    setFilledStock({});
   }
 
   function payload() {
@@ -150,6 +192,14 @@ export function SaleLpgForm() {
       elevenPointEightKgPrice: elevenPointEightKgPrice ? Number(elevenPointEightKgPrice) : undefined,
       invoiceLanguage,
       lines: preparedLines,
+      discount: amount(settlement.discount),
+      amountReceived: amount(settlement.amountReceived),
+      receiveMode: settlement.receiveMode,
+      bankId: settlement.bankId || undefined,
+      chequeNo: settlement.chequeNo || undefined,
+      chequeDate: settlement.chequeDate || undefined,
+      returnGasKg: amount(gasReturn.returnGasKg) || undefined,
+      gasReturnRate: amount(gasReturn.rate) || undefined,
     };
   }
 
@@ -171,6 +221,11 @@ export function SaleLpgForm() {
       setElevenPointEightKgPrice("");
       setInvoiceLanguage("English");
       setLines([{ ...emptyLine }]);
+      setSettlement(emptySettlement());
+      setGasReturn({ returnGasKg: "", rate: "" });
+      apiGet<{ documentNo: string }>("/api/documents/next-number?kind=sale-issue")
+        .then((preview) => setPreviewIssueNo(preview.documentNo))
+        .catch(() => undefined);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed.");
     } finally {
@@ -180,7 +235,17 @@ export function SaleLpgForm() {
 
   return (
     <>
-      <PageHeader title="Sale LPG" description="Create a legacy-style multi-line LPG invoice with one issue number, filled stock out per line, same-sale empty returns, aggregate receivable voucher, GST, security, and cylinder accountability." />
+      <PageHeader
+        title="Sale LPG"
+        description="Create a legacy-style multi-line LPG invoice with settlement, live customer balance, and stock preview."
+        actions={
+          previewIssueNo ? (
+            <span className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800">
+              Next Issue #: {previewIssueNo}
+            </span>
+          ) : null
+        }
+      />
       <form onSubmit={onSubmit} className="space-y-5">
         <ApiError message={error} />
         <SuccessMessage message={success} />
@@ -220,6 +285,7 @@ export function SaleLpgForm() {
                 <label className="form-label" htmlFor="saleType">Sale Type</label>
                 <select id="saleType" value={saleType} onChange={(e) => setSaleType(e.target.value)} className="form-input">
                   <option value="Direct">Direct</option>
+                  <option value="From Gasable">From Gasable</option>
                 </select>
               </div>
               <div>
@@ -239,7 +305,15 @@ export function SaleLpgForm() {
               </div>
               <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-3 lg:col-span-2">
                 <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Customer Balance</div>
-                <div className="mt-1 text-sm text-slate-700">{selectedCustomerBalance}</div>
+                {customerBalance ? (
+                  <div className="mt-1 space-y-0.5 text-sm text-slate-700 tabular-nums">
+                    <div>Receivable: {money(customerBalance.receivableBalance)}</div>
+                    <div>Empty owed: {customerBalance.emptyOwed}</div>
+                    <div>Cylinders out: {customerBalance.filledOutstanding}</div>
+                  </div>
+                ) : (
+                  <div className="mt-1 text-sm text-slate-500">Select customer to load balance.</div>
+                )}
               </div>
             </div>
           </div>
@@ -285,7 +359,9 @@ export function SaleLpgForm() {
                         </select>
                       </td>
                       <td className="px-2.5 py-2"><input type="number" min="0" value={line.emptyReturnQuantity} onChange={(e) => updateLine(index, { emptyReturnQuantity: e.target.value })} className="tbl-input w-20 text-right" /></td>
-                      <td className="px-2.5 py-2 text-xs text-slate-400 italic">Checked on save</td>
+                      <td className="px-2.5 py-2 text-right text-xs font-medium tabular-nums text-slate-600">
+                        {line.itemId ? filledStock[line.itemId] ?? 0 : "—"}
+                      </td>
                       <td className="px-2.5 py-2 text-right tabular-nums text-slate-600">{money(current.gstAmount)}</td>
                       <td className="px-2.5 py-2 text-right tabular-nums text-slate-600">{money(current.exGstAmount)}</td>
                       <td className="px-2.5 py-2 text-right tabular-nums font-medium text-slate-800">{money(current.incGstAmount)}</td>
@@ -317,6 +393,16 @@ export function SaleLpgForm() {
             </div>
           </div>
         </section>
+
+        <SettlementPanel
+          totalBill={totals.receivableAmount}
+          fields={settlement}
+          onChange={(patch) => setSettlement((current) => ({ ...current, ...patch }))}
+          banks={banks}
+          showGasReturn
+          gasReturn={gasReturn}
+          onGasReturnChange={(patch) => setGasReturn((current) => ({ ...current, ...patch }))}
+        />
 
         <div className="flex flex-wrap gap-2">
           <SubmitButton loading={loading}>Post Sale</SubmitButton>

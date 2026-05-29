@@ -87,6 +87,18 @@ export function ReportTableClient({
 
   useEffect(() => {
     setGeneratedAt(new Date().toLocaleString());
+    const params = new URLSearchParams(window.location.search);
+    const accountId = params.get("accountId");
+    const from = params.get("from");
+    const to = params.get("to");
+    if (accountId || from || to) {
+      setFilters((current) => ({
+        ...current,
+        ...(accountId ? { accountId } : {}),
+        ...(from ? { from } : {}),
+        ...(to ? { to } : {}),
+      }));
+    }
     if (showItemFilter) apiGet<{ items: Lookup[] }>("/api/items").then((data) => setItems(data.items)).catch((err: Error) => setError(err.message));
     if (showCustomerFilter) apiGet<{ customers: Lookup[] }>("/api/customers").then((data) => setCustomers(data.customers)).catch((err: Error) => setError(err.message));
     if (showVendorFilter) apiGet<{ vendors: Lookup[] }>("/api/vendors").then((data) => setVendors(data.vendors)).catch((err: Error) => setError(err.message));

@@ -1,6 +1,7 @@
 import { CylinderState, PartyType, PermissionAction, Prisma, StockDirection, StockSourceType, VoucherType } from "@prisma/client";
 import { prisma } from "../../../lib/prisma.ts";
 import { ACCOUNT_CODES, getAccountIdByCode } from "../accounting/accounts.ts";
+import { capDiscount, postCustomerReceipt } from "../accounting/settlement-vouchers.ts";
 import { createBalancedVoucher } from "../accounting/vouchers.ts";
 import { writeAuditLog } from "../audit/audit-log.ts";
 import { assertWritableBusinessDate } from "../inventory/day-closing.ts";
@@ -22,6 +23,11 @@ type EmptySaleInput = {
   lines?: EmptySaleLineInput[];
   transactionDate: string | Date;
   allowClosedDayOverride?: boolean;
+  discount?: string | number;
+  amountReceived?: string | number;
+  receiveMode?: string;
+  bankId?: string;
+  chequeNo?: string;
 };
 
 type EmptySaleLineInput = {
@@ -84,6 +90,14 @@ export async function emptySale(input: EmptySaleInput) {
     const totalExGstAmount = lines.reduce((sum, line) => sum.plus(line.exGstAmount), new Prisma.Decimal(0));
     const totalGstAmount = lines.reduce((sum, line) => sum.plus(line.gstAmount), new Prisma.Decimal(0));
     const totalIncGstAmount = totalExGstAmount.plus(totalGstAmount);
+    const discountAmount = capDiscount(totalIncGstAmount, input.discount);
+    const netReceivableAmount = totalIncGstAmount.minus(discountAmount);
+    let salesDiscountAccountId: string | null = null;
+    try {
+      salesDiscountAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.salesDiscount);
+    } catch {
+      salesDiscountAccountId = null;
+    }
     const stockEntries = [];
 
     for (const line of lines) {
@@ -116,10 +130,27 @@ export async function emptySale(input: EmptySaleInput) {
       sourceId: input.issueNo,
       createdById: input.userId,
       lines: [
-        { accountId: customer.accountId, debit: totalIncGstAmount },
+        { accountId: customer.accountId, debit: netReceivableAmount },
         { accountId: salesAccountId, credit: totalExGstAmount },
         ...(totalGstAmount.gt(0) ? [{ accountId: gstPayableAccountId, credit: totalGstAmount }] : []),
+        ...(discountAmount.gt(0) && salesDiscountAccountId ? [{ accountId: salesDiscountAccountId, debit: discountAmount }] : []),
       ],
+    });
+
+    const amountReceived = decimal(input.amountReceived);
+    if (amountReceived.gt(netReceivableAmount)) throw new Error("amountReceived cannot exceed net bill after discount.");
+    const receiptVoucher = await postCustomerReceipt(tx, {
+      companyId: input.companyId,
+      financialYearId: input.financialYearId,
+      userId: input.userId,
+      transactionDate: input.transactionDate,
+      allowClosedDayOverride: input.allowClosedDayOverride,
+      customerId: input.customerId,
+      partyAccountId: customer.accountId,
+      amount: amountReceived,
+      payMode: input.receiveMode,
+      bankId: input.bankId,
+      chequeNo: input.chequeNo,
     });
 
     await writeAuditLog(tx, {
@@ -136,6 +167,10 @@ export async function emptySale(input: EmptySaleInput) {
         totalExGstAmount: String(totalExGstAmount),
         totalGstAmount: String(totalGstAmount),
         totalIncGstAmount: String(totalIncGstAmount),
+        discountAmount: String(discountAmount),
+        netReceivableAmount: String(netReceivableAmount),
+        amountReceived: String(input.amountReceived ?? 0),
+        receiveMode: input.receiveMode ?? "Credit",
         lines: lines.map((line) => ({
           itemId: line.itemId,
           item: label(itemById.get(line.itemId), line.itemId),
@@ -151,6 +186,17 @@ export async function emptySale(input: EmptySaleInput) {
       },
     });
 
-    return { issueNo: input.issueNo, stockEntries, voucher, totalExGstAmount, totalGstAmount, totalIncGstAmount };
+    return {
+      issueNo: input.issueNo,
+      stockEntries,
+      voucher,
+      receiptVoucher,
+      totalExGstAmount,
+      totalGstAmount,
+      totalIncGstAmount,
+      discountAmount,
+      netReceivableAmount,
+      amountReceived,
+    };
   });
 }

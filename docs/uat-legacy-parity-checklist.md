@@ -24,9 +24,9 @@
 | # | Screen | Legacy path | Clone route | Parity | Test steps | Expected (clone) | Pass |
 |---|--------|-------------|-------------|--------|------------|------------------|------|
 | 0.1 | Login | `/login` | `/login` | Improved | Sign in with admin user | Redirect to dashboard; session cookie set | |
-| 0.2 | Dashboard shell | `/admin` | `/dashboard` | Partial | Compare KPI tiles, bank table, quick links | KPIs load from API; quick links navigate to real routes | |
+| 0.2 | Dashboard shell | `/admin` | `/dashboard` | Partial | Compare KPI tiles, bank table, quick links, backup alert | KPIs, collapsible stock/sale, bank→GL links, stale backup warning | |
 | 0.3 | Sidebar menu | Left nav all sections | Sidebar groups | Full | Click each group; compare labels | Same module names as legacy groups | |
-| 0.4 | Financial year | Login dropdown (legacy stuck 2020-21) | Topbar FY badge + session | Improved | Note FY on both systems | Clone shows active FY label in topbar/sidebar | |
+| 0.4 | Financial year | Login dropdown (legacy stuck 2020-21) | Login FY select + topbar switcher | Partial | Login with FY; switch FY in topbar | Session uses selected FY | |
 | 0.5 | Logout | Header/logout | Sidebar logout | Full | Log out and back in | Session cleared; login required | |
 
 ---
@@ -45,6 +45,7 @@
 | 1.8 | Item Coding | `/Item` | `/masters/items` | Full | Add cylinder item; edit with care | Item list + form | |
 | 1.9 | Customer Coding | `/Customer` | `/masters/customers` | Full | Add customer with city/area | Customer available on sale | |
 | 1.10 | Vendor Coding | `/Vendor` | `/masters/vendors` | Full | Add vendor | Vendor on purchase | |
+| 1.10b | Bank Coding | `/bank` | `/configuration/bank-coding` | Partial | Add bank with account no, opening balance | Extended fields; `/banks` redirects here | |
 | 1.11 | Shop Opening Balance | `/ShopOpeningBalance` | `/configuration/shop-opening-balance` | Partial | View/create opening stock lines | Stock snapshot per item/state | |
 | 1.12 | Cash Opening | `/cashopening` | `/configuration/cash-opening` | Partial | Set opening cash | Cash book opening aligns | |
 | 1.13 | Day Closing | `/day_closing` | `/operations/day-closing` | Partial | View status; close day; try post on closed day | Block writes on closed date | |
@@ -61,7 +62,8 @@
 | 2.1 | Purchase Filled Cylinder | `/DirectGIRN`, add GIRN | `/operations/purchase-filled-cylinder` | Partial | Post 2 lines, GST, empty return; print | One receipt #; stock +; vendor Dr; print works | |
 | 2.2 | Purchase Empty Cylinder | `/Purchaseempty` | `/sale-purchase/purchase-empty-cylinder` | Gap/N/A | Legacy unused; test clone anyway | Empty stock IN; payable voucher | |
 | 2.3 | Purchase Other | `/Purchaseother` | `/sale-purchase/purchase-other` | Gap/N/A | Legacy unused; test clone | Expense/payable voucher | |
-| 2.4 | Sale LPG | `/SaleLPG`, add sale | `/operations/sale-lpg` | Partial | Sale 1 customer, 2 lines, security, empty return; print | Issue #; stock out; receivable; Urdu print **Gap** | |
+| 2.4 | Sale LPG list | `/SaleLPG` | `/operations/sale-lpg` (top list) | Partial | Filter by date; open print | Recent sales table with issue #, customer, amounts | |
+| 2.4b | Sale LPG (add) | `/SaleLPG/add_sale_lpg` | `/operations/sale-lpg#sale-lpg-form` | Partial | Sale with discount, cash receipt, stock preview | Issue # preview; balance/stock panels; settlement block; CR on cash | |
 | 2.5 | Complete Day Sale | `/SaleLPG/add_sale_lpg_new` | `/operations/complete-day-sale` | Partial | 2 rows: 1 cash, 1 credit; 3 items max per row | Multiple issue #s; cash receipt on cash row | |
 | 2.6 | Decanting Sale | `/decanting` | `/sale-purchase/decanting-sale` | Gap/N/A | Legacy unused | Source stock ↓; sale voucher | |
 | 2.7 | Cylinder Conversion | `/CylinderConversion` | `/sale-purchase/cylinder-conversion` | Gap/N/A | Legacy unused | Stock OUT + IN | |
@@ -110,7 +112,9 @@
 | 5.10 | Sale Return Report | `/Salereturnreport` | `/reports/sale-return` | Partial | Date range | Cylinder returns listed | |
 | 5.11 | Purchase Return Report | `/Purchasereturnreport` | `/reports/purchase-return` | Partial | Date range | Purchase returns | |
 | 5.12 | Customer Stock Ledger | `/Customerstockledger` | `/reports/customer-stock-ledger` | Partial | Customer + item + dates | Movement history | |
-| 5.13 | Daily Activity Report | `/DAR` | `/reports/daily-activity` | Gap | Compare sections vs legacy DAR | Clone: count summary only | |
+| 5.13 | Daily Activity Report | `/DAR` | `/reports/daily-activity` | Partial | Compare sections vs legacy DAR | Sectional sales/purchases/vouchers/stock | |
+| 5.17 | Chart Of Account Report | `/Chart_of_account` | `/reports/chart-of-account` | Partial | Period filters; compare balances | Account period debits/credits/balance | |
+| 5.18 | Group Summary | `/Groupsummary` | `/reports/group-summary` | Partial | Group name filter (e.g. Trade Debtors) | Control group roll-up | |
 | 5.14 | Access Cylinders | `/Accesscylinders` | `/reports/customer-cylinder-balances` | Partial | Legacy has 2 sub-reports | Outstanding cylinders per customer | |
 | 5.15 | Salewise Profit | `/SalewiseProfit` | `/reports/salewise-profit` | Partial | Same range; spot-check profit % | Weighted-avg cost approximation | |
 | 5.16 | Profit / Loss | `/ProfitReport` | `/reports/profit-loss` | Partial | Month range | Revenue − expense style | |
@@ -155,11 +159,18 @@ Run once on **both** systems with the same test data (or parallel document numbe
 
 | Item | Legacy | Clone |
 |------|--------|-------|
-| Sale invoice Urdu/English | Yes | Not yet |
-| Sale B/W Date output modes | Item/amount/type-wise | Single table |
-| DAR full layout | Sectional | Count summary |
-| Inline stock check on sale | Yes | Not yet |
-| Inline customer balance on sale | Yes | Not yet |
+| Sale invoice Urdu/English | Yes | Selector present; print layout not fully verified |
+| Bank Coding under Configuration | Yes | Added in sidebar |
+| Sale LPG list screen | Yes | Added above form |
+| Settlement (discount/receipt) on Sale LPG | Yes | Done — cash/bank + cheque |
+| Settlement on Purchase Filled | Yes | Done — payment panel |
+| Sale B/W Date output modes | Item/amount/type-wise | Single table (open) |
+| DAR full layout | Sectional | Sectional tables (open polish) |
+| Inline stock check on sale | Yes | On save when company setting enabled |
+| Inline customer balance on sale | Yes | Live panel on Sale LPG |
+| Financial year switch | Login dropdown | Login select + topbar switcher |
+| Change password | User menu | `/configuration/change-password` |
+| Cash/bank balance on settlement | Yes | Cash + bank preview on settlement panel |
 | Payment/receipt history screen | Implicit lists | Use voucher list |
 | Day-close cash reconciliation UI | Partial | Basic close/reopen |
 | Global search (topbar) | — | Placeholder (disabled) |

@@ -12,9 +12,23 @@ type MasterInput = {
   code?: string;
   name: string;
   cityId?: string;
+  areaId?: string;
   phone?: string;
   cell?: string;
   address?: string;
+  address2?: string;
+  email?: string;
+  contactPerson?: string;
+  segmentType?: string;
+  registrationDate?: string | Date;
+  nationalTaxNumber?: string;
+  gstNumber?: string;
+  companyRegNo?: string;
+  vatNumber?: string;
+  creditDays?: string | number;
+  accountNumber?: string;
+  openingBalance?: string | number;
+  openingBalanceType?: string;
   status?: Status;
   cylinderWeightKg?: number;
   defaultSecurity?: number;
@@ -22,6 +36,25 @@ type MasterInput = {
   accountType?: string;
   normalBalance?: string;
 };
+
+function optionalString(value?: string) {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+}
+
+function optionalInt(value?: string | number) {
+  if (value === undefined || value === null || value === "") return null;
+  const number = Number(value);
+  if (!Number.isInteger(number) || number < 0) throw new Error("creditDays must be a non-negative integer.");
+  return number;
+}
+
+function optionalDate(value?: string | Date) {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) throw new Error("registrationDate must be a valid date.");
+  return date;
+}
 
 function cleanStatus(status?: Status) {
   return status === "INACTIVE" ? RecordStatus.INACTIVE : RecordStatus.ACTIVE;
@@ -101,9 +134,19 @@ export async function createCustomer(context: Context, input: MasterInput) {
         companyId: context.companyId,
         code: customerCode,
         name: customerName,
-        phone: input.phone,
-        cell: input.cell,
-        address: input.address,
+        contactPerson: optionalString(input.contactPerson),
+        phone: optionalString(input.phone),
+        cell: optionalString(input.cell),
+        email: optionalString(input.email),
+        address: optionalString(input.address),
+        address2: optionalString(input.address2),
+        cityId: optionalString(input.cityId),
+        areaId: optionalString(input.areaId),
+        segmentType: optionalString(input.segmentType),
+        registrationDate: optionalDate(input.registrationDate),
+        nationalTaxNumber: optionalString(input.nationalTaxNumber),
+        gstNumber: optionalString(input.gstNumber),
+        creditDays: optionalInt(input.creditDays),
         accountId: account.id,
         status: cleanStatus(input.status),
       },
@@ -121,7 +164,24 @@ export async function updateCustomer(context: Context, id: string, input: Master
     await ensureUnique(tx, "customer", context.companyId, "code", customerCode, id);
     const customer = await tx.customer.update({
       where: { id },
-      data: { code: customerCode, name: name(input.name), phone: input.phone, cell: input.cell, address: input.address, status: cleanStatus(input.status) },
+      data: {
+        code: customerCode,
+        name: name(input.name),
+        contactPerson: optionalString(input.contactPerson),
+        phone: optionalString(input.phone),
+        cell: optionalString(input.cell),
+        email: optionalString(input.email),
+        address: optionalString(input.address),
+        address2: optionalString(input.address2),
+        cityId: optionalString(input.cityId),
+        areaId: optionalString(input.areaId),
+        segmentType: optionalString(input.segmentType),
+        registrationDate: optionalDate(input.registrationDate),
+        nationalTaxNumber: optionalString(input.nationalTaxNumber),
+        gstNumber: optionalString(input.gstNumber),
+        creditDays: optionalInt(input.creditDays),
+        status: cleanStatus(input.status),
+      },
     });
     await writeAuditLog(tx, { companyId: context.companyId, userId: context.userId, action: AuditAction.UPDATE, entityType: "Customer", entityId: id, before, after: customer });
     return customer;
@@ -135,7 +195,25 @@ export async function createVendor(context: Context, input: MasterInput) {
     await ensureUnique(tx, "vendor", context.companyId, "code", vendorCode);
     const account = await findAccount(tx, context.companyId, "Trade Creditors");
     const vendor = await tx.vendor.create({
-      data: { companyId: context.companyId, code: vendorCode, name: name(input.name), phone: input.phone, cell: input.cell, address: input.address, accountId: account.id, status: cleanStatus(input.status) },
+      data: {
+        companyId: context.companyId,
+        code: vendorCode,
+        name: name(input.name),
+        contactPerson: optionalString(input.contactPerson),
+        phone: optionalString(input.phone),
+        cell: optionalString(input.cell),
+        email: optionalString(input.email),
+        address: optionalString(input.address),
+        cityId: optionalString(input.cityId),
+        areaId: optionalString(input.areaId),
+        segmentType: optionalString(input.segmentType),
+        registrationDate: optionalDate(input.registrationDate),
+        companyRegNo: optionalString(input.companyRegNo),
+        vatNumber: optionalString(input.vatNumber),
+        creditDays: optionalInt(input.creditDays),
+        accountId: account.id,
+        status: cleanStatus(input.status),
+      },
     });
     await writeAuditLog(tx, { companyId: context.companyId, userId: context.userId, entityType: "Vendor", entityId: vendor.id, after: vendor });
     return vendor;
@@ -150,7 +228,23 @@ export async function updateVendor(context: Context, id: string, input: MasterIn
     await ensureUnique(tx, "vendor", context.companyId, "code", vendorCode, id);
     const vendor = await tx.vendor.update({
       where: { id },
-      data: { code: vendorCode, name: name(input.name), phone: input.phone, cell: input.cell, address: input.address, status: cleanStatus(input.status) },
+      data: {
+        code: vendorCode,
+        name: name(input.name),
+        contactPerson: optionalString(input.contactPerson),
+        phone: optionalString(input.phone),
+        cell: optionalString(input.cell),
+        email: optionalString(input.email),
+        address: optionalString(input.address),
+        cityId: optionalString(input.cityId),
+        areaId: optionalString(input.areaId),
+        segmentType: optionalString(input.segmentType),
+        registrationDate: optionalDate(input.registrationDate),
+        companyRegNo: optionalString(input.companyRegNo),
+        vatNumber: optionalString(input.vatNumber),
+        creditDays: optionalInt(input.creditDays),
+        status: cleanStatus(input.status),
+      },
     });
     await writeAuditLog(tx, { companyId: context.companyId, userId: context.userId, action: AuditAction.UPDATE, entityType: "Vendor", entityId: id, before, after: vendor });
     return vendor;
@@ -194,14 +288,34 @@ export async function updateItem(context: Context, id: string, input: MasterInpu
   });
 }
 
+function optionalDecimal(value?: string | number) {
+  if (value === undefined || value === null || value === "") return null;
+  const amount = new Prisma.Decimal(value);
+  if (amount.isNegative()) throw new Error("openingBalance cannot be negative.");
+  return amount;
+}
+
+function bankData(input: MasterInput) {
+  return {
+    name: name(input.name),
+    accountNumber: input.accountNumber?.trim() || null,
+    phone: input.phone?.trim() || null,
+    address: input.address?.trim() || null,
+    email: input.email?.trim() || null,
+    openingBalance: optionalDecimal(input.openingBalance),
+    openingBalanceType: input.openingBalanceType?.trim() || null,
+    status: cleanStatus(input.status),
+  };
+}
+
 export async function createBank(context: Context, input: MasterInput) {
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "banks", PermissionAction.CREATE);
-    const bankName = name(input.name);
-    const duplicate = await tx.bank.findFirst({ where: { companyId: context.companyId, name: bankName }, select: { id: true } });
+    const data = bankData(input);
+    const duplicate = await tx.bank.findFirst({ where: { companyId: context.companyId, name: data.name }, select: { id: true } });
     if (duplicate) throw new Error("name already exists.");
     const account = await findAccount(tx, context.companyId, "Bank Account");
-    const bank = await tx.bank.create({ data: { companyId: context.companyId, name: bankName, accountId: account.id, status: cleanStatus(input.status) } });
+    const bank = await tx.bank.create({ data: { companyId: context.companyId, accountId: account.id, ...data } });
     await writeAuditLog(tx, { companyId: context.companyId, userId: context.userId, entityType: "Bank", entityId: bank.id, after: bank });
     return bank;
   });
@@ -211,10 +325,10 @@ export async function updateBank(context: Context, id: string, input: MasterInpu
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "banks", PermissionAction.UPDATE);
     const before = await tx.bank.findFirstOrThrow({ where: { id, companyId: context.companyId } });
-    const bankName = name(input.name);
-    const duplicate = await tx.bank.findFirst({ where: { companyId: context.companyId, name: bankName, NOT: { id } }, select: { id: true } });
+    const data = bankData(input);
+    const duplicate = await tx.bank.findFirst({ where: { companyId: context.companyId, name: data.name, NOT: { id } }, select: { id: true } });
     if (duplicate) throw new Error("name already exists.");
-    const bank = await tx.bank.update({ where: { id }, data: { name: bankName, status: cleanStatus(input.status) } });
+    const bank = await tx.bank.update({ where: { id }, data });
     await writeAuditLog(tx, { companyId: context.companyId, userId: context.userId, action: AuditAction.UPDATE, entityType: "Bank", entityId: id, before, after: bank });
     return bank;
   });

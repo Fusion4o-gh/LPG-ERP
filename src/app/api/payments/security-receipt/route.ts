@@ -2,7 +2,16 @@ import { DOCUMENT_PREFIXES, nextDocumentNumber } from "../../../../server/servic
 import { securityReceipt } from "../../../../server/services/payments/security-receipt.ts";
 import { getRequestContext } from "../../../../server/api/request-context.ts";
 import { fail, ok, serviceError } from "../../../../server/api/responses.ts";
-import { booleanField, dateField, optionalStringField, positiveNumberField, readJson, stringField } from "../../../../server/api/validation.ts";
+import {
+  booleanField,
+  dateField,
+  optionalPositiveNumberField,
+  optionalStringField,
+  positiveIntegerField,
+  positiveNumberField,
+  readJson,
+  stringField,
+} from "../../../../server/api/validation.ts";
 
 export async function POST(request: Request) {
   try {
@@ -15,6 +24,9 @@ export async function POST(request: Request) {
       customerId: stringField(body, "customerId"),
       itemId: stringField(body, "itemId"),
       bankId: optionalStringField(body, "bankId"),
+      quantity: body.quantity === undefined ? undefined : positiveIntegerField(body, "quantity"),
+      receiveMode: optionalStringField(body, "receiveMode"),
+      chequeNo: optionalStringField(body, "chequeNo"),
       amount: positiveNumberField(body, "amount"),
       transactionDate: dateField(body, "transactionDate"),
       allowClosedDayOverride: booleanField(body, "allowClosedDayOverride"),

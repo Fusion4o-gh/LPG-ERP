@@ -1,6 +1,7 @@
 import { CylinderState, PartyType, PermissionAction, Prisma, StockDirection, StockSourceType, VoucherType } from "@prisma/client";
 import { prisma } from "../../../lib/prisma.ts";
 import { ACCOUNT_CODES, getAccountIdByCode } from "../accounting/accounts.ts";
+import { capDiscount, postCustomerRefund } from "../accounting/settlement-vouchers.ts";
 import { createBalancedVoucher } from "../accounting/vouchers.ts";
 import { writeAuditLog } from "../audit/audit-log.ts";
 import { assertWritableBusinessDate } from "../inventory/day-closing.ts";
@@ -23,6 +24,11 @@ type CylinderReturnInput = {
   lines?: CylinderReturnLineInput[];
   transactionDate: string | Date;
   allowClosedDayOverride?: boolean;
+  discount?: string | number;
+  amountPaid?: string | number;
+  payMode?: string;
+  bankId?: string;
+  chequeNo?: string;
 };
 
 type CylinderReturnLineInput = {
@@ -100,6 +106,14 @@ export async function cylinderReturn(input: CylinderReturnInput) {
     const totalExGstAmount = lines.reduce((sum, line) => sum.plus(line.exGstAmount), new Prisma.Decimal(0));
     const totalGstAmount = lines.reduce((sum, line) => sum.plus(line.gstAmount), new Prisma.Decimal(0));
     const totalReturnAmount = totalExGstAmount.plus(totalGstAmount);
+    const discountAmount = capDiscount(totalReturnAmount, input.discount);
+    const netReturnAmount = totalReturnAmount.minus(discountAmount);
+    let salesDiscountAccountId: string | null = null;
+    try {
+      salesDiscountAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.salesDiscount);
+    } catch {
+      salesDiscountAccountId = null;
+    }
 
     for (const line of lines) {
       const stockEntry = await createStockLedgerEntry(tx, {
@@ -118,12 +132,14 @@ export async function cylinderReturn(input: CylinderReturnInput) {
       });
       stockEntries.push(stockEntry);
 
-      await decrementEmptyOwed(tx, input.customerId, line.itemId, line.quantity);
+      if (line.returnType === "Empty") {
+        await decrementEmptyOwed(tx, input.customerId, line.itemId, line.quantity);
+      }
     }
 
+    const customer = await tx.customer.findUniqueOrThrow({ where: { id: input.customerId }, select: { accountId: true } });
     let voucher = null;
-    if (totalReturnAmount.gt(0)) {
-      const customer = await tx.customer.findUniqueOrThrow({ where: { id: input.customerId }, select: { accountId: true } });
+    if (netReturnAmount.gt(0)) {
       const salesAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.sales);
       const gstPayableAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.gstPayable);
       voucher = await createBalancedVoucher(tx, {
@@ -139,10 +155,28 @@ export async function cylinderReturn(input: CylinderReturnInput) {
         lines: [
           { accountId: salesAccountId, debit: totalExGstAmount },
           ...(totalGstAmount.gt(0) ? [{ accountId: gstPayableAccountId, debit: totalGstAmount }] : []),
-          { accountId: customer.accountId, credit: totalReturnAmount },
+          ...(discountAmount.gt(0) && salesDiscountAccountId ? [{ accountId: salesDiscountAccountId, debit: discountAmount }] : []),
+          { accountId: customer.accountId, credit: netReturnAmount },
         ],
       });
     }
+
+    const amountPaid = decimal(input.amountPaid);
+    if (amountPaid.gt(netReturnAmount)) throw new Error("amountPaid cannot exceed net return amount after discount.");
+    const refundVoucher = netReturnAmount.gt(0)
+      ? await postCustomerRefund(tx, {
+          companyId: input.companyId,
+          financialYearId: input.financialYearId,
+          userId: input.userId,
+          transactionDate: input.transactionDate,
+          allowClosedDayOverride: input.allowClosedDayOverride,
+          partyAccountId: customer.accountId,
+          amount: amountPaid,
+          payMode: input.payMode,
+          bankId: input.bankId,
+          chequeNo: input.chequeNo,
+        })
+      : null;
 
     await writeAuditLog(tx, {
       companyId: input.companyId,
@@ -157,6 +191,10 @@ export async function cylinderReturn(input: CylinderReturnInput) {
         totalExGstAmount: String(totalExGstAmount),
         totalGstAmount: String(totalGstAmount),
         totalReturnAmount: String(totalReturnAmount),
+        discountAmount: String(discountAmount),
+        netReturnAmount: String(netReturnAmount),
+        amountPaid: String(input.amountPaid ?? 0),
+        payMode: input.payMode ?? "Credit",
         lines: lines.map((line) => {
           const item = itemById.get(line.itemId);
           return {
@@ -176,6 +214,17 @@ export async function cylinderReturn(input: CylinderReturnInput) {
       },
     });
 
-    return { returnNo: input.returnNo, stockEntries, voucher, totalExGstAmount, totalGstAmount, totalReturnAmount };
+    return {
+      returnNo: input.returnNo,
+      stockEntries,
+      voucher,
+      refundVoucher,
+      totalExGstAmount,
+      totalGstAmount,
+      totalReturnAmount,
+      discountAmount,
+      netReturnAmount,
+      amountPaid,
+    };
   });
 }

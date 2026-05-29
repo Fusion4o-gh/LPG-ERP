@@ -5,6 +5,7 @@ import { parseReportFilters, type ReportFilters } from "./operational-reports.ts
 
 type Context = { companyId: string; financialYearId: string; userId: string };
 type Tx = Prisma.TransactionClient;
+export type SaleReportFilters = ReportFilters & { mode?: string };
 
 function formatDate(value: Date | string | null | undefined) {
   if (!value) return "";
@@ -124,13 +125,81 @@ function buildSaleRows(
   });
 }
 
-export async function getSaleBetweenDatesReport(context: Context, input: ReportFilters = {}) {
+function buildSaleRowsByItem(
+  entries: Awaited<ReturnType<typeof loadSaleEntries>>,
+  customerMap: Map<string, { id: string; code: string; name: string }>,
+  itemMap: Map<string, { id: string; code: string; name: string }>,
+  voucherMap: Map<string, Prisma.Decimal>,
+) {
+  const bySaleItem = new Map<string, { issueNo: string; transactionDate: Date; customerId: string | null; itemId: string; totalQty: number }>();
+  for (const entry of entries) {
+    const key = `${entry.sourceId}:${entry.itemId}`;
+    const current = bySaleItem.get(key) ?? {
+      issueNo: entry.sourceId,
+      transactionDate: entry.transactionDate,
+      customerId: entry.customerId,
+      itemId: entry.itemId,
+      totalQty: 0,
+    };
+    current.totalQty += entry.quantity;
+    bySaleItem.set(key, current);
+  }
+  return [...bySaleItem.values()].map((row) => {
+    const customer = customerMap.get(row.customerId ?? "");
+    const item = itemMap.get(row.itemId);
+    return {
+      issueNo: row.issueNo,
+      transactionDate: formatDate(row.transactionDate),
+      customerCode: customer?.code ?? "",
+      customerName: customer?.name ?? "",
+      itemCode: item?.code ?? "",
+      itemName: item?.name ?? "",
+      totalQty: row.totalQty,
+      saleAmount: formatMoney(voucherMap.get(row.issueNo)),
+    };
+  });
+}
+
+function buildSaleRowsByType(
+  rows: ReturnType<typeof buildSaleRows>,
+) {
+  const byType = new Map<string, { saleType: string; invoiceCount: number; totalQty: number; totalAmount: number }>();
+  for (const row of rows) {
+    const current = byType.get(row.saleType) ?? { saleType: row.saleType, invoiceCount: 0, totalQty: 0, totalAmount: 0 };
+    current.invoiceCount += 1;
+    current.totalQty += Number(row.totalQty);
+    current.totalAmount += Number(row.saleAmount);
+    byType.set(row.saleType, current);
+  }
+  return [...byType.values()].map((row) => ({
+    saleType: row.saleType,
+    invoiceCount: row.invoiceCount,
+    totalQty: row.totalQty,
+    saleAmount: row.totalAmount.toFixed(2),
+  }));
+}
+
+export async function getSaleBetweenDatesReport(context: Context, input: SaleReportFilters = {}) {
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "reports", PermissionAction.VIEW);
     const filters = parseReportFilters(input);
+    const mode = (input.mode ?? "invoice").toLowerCase();
     const entries = await loadSaleEntries(tx, context, filters);
     const { customerMap, voucherMap, saleTypeMap } = await enrichSaleEntries(tx, context, entries);
-    return buildSaleRows(entries, customerMap, voucherMap, saleTypeMap);
+
+    if (mode === "item") {
+      const itemIds = [...new Set(entries.map((e) => e.itemId))];
+      const items = await tx.item.findMany({
+        where: { id: { in: itemIds } },
+        select: { id: true, code: true, name: true },
+      });
+      const itemMap = new Map(items.map((i) => [i.id, i]));
+      return buildSaleRowsByItem(entries, customerMap, itemMap, voucherMap);
+    }
+
+    const invoiceRows = buildSaleRows(entries, customerMap, voucherMap, saleTypeMap);
+    if (mode === "type") return buildSaleRowsByType(invoiceRows);
+    return invoiceRows;
   });
 }
 
@@ -228,8 +297,21 @@ export async function getSaleReturnReport(context: Context, input: ReportFilters
   });
 }
 
-export async function getSaleBetweenDatesReportCsv(context: Context, input: ReportFilters = {}) {
+export async function getSaleBetweenDatesReportCsv(context: Context, input: SaleReportFilters = {}) {
   const rows = await getSaleBetweenDatesReport(context, input);
+  const mode = (input.mode ?? "invoice").toLowerCase();
+  if (mode === "item") {
+    return toCsv(
+      ["Issue No", "Date", "Customer Code", "Customer Name", "Item Code", "Item Name", "Qty", "Amount"],
+      rows.map((r) => [r.issueNo, r.transactionDate, r.customerCode, r.customerName, r.itemCode, r.itemName, r.totalQty, r.saleAmount]),
+    );
+  }
+  if (mode === "type") {
+    return toCsv(
+      ["Sale Type", "Invoices", "Qty", "Amount"],
+      rows.map((r) => [r.saleType, r.invoiceCount, r.totalQty, r.saleAmount]),
+    );
+  }
   return toCsv(
     ["Issue No", "Date", "Customer Code", "Customer Name", "Total Qty", "Sale Amount", "Sale Type"],
     rows.map((r) => [r.issueNo, r.transactionDate, r.customerCode, r.customerName, r.totalQty, r.saleAmount, r.saleType]),

@@ -10,6 +10,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const { id } = await params;
     const bank = await updateBank(context, id, {
       name: stringField(body, "name"),
+      accountNumber: optionalStringField(body, "accountNumber"),
+      phone: optionalStringField(body, "phone"),
+      address: optionalStringField(body, "address"),
+      email: optionalStringField(body, "email"),
+      openingBalance: optionalStringField(body, "openingBalance"),
+      openingBalanceType: optionalStringField(body, "openingBalanceType"),
       status: optionalStringField(body, "status") as never,
     });
     return ok({ bank });

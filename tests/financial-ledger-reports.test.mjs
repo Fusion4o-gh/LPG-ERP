@@ -505,10 +505,43 @@ test("profit and loss CSV outputs revenue, expenses, and summary rows", async ()
 
   const csv = await ledgers.getProfitLossReportCsv({ companyId: company.id, financialYearId: financialYear.id, userId: user.id }, { from: "2027-07-01", to: "2027-07-31" });
 
-  assert.match(csv, /Category,Account Code,Account Name,Debit,Credit,Amount/);
-  assert.match(csv, /REVENUE,.*0.00,400.00,400.00/);
-  assert.match(csv, /EXPENSE,.*90.00,0.00,90.00/);
-  assert.match(csv, /Profit,,,,,310.00/);
+  assert.match(csv, /Section,Account Code,Account Name,Amount/);
+  assert.match(csv, /Revenue,.*400.00/);
+  assert.match(csv, /Total Revenue,400.00/);
+  assert.match(csv, /Expenses,.*90.00/);
+  assert.match(csv, /Net Profit,310.00/);
+});
+
+test("profit and loss monthly breakdown groups amounts by calendar month", async () => {
+  const { company, user, cash, revenue, expenses } = await fixture();
+  const financialYear = await isolatedFinancialYear(company.id);
+  const salesAccount = await createAccount(company.id, revenue.id, "PL-MON-REV", AccountType.REVENUE, NormalBalance.CREDIT);
+  const expenseAccount = await createAccount(company.id, expenses.id, "PL-MON-EXP", AccountType.EXPENSE, NormalBalance.DEBIT);
+  await createVoucher(company.id, financialYear.id, user.id, "2027-08-05", [
+    { accountId: cash.id, debit: 100, credit: 0, sortOrder: 1 },
+    { accountId: salesAccount.id, debit: 0, credit: 100, sortOrder: 2 },
+  ]);
+  await createVoucher(company.id, financialYear.id, user.id, "2027-09-10", [
+    { accountId: cash.id, debit: 200, credit: 0, sortOrder: 1 },
+    { accountId: salesAccount.id, debit: 0, credit: 200, sortOrder: 2 },
+  ]);
+  await createVoucher(company.id, financialYear.id, user.id, "2027-09-15", [
+    { accountId: expenseAccount.id, debit: 50, credit: 0, sortOrder: 1 },
+    { accountId: cash.id, debit: 0, credit: 50, sortOrder: 2 },
+  ]);
+
+  const report = await ledgers.getProfitLossReport(
+    { companyId: company.id, financialYearId: financialYear.id, userId: user.id },
+    { from: "2027-08-01", to: "2027-09-30", breakdown: "month" },
+  );
+
+  assert.deepEqual(report.months, ["2027-08", "2027-09"]);
+  const sales = report.revenueRows.find((row) => row.id === salesAccount.id);
+  assert.equal(sales.monthlyAmounts["2027-08"], 100);
+  assert.equal(sales.monthlyAmounts["2027-09"], 200);
+  assert.equal(report.monthlyTotals.revenue["2027-09"], 200);
+  assert.equal(report.monthlyTotals.expenses["2027-09"], 50);
+  assert.equal(report.monthlyTotals.net["2027-09"], 150);
 });
 
 test("balance sheet CSV outputs account rows and totals", async () => {

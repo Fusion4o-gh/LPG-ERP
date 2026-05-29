@@ -6,3 +6,4 @@ dist
 coverage
 *.log
 backups/
+.local-postgres/

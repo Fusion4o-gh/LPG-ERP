@@ -33,6 +33,12 @@ export async function PUT(request: Request) {
       email: optionalStringField(body, "email"),
       taxRegistrationNumber: optionalStringField(body, "taxRegistrationNumber"),
       nationalTaxNumber: optionalStringField(body, "nationalTaxNumber"),
+      stockAvailableCheck: body.stockAvailableCheck === undefined ? undefined : body.stockAvailableCheck === true,
+      centralizedPricing: body.centralizedPricing === undefined ? undefined : body.centralizedPricing === true,
+      showDefaultDate: body.showDefaultDate === undefined ? undefined : body.showDefaultDate === true,
+      redirectOnSamePage: body.redirectOnSamePage === undefined ? undefined : body.redirectOnSamePage === true,
+      workStartTime: optionalStringField(body, "workStartTime"),
+      workEndTime: optionalStringField(body, "workEndTime"),
       workingDays: optionalWorkingDays(body),
     });
     return ok({ company });

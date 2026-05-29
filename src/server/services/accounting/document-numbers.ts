@@ -59,3 +59,21 @@ export async function nextDocumentNumberInTransaction(tx: Tx, input: DocumentNum
 export async function nextDocumentNumber(input: DocumentNumberInput) {
   return prisma.$transaction((tx) => nextDocumentNumberInTransaction(tx, input));
 }
+
+export async function peekNextDocumentNumber(input: DocumentNumberInput) {
+  const financialYear = await prisma.financialYear.findUniqueOrThrow({
+    where: { id: input.financialYearId },
+    select: { label: true },
+  });
+  const sequence = await prisma.documentSequence.findUnique({
+    where: {
+      companyId_financialYearId_prefix: {
+        companyId: input.companyId,
+        financialYearId: input.financialYearId,
+        prefix: input.prefix,
+      },
+    },
+    select: { nextNumber: true },
+  });
+  return formatDocumentNumber(input.prefix, financialYear.label, sequence?.nextNumber ?? 1);
+}

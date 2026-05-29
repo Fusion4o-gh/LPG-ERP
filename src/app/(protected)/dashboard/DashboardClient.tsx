@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiGet } from "@/lib/api-client";
@@ -17,6 +18,7 @@ type KpiData = {
 
 type BankRow = {
   id: string;
+  accountId: string;
   name: string;
   accountCode: string;
   totalDebit: number;
@@ -42,6 +44,7 @@ type DashboardData = {
   bankPosition: BankRow[];
   currentStock: StockRow[];
   saleStats: SaleStats;
+  backup: { lastBackupAt: string | null; backupStaleDays: number | null; isStale: boolean };
 };
 
 const QUICK_LINKS = [
@@ -71,6 +74,31 @@ const KPI_DEFS = [
 
 function fmt(n: number) {
   return n.toLocaleString("en-PK", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+function CollapsibleSection({
+  title,
+  defaultOpen = true,
+  children,
+}: {
+  title: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="card rounded-xl overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="flex w-full items-center justify-between border-b border-slate-100 px-4 py-3 bg-slate-50/70 text-left"
+      >
+        <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">{title}</p>
+        <span className="text-slate-400 text-xs">{open ? "Hide" : "Show"}</span>
+      </button>
+      {open ? children : null}
+    </div>
+  );
 }
 
 function KpiSkeleton() {
@@ -105,30 +133,37 @@ export function DashboardClient() {
     <>
       <ApiError message={error} />
 
-      {/* KPI tiles */}
+      {data?.backup.isStale ? (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <strong>Database backup required.</strong>{" "}
+          {data.backup.lastBackupAt
+            ? `Last backup was ${data.backup.backupStaleDays} day(s) ago.`
+            : "No backup has been recorded yet."}{" "}
+          <Link href="/database-backup" className="font-semibold underline">
+            Open Database Backup
+          </Link>
+        </div>
+      ) : null}
+
       {data && (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-5">
           {KPI_DEFS.map((kpi) => (
             <div key={kpi.key} className="card rounded-xl p-4 flex items-start justify-between gap-3">
               <div>
                 <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">{kpi.label}</p>
-                <p className="mt-2 text-2xl font-bold text-slate-800 tabular-nums leading-none">
-                  {fmt(data.kpis[kpi.key])}
-                </p>
+                <p className="mt-2 text-2xl font-bold text-slate-800 tabular-nums leading-none">{fmt(data.kpis[kpi.key])}</p>
               </div>
-              <span className="text-xl mt-0.5 select-none" aria-hidden="true">{kpi.icon}</span>
+              <span className="text-xl mt-0.5 select-none" aria-hidden="true">
+                {kpi.icon}
+              </span>
             </div>
           ))}
         </div>
       )}
 
       <div className="grid gap-5 xl:grid-cols-2 mb-5">
-        {/* Bank Position */}
         {data && data.bankPosition.length > 0 && (
-          <div className="card rounded-xl overflow-hidden">
-            <div className="border-b border-slate-100 px-4 py-3 bg-slate-50/70">
-              <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Bank Position</p>
-            </div>
+          <CollapsibleSection title="Bank Position" defaultOpen>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -142,7 +177,14 @@ export function DashboardClient() {
                 <tbody className="divide-y divide-slate-100">
                   {data.bankPosition.map((b) => (
                     <tr key={b.id} className="hover:bg-blue-50/30 transition-colors">
-                      <td className="px-4 py-2.5 text-slate-700 font-medium">{b.name}</td>
+                      <td className="px-4 py-2.5 text-slate-700 font-medium">
+                        <Link
+                          href={`/reports/general-ledger?accountId=${encodeURIComponent(b.accountId)}`}
+                          className="hover:text-blue-700 hover:underline"
+                        >
+                          {b.name}
+                        </Link>
+                      </td>
                       <td className="px-4 py-2.5 text-right tabular-nums text-slate-600">{fmt(b.totalDebit)}</td>
                       <td className="px-4 py-2.5 text-right tabular-nums text-slate-600">{fmt(b.totalCredit)}</td>
                       <td className={`px-4 py-2.5 text-right tabular-nums font-semibold ${b.balance >= 0 ? "text-blue-700" : "text-red-600"}`}>
@@ -153,15 +195,11 @@ export function DashboardClient() {
                 </tbody>
               </table>
             </div>
-          </div>
+          </CollapsibleSection>
         )}
 
-        {/* Sale Stats */}
         {data && (
-          <div className="card rounded-xl overflow-hidden">
-            <div className="border-b border-slate-100 px-4 py-3 bg-slate-50/70">
-              <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Sale Stats</p>
-            </div>
+          <CollapsibleSection title="Sale Stats" defaultOpen>
             <div className="divide-y divide-slate-100">
               {[
                 { label: "Today — Transactions", value: String(data.saleStats.today.count) },
@@ -175,17 +213,13 @@ export function DashboardClient() {
                 </div>
               ))}
             </div>
-          </div>
+          </CollapsibleSection>
         )}
       </div>
 
-      {/* Current Stock */}
       {data && data.currentStock.length > 0 && (
-        <div className="card rounded-xl overflow-hidden mb-5">
-          <div className="border-b border-slate-100 px-4 py-3 bg-slate-50/70">
-            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Current Stock</p>
-          </div>
-          <div className="overflow-x-auto">
+        <CollapsibleSection title="Current Stock" defaultOpen={false}>
+          <div className="overflow-x-auto mb-5">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">
@@ -208,10 +242,9 @@ export function DashboardClient() {
               </tbody>
             </table>
           </div>
-        </div>
+        </CollapsibleSection>
       )}
 
-      {/* Quick Links */}
       <div className="card rounded-xl overflow-hidden">
         <div className="border-b border-slate-100 px-4 py-3 bg-slate-50/70">
           <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Quick Links</p>

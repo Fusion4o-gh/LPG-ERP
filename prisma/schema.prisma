@@ -96,6 +96,10 @@ model Company {
   timeZone              String       @default("Asia/Karachi")
   stockAvailableCheck   Boolean      @default(true)
   centralizedPricing    Boolean      @default(false)
+  showDefaultDate       Boolean      @default(true)
+  redirectOnSamePage    Boolean      @default(false)
+  workStartTime         String?
+  workEndTime           String?
   workingDays           Json?
   status                RecordStatus @default(ACTIVE)
   createdAt             DateTime     @default(now())
@@ -260,6 +264,7 @@ model City {
   company   Company    @relation(fields: [companyId], references: [id])
   areas     Area[]
   customers Customer[]
+  vendors   Vendor[]
 
   @@unique([companyId, name])
 }
@@ -273,6 +278,7 @@ model Area {
 
   city      City       @relation(fields: [cityId], references: [id])
   customers Customer[]
+  vendors   Vendor[]
   userAreas UserArea[]
 
   @@unique([cityId, name])
@@ -380,18 +386,25 @@ model ChartAccount {
 }
 
 model Customer {
-  id        String       @id @default(cuid())
-  companyId String
-  code      String
-  name      String
-  phone     String?
-  cell      String?
-  email     String?
-  address   String?
-  cityId    String?
-  areaId    String?
-  accountId String
-  status    RecordStatus @default(ACTIVE)
+  id               String       @id @default(cuid())
+  companyId        String
+  code             String
+  name             String
+  contactPerson    String?
+  phone            String?
+  cell             String?
+  email            String?
+  address          String?
+  address2         String?
+  cityId           String?
+  areaId           String?
+  segmentType      String?
+  registrationDate DateTime?    @db.Date
+  nationalTaxNumber String?
+  gstNumber        String?
+  creditDays       Int?
+  accountId        String
+  status           RecordStatus @default(ACTIVE)
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 
@@ -408,19 +421,30 @@ model Customer {
 }
 
 model Vendor {
-  id        String       @id @default(cuid())
-  companyId String
-  code      String
-  name      String
-  phone     String?
-  cell      String?
-  address   String?
-  accountId String
-  status    RecordStatus @default(ACTIVE)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  id               String       @id @default(cuid())
+  companyId        String
+  code             String
+  name             String
+  contactPerson    String?
+  phone            String?
+  cell             String?
+  email            String?
+  address          String?
+  cityId           String?
+  areaId           String?
+  segmentType      String?
+  registrationDate DateTime?    @db.Date
+  companyRegNo     String?
+  vatNumber        String?
+  creditDays       Int?
+  accountId        String
+  status           RecordStatus @default(ACTIVE)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
   company            Company                       @relation(fields: [companyId], references: [id])
+  city               City?                         @relation(fields: [cityId], references: [id])
+  area               Area?                         @relation(fields: [areaId], references: [id])
   account            ChartAccount                  @relation(fields: [accountId], references: [id])
   cylinderBalances   VendorCylinderReturnBalance[]
   stockLedgerEntries StockLedgerEntry[]
@@ -430,11 +454,17 @@ model Vendor {
 }
 
 model Bank {
-  id        String       @id @default(cuid())
-  companyId String
-  name      String
-  accountId String
-  status    RecordStatus @default(ACTIVE)
+  id                 String       @id @default(cuid())
+  companyId          String
+  name               String
+  accountId          String
+  accountNumber      String?
+  phone              String?
+  address            String?
+  email              String?
+  openingBalance     Decimal?     @db.Decimal(14, 2)
+  openingBalanceType String?
+  status             RecordStatus @default(ACTIVE)
 
   account ChartAccount @relation(fields: [accountId], references: [id])
 

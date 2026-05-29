@@ -154,6 +154,39 @@ test("sale between dates report returns sales in date range", async () => {
   assert.ok(Number(row.saleAmount) > 0);
 });
 
+test("sale between dates item mode returns line-level rows", async () => {
+  const { company, financialYear, user, seedItem, seedCustomer } = await fixture();
+  const item = await createTestItem(company.id, seedItem);
+  const customer = await createTestCustomer(company.id, seedCustomer);
+  const issueNo = source("SR-ITEM");
+  const date = "2027-03-11";
+
+  await createSaleEntry(company.id, financialYear.id, user.id, issueNo, customer.id, item.id, 2, date);
+
+  const context = { companyId: company.id, financialYearId: financialYear.id, userId: user.id };
+  const rows = await salesReports.getSaleBetweenDatesReport(context, { from: date, to: date, mode: "item" });
+
+  const row = rows.find((r) => r.issueNo === issueNo);
+  assert.ok(row, "should find item row");
+  assert.equal(row.itemCode, item.code);
+  assert.equal(row.totalQty, 2);
+});
+
+test("sale between dates type mode groups by sale type", async () => {
+  const { company, financialYear, user, seedItem, seedCustomer } = await fixture();
+  const item = await createTestItem(company.id, seedItem);
+  const customer = await createTestCustomer(company.id, seedCustomer);
+  const issueNo = source("SR-TYPE");
+  const date = "2027-03-12";
+
+  await createSaleEntry(company.id, financialYear.id, user.id, issueNo, customer.id, item.id, 1, date);
+
+  const context = { companyId: company.id, financialYearId: financialYear.id, userId: user.id };
+  const rows = await salesReports.getSaleBetweenDatesReport(context, { from: date, to: date, mode: "type" });
+
+  assert.ok(rows.some((r) => r.saleType && Number(r.invoiceCount) >= 1));
+});
+
 test("sale between dates excludes sales outside date range", async () => {
   const { company, financialYear, user, seedItem, seedCustomer } = await fixture();
   const item = await createTestItem(company.id, seedItem);

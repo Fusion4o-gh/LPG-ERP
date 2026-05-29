@@ -103,11 +103,8 @@ export async function triggerBackup(context: Context): Promise<TriggerBackupResu
   return { success: true, pgDumpAvailable: true, filename, message: `Backup created: ${filename}` };
 }
 
-export async function listBackups(context: Context): Promise<BackupFile[]> {
-  await checkPermission(context.userId);
-
+export function listBackupFiles(): BackupFile[] {
   ensureBackupDir();
-
   const files = fs.readdirSync(BACKUP_DIR).filter((f) => /^backup-[\w.-]+\.(dump|sql|gz)$/.test(f));
   return files
     .map((filename) => {
@@ -115,6 +112,11 @@ export async function listBackups(context: Context): Promise<BackupFile[]> {
       return { filename, size: stat.size, createdAt: stat.birthtime.toISOString() };
     })
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export async function listBackups(context: Context): Promise<BackupFile[]> {
+  await checkPermission(context.userId);
+  return listBackupFiles();
 }
 
 export function resolveBackupFilePath(filename: string): string | null {
