@@ -19,6 +19,12 @@ Reference: `docs/original-module-study-build-plan.md`, `docs/original-live-audit
 
 ---
 
+## Current milestone
+
+The original audit's operator-critical parity work is now implemented for normal data entry flows. The next milestone is not more first-pass cloning; it is verification, accounting hardening, and the remaining configuration/report depth that makes the clone reliable without reopening the legacy site.
+
+---
+
 ## P0 — Operator-critical
 
 | Item | Status | Notes |
@@ -67,7 +73,7 @@ Reference: `docs/original-module-study-build-plan.md`, `docs/original-live-audit
 | Global search | Open | Placeholder only |
 | Urdu UI / invoice print | Open | Selector only |
 | Voucher list in sidebar | Open | Page exists |
-| Voucher # preview on payments | Open | |
+| Voucher # preview on payments | Partial | Sale/purchase previews exist; standalone payments need preview |
 
 ---
 
@@ -94,12 +100,12 @@ Reference: `docs/original-module-study-build-plan.md`, `docs/original-live-audit
 
 ## Suggested build order (ongoing)
 
-1. P0 settlement on remaining transaction forms (shared service helpers).
-2. P0 sale B/W modes + security receipt.
-3. P1 company settings + item brand/category + map area filters.
-4. P2 shell (search, voucher history, payment previews).
-5. P3 report polish + P4 accounting tree.
+1. Run a P0 verification sprint over every completed operator workflow: Sale LPG, all purchase flows, Empty Sale, Complete Day Sale, Cylinder Return, Security Receipt, Sale B/W Date, Daily Activity, Chart of Account, and Group Summary.
+2. Add regression coverage for settlement posting: cash, bank, credit, partial settlement, discount, cheque metadata, gas return, vendor payment, and refund cases.
+3. Finish P1 configuration wiring: company default-date/redirect/working-day behavior, item brand/category UI, map-area lookup enforcement, expense type opening balances, and company logo upload.
+4. Finish P2 shell/dashboard gaps: bank drill-down, collapsible dashboard sections, stale backup warning, global search, voucher list in sidebar, and voucher previews for standalone payment/receipt screens.
+5. Finish P3/P4 depth: Access Cylinders own-business report, report total validation against legacy audit samples, chart-of-accounts tree UI, day-close reconciliation, and database restore/schedule.
 
 ---
 
-**Last updated:** 2026-05-28
+**Last updated:** 2026-05-30

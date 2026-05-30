@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { PermissionAction, PrismaClient } from "@prisma/client";
+import { seedContext } from "./helpers/lpg-fixtures.mjs";
 
 const prisma = new PrismaClient();
 const jv = await import("../src/server/services/accounting/journal-voucher.ts");
@@ -19,10 +20,7 @@ function doc(prefix) {
 }
 
 async function fixture() {
-  const company = await prisma.company.findFirstOrThrow({ where: { legalName: "Hasnan Traders" } });
-  const financialYear = await prisma.financialYear.findFirstOrThrow({ where: { companyId: company.id, isActive: true } });
-  const user = await prisma.user.findFirstOrThrow({ where: { companyId: company.id, loginId: "admin" } });
-  // Debit account: any non-control chart account (use first level 3 account available)
+  const { company, financialYear, user } = await seedContext(prisma);
   const debitAcct = await prisma.chartAccount.findFirstOrThrow({ where: { companyId: company.id, level: 3 } });
   const creditAcct = await prisma.chartAccount.findFirstOrThrow({ where: { companyId: company.id, level: 3, id: { not: debitAcct.id } } });
   return { company, financialYear, user, debitAcct, creditAcct };
@@ -310,8 +308,9 @@ test("printable JV page uses journal-voucher document type", async () => {
   assert.match(page, /PrintableTransactionDocument/, "print page must use PrintableTransactionDocument");
 });
 
-test("sidebar Journal Vouchers link points to /payments/journal-vouchers", async () => {
+test("navigation Journal Vouchers tab points to /payments/journal-vouchers", async () => {
   const root = new URL("../", import.meta.url);
-  const sidebar = await readFile(new URL("src/components/Sidebar.tsx", root), "utf8");
-  assert.match(sidebar, /payments\/journal-vouchers[\s\S]{0,60}journal-vouchers|journal-vouchers[\s\S]{0,60}payments\/journal-vouchers/);
+  const nav = await readFile(new URL("src/lib/navigation/modules.ts", root), "utf8");
+  assert.match(nav, /\/payments\/journal-vouchers/);
+  assert.match(nav, /Journal Vouchers/);
 });

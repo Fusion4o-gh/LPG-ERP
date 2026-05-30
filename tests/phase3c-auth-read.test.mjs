@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { PrismaClient, VoucherType } from "@prisma/client";
+import { baseFixture } from "./helpers/lpg-fixtures.mjs";
+import { SEED_ADMIN_PASSWORD } from "./helpers/test-database.mjs";
 
 const prisma = new PrismaClient();
 const auth = await import("../src/server/auth/password.ts");
@@ -12,14 +14,18 @@ const voucherDetailRoute = await import("../src/app/api/accounting/vouchers/[id]
 const formValidation = await import("../src/lib/form-validation.ts");
 
 async function fixture() {
-  const company = await prisma.company.findFirstOrThrow({ where: { legalName: "Hasnan Traders" } });
-  const financialYear = await prisma.financialYear.findFirstOrThrow({ where: { companyId: company.id, isActive: true } });
-  const user = await prisma.user.findFirstOrThrow({ where: { companyId: company.id, loginId: "admin" } });
-  const item = await prisma.item.findFirstOrThrow({ where: { companyId: company.id, code: "CYL-11.8-PSO" } });
-  const customer = await prisma.customer.findFirstOrThrow({ where: { companyId: company.id, code: "C-0001" } });
-  const cash = await prisma.chartAccount.findFirstOrThrow({ where: { companyId: company.id, name: "Cash in Hand" } });
-  const revenue = await prisma.chartAccount.findFirstOrThrow({ where: { companyId: company.id, code: "3000000000" } });
-  return { company, financialYear, user, item, customer, cash, revenue };
+  const base = await baseFixture(prisma);
+  const cash = await prisma.chartAccount.findFirstOrThrow({ where: { companyId: base.company.id, name: "Cash in Hand" } });
+  const revenue = await prisma.chartAccount.findFirstOrThrow({ where: { companyId: base.company.id, code: "3000000000" } });
+  return {
+    company: base.company,
+    financialYear: base.financialYear,
+    user: base.user,
+    item: base.seedItem,
+    customer: base.seedCustomer,
+    cash,
+    revenue,
+  };
 }
 
 async function authedRequest(url = "http://localhost/api/test") {
@@ -34,7 +40,7 @@ test.after(async () => {
 
 test("password helper verifies seeded admin password and rejects bad password", async () => {
   const { user } = await fixture();
-  assert.equal(await auth.verifyPassword("ChangeMe@123", user.passwordHash), true);
+  assert.equal(await auth.verifyPassword(SEED_ADMIN_PASSWORD, user.passwordHash), true);
   assert.equal(await auth.verifyPassword("wrong-password", user.passwordHash), false);
 });
 

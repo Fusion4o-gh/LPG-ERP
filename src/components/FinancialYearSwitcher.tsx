@@ -35,7 +35,7 @@ export function FinancialYearSwitcher({ currentLabel }: { currentLabel: string }
 
   if (years.length <= 1) {
     return (
-      <span className="hidden rounded-md border border-blue-100 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-800 sm:inline" title="Active financial year">
+      <span className="accent-chip hidden rounded-md px-2.5 py-1 text-xs font-semibold sm:inline" title="Active financial year">
         FY {currentLabel}
       </span>
     );
@@ -48,7 +48,7 @@ export function FinancialYearSwitcher({ currentLabel }: { currentLabel: string }
         value={currentId}
         disabled={saving}
         onChange={(e) => onChange(e.target.value)}
-        className="h-8 rounded-md border border-blue-100 bg-blue-50 px-2 text-xs font-semibold text-blue-900"
+        className="accent-chip h-8 rounded-md px-2 text-xs font-semibold"
         aria-label="Financial year"
       >
         {years.map((year) => (

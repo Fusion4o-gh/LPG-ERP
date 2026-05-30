@@ -236,8 +236,7 @@ export async function purchaseFilledCylinder(input: PurchaseFilledCylinderInput)
         });
         const bankAccountId = await getBankAccountId(tx, input.bankId);
         const narration = input.chequeNo ? `Cheque ${input.chequeNo}` : undefined;
-        paymentVoucher = (
-          await createBalancedVoucher(tx, {
+        paymentVoucher = await createBalancedVoucher(tx, {
             companyId: input.companyId,
             financialYearId: input.financialYearId,
             voucherNo,
@@ -251,8 +250,7 @@ export async function purchaseFilledCylinder(input: PurchaseFilledCylinderInput)
               { accountId: vendor.accountId, debit: amountPaid },
               { accountId: bankAccountId, credit: amountPaid },
             ],
-          })
-        ).voucher;
+          });
       } else {
         const voucherNo = await nextDocumentNumberInTransaction(tx, {
           companyId: input.companyId,
@@ -260,8 +258,7 @@ export async function purchaseFilledCylinder(input: PurchaseFilledCylinderInput)
           prefix: DOCUMENT_PREFIXES.cashPaymentVoucher,
         });
         const cashAccountId = await getCashAccountId(tx, input.companyId);
-        paymentVoucher = (
-          await createBalancedVoucher(tx, {
+        paymentVoucher = await createBalancedVoucher(tx, {
             companyId: input.companyId,
             financialYearId: input.financialYearId,
             voucherNo,
@@ -274,8 +271,7 @@ export async function purchaseFilledCylinder(input: PurchaseFilledCylinderInput)
               { accountId: vendor.accountId, debit: amountPaid },
               { accountId: cashAccountId, credit: amountPaid },
             ],
-          })
-        ).voucher;
+          });
       }
     }
 

@@ -150,6 +150,8 @@ export async function getDashboardData(context: Context) {
     const backupStaleDays = lastBackupAt
       ? Math.floor((Date.now() - new Date(lastBackupAt).getTime()) / (1000 * 60 * 60 * 24))
       : null;
+    const needsFirstBackup = lastBackupAt === null;
+    const isStale = backupStaleDays !== null && backupStaleDays > 3;
     return {
       kpis,
       bankPosition,
@@ -158,7 +160,8 @@ export async function getDashboardData(context: Context) {
       backup: {
         lastBackupAt,
         backupStaleDays,
-        isStale: backupStaleDays === null || backupStaleDays > 7,
+        needsFirstBackup,
+        isStale,
       },
     };
   });

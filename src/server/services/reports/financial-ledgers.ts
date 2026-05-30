@@ -357,14 +357,15 @@ export async function getProfitLossReport(context: Context, input: ProfitLossFil
     if (useMonthly) {
       const monthly = await loadProfitLossMonthly(tx, context, filters);
       rows = monthly.rows;
-      months = monthly.months;
+      const monthKeys = monthly.months;
+      months = monthKeys;
       monthlyTotalsBlock = {
-        revenue: monthlyTotals(rows, months, AccountType.REVENUE),
-        expenses: monthlyTotals(rows, months, AccountType.EXPENSE),
+        revenue: monthlyTotals(rows, monthKeys, AccountType.REVENUE),
+        expenses: monthlyTotals(rows, monthKeys, AccountType.EXPENSE),
         net: Object.fromEntries(
-          months.map((month) => [
+          monthKeys.map((month) => [
             month,
-            (monthlyTotals(rows, months, AccountType.REVENUE)[month] ?? 0) - (monthlyTotals(rows, months, AccountType.EXPENSE)[month] ?? 0),
+            (monthlyTotals(rows, monthKeys, AccountType.REVENUE)[month] ?? 0) - (monthlyTotals(rows, monthKeys, AccountType.EXPENSE)[month] ?? 0),
           ]),
         ),
       };

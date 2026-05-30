@@ -1,5 +1,34 @@
 import { LoginForm } from "@/components/LoginForm";
 
+const FUSION4O_URL = "https://fusion4o.com";
+
+function Fusion4oLogoLink({ className }: { className: string }) {
+  return (
+    <a
+      href={FUSION4O_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-block rounded-sm transition-opacity hover:opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/50"
+      aria-label="fusion4o.com"
+    >
+      <img src="/fusion4o-logo.png" alt="fusion4o" className={className} />
+    </a>
+  );
+}
+
+function Fusion4oSiteLink({ className }: { className?: string }) {
+  return (
+    <a
+      href={FUSION4O_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`font-medium transition-colors hover:underline ${className ?? ""}`}
+    >
+      fusion4o.com
+    </a>
+  );
+}
+
 export default function LoginPage() {
   return (
     <main className="flex min-h-screen">
@@ -25,9 +54,9 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10 text-center max-w-sm">
-          <img src="/fusion4o-logo.png" alt="Fusion4o" className="mx-auto mb-8 h-24 w-24 object-contain" />
+          <Fusion4oLogoLink className="mx-auto mb-8 h-24 w-auto max-w-[220px] object-contain" />
 
-          <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">LPG ERP</h1>
+          <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">LPG Management System</h1>
 
           <div className="mx-auto mb-6 h-1 w-16 rounded-full fusion-gradient" />
 
@@ -37,10 +66,10 @@ export default function LoginPage() {
 
           <div className="mt-10 grid grid-cols-2 gap-4 text-left">
             {[
-              { icon: "⚡", label: "Real-time stock tracking" },
-              { icon: "📊", label: "Sales & purchase reports" },
-              { icon: "💳", label: "Payment & receipt management" },
-              { icon: "🔒", label: "Role-based access control" },
+              { icon: "01", label: "Real-time stock tracking" },
+              { icon: "02", label: "Sales & purchase reports" },
+              { icon: "03", label: "Payment & receipt management" },
+              { icon: "04", label: "Role-based access control" },
             ].map((f) => (
               <div
                 key={f.label}
@@ -53,8 +82,9 @@ export default function LoginPage() {
             ))}
           </div>
 
-          <p className="mt-10 text-xs text-slate-500 uppercase tracking-widest">Powered by Fusion4o</p>
-          <p className="mt-1 text-xs text-slate-600">Custom Software & Intelligent Business Systems</p>
+          <p className="mt-10 text-xs text-slate-500 uppercase tracking-widest">
+            Powered by <Fusion4oSiteLink className="text-slate-400 hover:text-slate-300" />
+          </p>
         </div>
       </div>
 
@@ -62,9 +92,11 @@ export default function LoginPage() {
       <div className="flex flex-1 flex-col items-center justify-center bg-slate-50 px-6 py-12">
         {/* Mobile logo */}
         <div className="mb-8 flex flex-col items-center lg:hidden">
-          <img src="/fusion4o-logo.png" alt="Fusion4o" className="h-16 w-16 object-contain mb-3" />
-          <h1 className="text-2xl font-bold text-slate-900">LPG ERP</h1>
-          <p className="mt-1 text-sm text-slate-500">Powered by Fusion4o</p>
+          <Fusion4oLogoLink className="mb-3 h-16 w-auto max-w-[180px] object-contain" />
+          <h1 className="text-2xl font-bold text-slate-900">LPG Management System</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Powered by <Fusion4oSiteLink className="text-slate-600 hover:text-slate-800" />
+          </p>
         </div>
 
         <div className="w-full max-w-md">
@@ -79,7 +111,8 @@ export default function LoginPage() {
           <LoginForm />
 
           <p className="mt-6 text-center text-xs text-slate-400">
-            &copy; {new Date().getFullYear()} Fusion4o. All rights reserved.
+            &copy; {new Date().getFullYear()} LPG Management System ·{" "}
+            <Fusion4oSiteLink className="text-slate-500 hover:text-slate-700" />
           </p>
         </div>
       </div>

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { AccountType, NormalBalance, PermissionAction, PrismaClient, VoucherType } from "@prisma/client";
+import { seedContext } from "./helpers/lpg-fixtures.mjs";
 
 const prisma = new PrismaClient();
 const ledgers = await import("../src/server/services/reports/financial-ledgers.ts");
@@ -13,9 +14,7 @@ function doc(prefix) {
 }
 
 async function fixture() {
-  const company = await prisma.company.findFirstOrThrow({ where: { legalName: "Hasnan Traders" } });
-  const financialYear = await prisma.financialYear.findFirstOrThrow({ where: { companyId: company.id, isActive: true } });
-  const user = await prisma.user.findFirstOrThrow({ where: { companyId: company.id, loginId: "admin" } });
+  const { company, financialYear, user } = await seedContext(prisma);
   const debtors = await prisma.chartAccount.findFirstOrThrow({ where: { companyId: company.id, code: "2004001000" } });
   const cash = await prisma.chartAccount.findFirstOrThrow({ where: { companyId: company.id, name: "Cash in Hand" } });
   return { company, financialYear, user, debtors, cash };

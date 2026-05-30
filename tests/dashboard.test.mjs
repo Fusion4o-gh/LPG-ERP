@@ -44,6 +44,7 @@ test("getDashboardData returns all expected KPI keys", async () => {
   assert.ok(typeof data.kpis.todaySale === "number");
   assert.ok(typeof data.kpis.expenses === "number");
   assert.ok(typeof data.kpis.mExpenses === "number");
+  assert.ok(typeof data.backup.needsFirstBackup === "boolean");
   assert.ok(typeof data.backup.isStale === "boolean");
 });
 

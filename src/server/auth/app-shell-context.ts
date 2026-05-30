@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/prisma";
+import { DEFAULT_THEME, isThemeId, type ThemeId } from "@/lib/theme";
 
 export type AppShellContext = {
   userName: string;
   loginId: string;
   companyName: string;
   financialYearLabel: string;
+  themeId: ThemeId;
 };
 
 export async function getAppShellContext(
@@ -16,6 +18,7 @@ export async function getAppShellContext(
     select: {
       name: true,
       loginId: true,
+      uiTheme: true,
       company: { select: { legalName: true, tradeName: true } },
       financialYear: { select: { label: true } },
     },
@@ -31,7 +34,8 @@ export async function getAppShellContext(
   return {
     userName: user?.name ?? "User",
     loginId: user?.loginId ?? "",
-    companyName: user?.company.tradeName ?? user?.company.legalName ?? "LPG ERP",
+    companyName: user?.company.tradeName ?? user?.company.legalName ?? "LPG Management System",
     financialYearLabel: financialYear?.label ?? "—",
+    themeId: (user?.uiTheme && isThemeId(user.uiTheme) ? user.uiTheme : DEFAULT_THEME) as ThemeId,
   };
 }

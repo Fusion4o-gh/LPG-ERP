@@ -11,6 +11,6 @@ export async function GET(request: Request) {
     const data = await getSaleLpgContext(context, { customerId, itemIds });
     return ok(data);
   } catch (error) {
-    return error instanceof Error ? error.message.includes("required") ? fail(error.message) : serviceError(error);
+    return error instanceof Error && error.message.includes("required") ? fail(error.message) : serviceError(error);
   }
 }

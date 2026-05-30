@@ -149,6 +149,7 @@ model User {
   loginId         String
   email           String?
   passwordHash    String?
+  uiTheme         String       @default("aurora")
   status          RecordStatus @default(ACTIVE)
   lastLoginAt     DateTime?
   createdAt       DateTime     @default(now())

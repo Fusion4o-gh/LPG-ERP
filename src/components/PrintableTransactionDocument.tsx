@@ -154,7 +154,7 @@ export function PrintableTransactionDocument({ documentType, documentNo }: { doc
           </div>
 
           <footer className="border-t border-slate-200 pt-3 text-center text-[11px] text-slate-500">
-            Powered by Fusion4o
+            LPG Management System
           </footer>
         </>
       ) : null}

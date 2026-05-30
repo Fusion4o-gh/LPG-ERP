@@ -17,6 +17,7 @@ test("Phase 3B reusable UI components exist", async () => {
   const components = [
     "src/components/AppShell.tsx",
     "src/components/Sidebar.tsx",
+    "src/components/ModuleTabBar.tsx",
     "src/components/PageHeader.tsx",
     "src/components/DataTable.tsx",
     "src/components/FormSection.tsx",
@@ -49,12 +50,13 @@ test("Phase 3B operational pages are wired to existing APIs", async () => {
   }
 });
 
-test("dashboard and sidebar use LPG ERP operational terminology", async () => {
-  const sidebar = await file("src/components/Sidebar.tsx");
+test("dashboard and navigation use LPG operational terminology", async () => {
+  const nav = await file("src/lib/navigation/modules.ts");
+  const tabBar = await file("src/components/ModuleTabBar.tsx");
   const dashboard = await file("src/app/(protected)/dashboard/page.tsx");
 
   for (const label of ["Purchase Filled Cylinder", "Sale LPG", "Complete Day Sale", "Cylinder Return", "Security Receipt"]) {
-    assert.match(sidebar + dashboard, new RegExp(label));
+    assert.match(nav + tabBar + dashboard, new RegExp(label));
   }
 });
 
@@ -65,11 +67,11 @@ test("Fusion4o branding assets and shell copy are present", async () => {
   const globals = await file("src/app/globals.css");
 
   await exists("public/fusion4o-logo.png");
-  assert.match(rootLayout, /LPG ERP \| Fusion4o/);
-  assert.match(rootLayout, /LPG distribution ERP powered by Fusion4o/);
+  assert.match(rootLayout, /LPG Management System/);
+  assert.match(rootLayout, /Operational LPG distribution, inventory, accounts, and reporting system/);
   assert.match(loginPage, /Operational control for LPG distribution businesses/);
-  assert.match(loginPage, /Custom Software & Intelligent Business Systems/);
-  assert.match(loginPage + sidebar, /Powered by Fusion4o/);
+  assert.match(loginPage, /Real-time stock tracking/);
+  assert.match(loginPage + sidebar, /LPG Management System/);
   assert.match(globals, /--fusion-cyan/);
   assert.match(globals, /--fusion-blue/);
   assert.match(globals, /\.fusion-gradient/);
@@ -147,12 +149,16 @@ test("report pages include shared print action and print metadata", async () => 
 test("print CSS hides navigation and actions while preserving report tables", async () => {
   const globals = await file("src/app/globals.css");
   const sidebar = await file("src/components/Sidebar.tsx");
+  const tabBar = await file("src/components/ModuleTabBar.tsx");
+  const appShell = await file("src/components/AppShell.tsx");
   const reportClient = await file("src/app/(protected)/reports/ReportTableClient.tsx");
 
   assert.match(globals, /@media print/);
   assert.match(globals, /\[data-print-hidden\]/);
   assert.match(globals, /\[data-report-print\] table/);
   assert.match(sidebar, /data-print-hidden/);
+  assert.match(tabBar, /data-print-hidden/);
+  assert.match(appShell, /ModuleTabBar/);
   assert.match(reportClient, /<form[\s\S]*data-print-hidden/);
 });
 

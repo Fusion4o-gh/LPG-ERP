@@ -27,14 +27,14 @@ export function LoginForm() {
       fetch(`/api/auth/login-options?loginId=${encodeURIComponent(loginId.trim())}`)
         .then((res) => res.json())
         .then((body) => {
-          if (!body.success || !body.data?.found) {
+          if (!body.success || !body.found) {
             setFinancialYears([]);
             setCompanyName("");
             return;
           }
-          setFinancialYears(body.data.financialYears ?? []);
-          setCompanyName(body.data.companyName ?? "");
-          setFinancialYearId(body.data.defaultFinancialYearId ?? body.data.financialYears?.[0]?.id ?? "");
+          setFinancialYears(body.financialYears ?? []);
+          setCompanyName(body.companyName ?? "");
+          setFinancialYearId(body.defaultFinancialYearId ?? body.financialYears?.[0]?.id ?? "");
         })
         .catch(() => undefined);
     }, 300);

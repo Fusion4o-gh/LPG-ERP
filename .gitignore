@@ -7,3 +7,6 @@ coverage
 *.log
 backups/
 .local-postgres/
+
+.vercel
+.env*

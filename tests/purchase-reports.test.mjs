@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { CylinderState, PermissionAction, PrismaClient, StockDirection, StockSourceType, VoucherType } from "@prisma/client";
+import { baseFixture } from "./helpers/lpg-fixtures.mjs";
 
 const prisma = new PrismaClient();
 const purchaseReports = await import("../src/server/services/reports/purchase-reports.ts");
@@ -36,12 +37,14 @@ function csvRows(csv) {
 }
 
 async function fixture() {
-  const company = await prisma.company.findFirstOrThrow({ where: { legalName: "Hasnan Traders" } });
-  const financialYear = await prisma.financialYear.findFirstOrThrow({ where: { companyId: company.id, isActive: true } });
-  const user = await prisma.user.findFirstOrThrow({ where: { companyId: company.id, loginId: "admin" } });
-  const seedItem = await prisma.item.findFirstOrThrow({ where: { companyId: company.id, code: "CYL-11.8-PSO" } });
-  const seedVendor = await prisma.vendor.findFirstOrThrow({ where: { companyId: company.id } });
-  return { company, financialYear, user, seedItem, seedVendor };
+  const base = await baseFixture(prisma);
+  return {
+    company: base.company,
+    financialYear: base.financialYear,
+    user: base.user,
+    seedItem: base.seedItem,
+    seedVendor: base.seedVendor,
+  };
 }
 
 async function createTestItem(companyId, seedItem, prefix = "PR-ITEM") {

@@ -2,115 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useMemo } from "react";
+import { breadcrumbsForPath } from "@/lib/navigation/modules";
 import type { AppShellContext } from "@/server/auth/app-shell-context";
 import { FinancialYearSwitcher } from "./FinancialYearSwitcher";
-
-const SEGMENT_LABELS: Record<string, string> = {
-  dashboard: "Dashboard",
-  configuration: "Configuration",
-  operations: "Operations",
-  "sale-purchase": "Sale / Purchase",
-  returns: "Returns",
-  payments: "Payments",
-  reports: "Reports",
-  masters: "Masters",
-  accounting: "Accounting",
-  settings: "Settings",
-  "company-information": "Company Information",
-  "user-management": "User Management",
-  cities: "Cities",
-  area: "Area",
-  "brand-coding": "Brand Coding",
-  "bank-coding": "Bank Coding",
-  "category-coding": "Category Coding",
-  items: "Item Coding",
-  customers: "Customer Coding",
-  vendors: "Vendor Coding",
-  "shop-opening-balance": "Shop Opening Balance",
-  "cash-opening": "Cash Opening",
-  "day-closing": "Day Closing",
-  "customer-opening-balance": "Customer Opening Balance",
-  "vendor-opening-balance": "Vendor Opening Balance",
-  "expense-type-coding": "Expense Type Coding",
-  "purchase-filled-cylinder": "Purchase Filled Cylinder",
-  "purchase-empty-cylinder": "Purchase Empty Cylinder",
-  "purchase-other": "Purchase Other",
-  "complete-day-sale": "Complete Day Sale",
-  "sale-lpg": "Sale LPG",
-  "decanting-sale": "Decanting Sale",
-  "cylinder-conversion": "Cylinder Conversion",
-  "empty-sale": "Empty Sale",
-  "cylinder-return": "Cylinder Return",
-  "purchase-return-cylinder": "Purchase Return Cylinder",
-  "purchase-return-other": "Purchase Return Other",
-  "cash-payment": "Cash Payment",
-  "cash-receipt": "Cash Receipt",
-  "security-receipt": "Security Receipt",
-  "chart-of-accounts": "Chart of Accounts",
-  "journal-vouchers": "Journal Vouchers",
-  "bank-payments-receipts": "Bank Payments / Receipt",
-  "bank-payment": "Bank Payment",
-  "bank-receipt": "Bank Receipt",
-  "sale-between-dates": "Sale B/W Date",
-  "cylinder-conversion-between-dates": "Cylinder Conversion B/W Date",
-  "one-customer-sale-history": "One Customer Sale History",
-  "stock-summary": "Stock Report",
-  "cash-book": "Cash Book",
-  "bank-book": "Bank Book",
-  "vendor-wise-receiving": "Vendor Wise Receiving",
-  "general-ledger": "General Ledger",
-  "customer-ledger": "Customer Ledger",
-  "sale-return": "Sale Return Report",
-  "purchase-return": "Purchase Return Report",
-  "customer-stock-ledger": "Customer Stock Ledger",
-  "daily-activity": "Daily Activity Report",
-  "customer-cylinder-balances": "Access Cylinders",
-  "salewise-profit": "Salewise Profit",
-  "profit-loss": "Profit / Loss Report",
-  "trial-balance": "Trial Balance",
-  "balance-sheet": "Balance Sheet",
-  "database-backup": "Database Backup",
-  "audit-log": "Audit Log",
-  reversals: "Transaction Reversals",
-  roles: "Roles & Permissions",
-  vouchers: "Vouchers",
-  banks: "Banks",
-  "stock-ledger": "Stock Ledger",
-  print: "Print",
-};
-
-function labelForSegment(segment: string) {
-  return SEGMENT_LABELS[segment] ?? segment.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-function breadcrumbsFromPath(pathname: string) {
-  if (pathname === "/dashboard") {
-    return [{ label: "Dashboard", href: "/dashboard" }];
-  }
-
-  const segments = pathname.split("/").filter(Boolean);
-  const crumbs: { label: string; href: string }[] = [{ label: "Dashboard", href: "/dashboard" }];
-
-  let path = "";
-  let skipNext = false;
-  for (const segment of segments) {
-    if (skipNext) {
-      skipNext = false;
-      continue;
-    }
-    if (segment === "print") {
-      skipNext = true;
-      continue;
-    }
-    if (/^c[a-z0-9]{20,}$/i.test(segment) || /^\d+$/.test(segment)) {
-      continue;
-    }
-    path += `/${segment}`;
-    crumbs.push({ label: labelForSegment(segment), href: path });
-  }
-
-  return crumbs;
-}
 
 function formatToday() {
   return new Date().toLocaleDateString("en-PK", {
@@ -120,9 +15,9 @@ function formatToday() {
   });
 }
 
-export function Topbar({ shell }: { shell: AppShellContext }) {
+export function Topbar({ shell, permissions }: { shell: AppShellContext; permissions: string[] }) {
   const pathname = usePathname();
-  const crumbs = breadcrumbsFromPath(pathname);
+  const crumbs = useMemo(() => breadcrumbsForPath(pathname, permissions), [pathname, permissions]);
 
   return (
     <header
@@ -133,12 +28,12 @@ export function Topbar({ shell }: { shell: AppShellContext }) {
         {crumbs.map((crumb, index) => {
           const isLast = index === crumbs.length - 1;
           return (
-            <span key={crumb.href} className="flex min-w-0 items-center gap-1.5">
+            <span key={`${crumb.href}-${index}`} className="flex min-w-0 items-center gap-1.5">
               {index > 0 ? <span className="text-slate-300">/</span> : null}
               {isLast ? (
                 <span className="truncate font-semibold text-slate-900">{crumb.label}</span>
               ) : (
-                <Link href={crumb.href} className="truncate hover:text-blue-700 transition-colors">
+                <Link href={crumb.href} className="accent-link truncate transition-colors">
                   {crumb.label}
                 </Link>
               )}
@@ -192,7 +87,7 @@ export function Topbar({ shell }: { shell: AppShellContext }) {
           <div className="hidden min-w-0 sm:block">
             <p className="truncate text-sm font-semibold text-slate-800 leading-tight">{shell.userName}</p>
             <p className="truncate text-[11px] text-slate-500">
-              <Link href="/configuration/change-password" className="hover:text-blue-700">
+              <Link href="/configuration/change-password" className="accent-link">
                 {shell.loginId}
               </Link>
             </p>

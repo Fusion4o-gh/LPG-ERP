@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import type { AppShellContext } from "@/server/auth/app-shell-context";
+import { ModuleTabBar } from "./ModuleTabBar";
+import { ModuleTransition } from "./ModuleTransition";
 import { Sidebar } from "./Sidebar";
+import { ThemeHydrator } from "./ThemeHydrator";
 import { Topbar } from "./Topbar";
 
 export function AppShell({
@@ -18,6 +21,7 @@ export function AppShell({
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <ThemeHydrator themeId={shell.themeId} />
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
@@ -27,10 +31,10 @@ export function AppShell({
         />
       )}
 
-      <div className="md:flex min-h-screen">
-        {/* Sidebar — fixed drawer on mobile, static column on desktop */}
+      <div className="min-h-screen">
+        {/* Sidebar — fixed drawer on mobile and fixed rail on desktop */}
         <div
-          className={`fixed inset-y-0 left-0 z-40 transition-transform duration-200 md:static md:translate-x-0 ${
+          className={`fixed inset-y-0 left-0 z-40 transition-transform duration-200 md:translate-x-0 ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
           }`}
         >
@@ -38,7 +42,7 @@ export function AppShell({
         </div>
 
         {/* Content column */}
-        <div className="flex flex-1 min-w-0 flex-col">
+        <div className="flex min-h-screen min-w-0 flex-col md:pl-72">
           {/* Mobile top-bar */}
           <header
             data-print-hidden
@@ -58,14 +62,18 @@ export function AppShell({
               <img src="/fusion4o-logo.png" alt="" className="h-6 w-6 object-contain" aria-hidden="true" />
               <span className="truncate text-sm font-bold text-slate-900 tracking-tight">{shell.companyName}</span>
             </div>
-            <span className="shrink-0 rounded-md border border-blue-100 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-800">
+            <span className="accent-chip shrink-0 rounded-md px-2 py-0.5 text-[10px] font-semibold">
               FY {shell.financialYearLabel}
             </span>
           </header>
 
-          <Topbar shell={shell} />
+          <Topbar shell={shell} permissions={permissions} />
 
-          <main className="flex-1 p-5 md:p-7">{children}</main>
+          <ModuleTabBar permissions={permissions} />
+
+          <main className="flex-1 p-5 md:p-7">
+            <ModuleTransition>{children}</ModuleTransition>
+          </main>
         </div>
       </div>
     </div>

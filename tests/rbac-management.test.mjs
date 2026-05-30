@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { PermissionAction, PrismaClient } from "@prisma/client";
+import { seedContext } from "./helpers/lpg-fixtures.mjs";
 
 const prisma = new PrismaClient();
 const sessions = await import("../src/server/auth/session.ts");
@@ -13,10 +14,7 @@ function doc(prefix) {
 }
 
 async function seedFixture() {
-  const company = await prisma.company.findFirstOrThrow({ where: { legalName: "Hasnan Traders" } });
-  const financialYear = await prisma.financialYear.findFirstOrThrow({ where: { companyId: company.id, isActive: true } });
-  const user = await prisma.user.findFirstOrThrow({ where: { companyId: company.id, loginId: "admin" } });
-  return { company, financialYear, user };
+  return seedContext(prisma);
 }
 
 async function isolatedAdminFixture() {

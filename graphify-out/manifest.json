@@ -1,0 +1,1902 @@
+{
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\next-env.d.ts": {
+    "mtime": 1779986887.7451215,
+    "ast_hash": "90426577ad8f38459f3e566411c85589",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\next.config.ts": {
+    "mtime": 1779986887.7451215,
+    "ast_hash": "ce940dfdb356e52e790139b9d6993f79",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\package.json": {
+    "mtime": 1780090347.26904,
+    "ast_hash": "c43c196e2f715a46fca9b64a90b8f602",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\postcss.config.mjs": {
+    "mtime": 1779986887.7451215,
+    "ast_hash": "9edd5f4cc5f7d8a251e834c9ba1f9757",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tailwind.config.ts": {
+    "mtime": 1779986888.002179,
+    "ast_hash": "2e7067b2268905f12406dbaa9b68e663",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tsconfig.json": {
+    "mtime": 1779986888.0268147,
+    "ast_hash": "de271e25e6d93cb2d89ecba2c49328fc",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\docs\\original-live-audit.json": {
+    "mtime": 1779995349.595884,
+    "ast_hash": "8b0b7aa3e72e21fe03f8d5502cc11e56",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\graphify-output\\.graphify_ast.json": {
+    "mtime": 1779986887.7372286,
+    "ast_hash": "d04d362d117886f012b87596830be9ba",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\graphify-output\\.graphify_detect.json": {
+    "mtime": 1779986887.7372286,
+    "ast_hash": "a09be84741fdeb8031be11332564cbdf",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\graphify-output\\graph.json": {
+    "mtime": 1779986887.7424886,
+    "ast_hash": "55bc40dcb2d90c9614dffeb5883b30f6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\graphify-output\\graphify_extract.json": {
+    "mtime": 1779986887.7451215,
+    "ast_hash": "2a3f07ec49690ec6638cce5f86510f97",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\prisma\\seed.js": {
+    "mtime": 1780090630.8925455,
+    "ast_hash": "455d42825c93f753826ab00a64aa5e56",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\prisma\\migrations\\20260507062344_init_foundation\\migration.sql": {
+    "mtime": 1779986887.7486367,
+    "ast_hash": "596f1001fc0f696636c1dbb8b5cc2eff",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\prisma\\migrations\\20260507084535_add_document_sequences\\migration.sql": {
+    "mtime": 1779986887.7486367,
+    "ast_hash": "07381d642315ec0fb38b4e7760e62837",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\prisma\\migrations\\20260528180000_sprint_bank_company_settlement\\migration.sql": {
+    "mtime": 1780082176.1554658,
+    "ast_hash": "20917c8200da4dff781b223468e3b6bd",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\prisma\\migrations\\20260528200000_master_fields_reports\\migration.sql": {
+    "mtime": 1780082176.158467,
+    "ast_hash": "efdd51843cd6b86c107a6b65c36aa298",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\scripts\\patch-exfat-readlink.js": {
+    "mtime": 1779986887.7545748,
+    "ast_hash": "9200a675fa8aebeb55bac984a9117198",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\layout.tsx": {
+    "mtime": 1780090347.2612488,
+    "ast_hash": "482a92b355ef84244397957ed970ce58",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\page.tsx": {
+    "mtime": 1779986887.9409525,
+    "ast_hash": "979c392a777433d75a2588d0686b4cca",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(auth)\\login\\page.tsx": {
+    "mtime": 1780090347.263262,
+    "ast_hash": "8a807b2498f505360d9e790711e7b84b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\layout.tsx": {
+    "mtime": 1779987402.8955932,
+    "ast_hash": "f9f1369469df7bec6da3a207fd9998d7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\accounting\\chart-of-accounts\\page.tsx": {
+    "mtime": 1779986887.7582345,
+    "ast_hash": "8cc0ba0f62f2bbffe0ce3387d56fd97d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\accounting\\vouchers\\page.tsx": {
+    "mtime": 1779986887.7582345,
+    "ast_hash": "909a885c70abf863e3842d67ed30da2c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\accounting\\vouchers\\[id]\\page.tsx": {
+    "mtime": 1779986887.7582345,
+    "ast_hash": "867b6ebfcab321cc9641e9285994e57f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\audit-log\\page.tsx": {
+    "mtime": 1779986887.7582345,
+    "ast_hash": "27f4f7982d445ac5083807c25e155d9b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\banks\\page.tsx": {
+    "mtime": 1780082176.1574712,
+    "ast_hash": "6fd1fab4cd6e8389a1148b6972f2a2f1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\configuration\\area\\page.tsx": {
+    "mtime": 1779986887.7582345,
+    "ast_hash": "499f4d790d8df0f2259d91892a5ba34c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\configuration\\bank-coding\\page.tsx": {
+    "mtime": 1780082176.1554658,
+    "ast_hash": "44fb9a0499b3bda73d84c7faaff6ad33",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\configuration\\brand-coding\\page.tsx": {
+    "mtime": 1779986887.7582345,
+    "ast_hash": "b29592e36cda43e7a88f84804210c1a3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\configuration\\cash-opening\\page.tsx": {
+    "mtime": 1779986887.7582345,
+    "ast_hash": "e809640e200d656d89865966c11d496c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\configuration\\category-coding\\page.tsx": {
+    "mtime": 1779986887.7582345,
+    "ast_hash": "94e76e8e78d9f5dbce141c4b48ea58b5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\configuration\\change-password\\page.tsx": {
+    "mtime": 1780082176.1554658,
+    "ast_hash": "45682e51ecd437788e9a79c56ca93fcd",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\configuration\\cities\\page.tsx": {
+    "mtime": 1779986887.7582345,
+    "ast_hash": "5506f275ddfdf9a532c5fb131a3ff35f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\configuration\\company-information\\page.tsx": {
+    "mtime": 1779986887.7582345,
+    "ast_hash": "d05ba268f8b6343099f2c91eba2b07ae",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\configuration\\customer-opening-balance\\page.tsx": {
+    "mtime": 1779986887.7582345,
+    "ast_hash": "86607f7f3dbe5461b3c6ca00b2085db4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\configuration\\expense-type-coding\\page.tsx": {
+    "mtime": 1779986887.7582345,
+    "ast_hash": "8176af3d6a10ccee78270472a9171d4a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\configuration\\shop-opening-balance\\page.tsx": {
+    "mtime": 1779986887.7582345,
+    "ast_hash": "3e7784bfe0ba2719521a74b3c83a7a7f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\configuration\\user-management\\page.tsx": {
+    "mtime": 1779986887.7733703,
+    "ast_hash": "eabf1217f959fe2f6ebf66820f0389be",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\configuration\\user-management\\UserManagementClient.tsx": {
+    "mtime": 1779986887.7582345,
+    "ast_hash": "89ce686b022027a920c3c10f36adf575",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\configuration\\user-management\\[id]\\map-area\\MapAreaClient.tsx": {
+    "mtime": 1779986887.7715452,
+    "ast_hash": "28fa636cf987fb6dc7fb8c3d03c11dff",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\configuration\\user-management\\[id]\\map-area\\page.tsx": {
+    "mtime": 1779986887.7715452,
+    "ast_hash": "dad083f0115844bbf28d364a04376821",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\configuration\\vendor-opening-balance\\page.tsx": {
+    "mtime": 1779986887.7733703,
+    "ast_hash": "7d45709c52f9900109ee6e1fe7dcc879",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\customer-cylinder-balances\\page.tsx": {
+    "mtime": 1779986887.7753806,
+    "ast_hash": "b2af8c34766839b9b4bdd5eca57c824e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\dashboard\\DashboardClient.tsx": {
+    "mtime": 1780089162.0410166,
+    "ast_hash": "ae5c675ac6d4fd716c92d6412c328b51",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\dashboard\\page.tsx": {
+    "mtime": 1779986887.7753806,
+    "ast_hash": "c9c1205cc1c16fa552e7ea8019bac608",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\database-backup\\DatabaseBackupClient.tsx": {
+    "mtime": 1779986887.7772439,
+    "ast_hash": "8daf6b155a9a8cfc98b7895cdd86a313",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\database-backup\\page.tsx": {
+    "mtime": 1779986887.7772439,
+    "ast_hash": "e8b18fec6f31dc6cdd4ad1d5898f0501",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\masters\\customers\\page.tsx": {
+    "mtime": 1780082176.1564646,
+    "ast_hash": "d64a01e0331f46f616c92c1aa259e4f2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\masters\\items\\page.tsx": {
+    "mtime": 1779986887.779086,
+    "ast_hash": "7ff0a7c1f0487da9308c3195161451c2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\masters\\vendors\\page.tsx": {
+    "mtime": 1780082176.158467,
+    "ast_hash": "17d6f48f2daf7b06fc13e3286c2ce487",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\operations\\complete-day-sale\\page.tsx": {
+    "mtime": 1779986887.779086,
+    "ast_hash": "3217b08874599abc4f8b4a866f40c61a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\operations\\cylinder-return\\page.tsx": {
+    "mtime": 1779986887.779086,
+    "ast_hash": "2e87b62bf939d98d7538637beed151db",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\operations\\cylinder-return\\print\\[documentNo]\\page.tsx": {
+    "mtime": 1779986887.779086,
+    "ast_hash": "a498650315c8ad64fa77518af8342f85",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\operations\\day-closing\\page.tsx": {
+    "mtime": 1779986887.779086,
+    "ast_hash": "4337b98f627238d0a961720345d6ae67",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\operations\\purchase-filled-cylinder\\page.tsx": {
+    "mtime": 1779986887.779086,
+    "ast_hash": "17ce907321bbc3b5259a535be47ce9a1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\operations\\purchase-filled-cylinder\\print\\[documentNo]\\page.tsx": {
+    "mtime": 1779986887.779086,
+    "ast_hash": "65d9fc3c4f1a81a67531089622336834",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\operations\\reversals\\page.tsx": {
+    "mtime": 1779986887.7890213,
+    "ast_hash": "68b7f76c80c97b3f932650198f182d2f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\operations\\sale-lpg\\page.tsx": {
+    "mtime": 1780082176.158467,
+    "ast_hash": "3e05be4c0f272d52b755637408c2d332",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\operations\\sale-lpg\\print\\[documentNo]\\page.tsx": {
+    "mtime": 1779986887.7890213,
+    "ast_hash": "614fd8a30bd1e9fe119b523a6c00bb58",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\payments\\bank-payment\\page.tsx": {
+    "mtime": 1779986887.7890213,
+    "ast_hash": "7fb8fec7a39a830d1794a589afc14e6b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\payments\\bank-payment\\print\\[documentNo]\\page.tsx": {
+    "mtime": 1779986887.7890213,
+    "ast_hash": "e72bf595701988aabeb92e51b5bfb7e8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\payments\\bank-payments-receipts\\page.tsx": {
+    "mtime": 1779986887.7890213,
+    "ast_hash": "c7309213af314411627c6d3c1c3383ec",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\payments\\bank-receipt\\page.tsx": {
+    "mtime": 1779986887.7890213,
+    "ast_hash": "34363fe031afca0ffe6d004508751f42",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\payments\\bank-receipt\\print\\[documentNo]\\page.tsx": {
+    "mtime": 1779986887.7890213,
+    "ast_hash": "62d7c2a4995575a4e3a1a5b6edfbcb1b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\payments\\cash-payment\\page.tsx": {
+    "mtime": 1779986887.7890213,
+    "ast_hash": "520e2a31dbe65824b23b0467c57b74ea",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\payments\\cash-payment\\print\\[documentNo]\\page.tsx": {
+    "mtime": 1779986887.7890213,
+    "ast_hash": "424a3c761a9ab63e067760122aca10af",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\payments\\cash-receipt\\page.tsx": {
+    "mtime": 1779986887.7890213,
+    "ast_hash": "17e5c184dea58a1896ca0f144850cae4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\payments\\cash-receipt\\print\\[documentNo]\\page.tsx": {
+    "mtime": 1779986887.7890213,
+    "ast_hash": "6468c18e78f4e67751b56ff251fa3e24",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\payments\\journal-vouchers\\page.tsx": {
+    "mtime": 1779986887.7890213,
+    "ast_hash": "99c9da2a843a05ee8f24ae50808f0daa",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\payments\\journal-vouchers\\print\\[documentNo]\\page.tsx": {
+    "mtime": 1779986887.7890213,
+    "ast_hash": "038f2dd42fd80c0fb9a551c0febbc85a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\payments\\security-receipt\\page.tsx": {
+    "mtime": 1780082176.1554658,
+    "ast_hash": "acaa785ba6cff96b630b3a88128f2a62",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\payments\\security-receipt\\print\\[documentNo]\\page.tsx": {
+    "mtime": 1779986887.8048863,
+    "ast_hash": "d50f4f30b45888807b80a91c87464f40",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\reports\\DailyActivityReportClient.tsx": {
+    "mtime": 1780082176.158467,
+    "ast_hash": "11bdc8196b92e62daa0ca7a47df3e382",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\reports\\page.tsx": {
+    "mtime": 1780090482.9444048,
+    "ast_hash": "d157769b3f270c5cb909599203bc5b22",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\reports\\ReportTableClient.tsx": {
+    "mtime": 1780082176.158467,
+    "ast_hash": "80884e34f2779d3ba42f6fd5cc14fc43",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\reports\\balance-sheet\\page.tsx": {
+    "mtime": 1779986887.8048863,
+    "ast_hash": "2f48bb8a7d158b9f34032388ad961c48",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\reports\\bank-book\\page.tsx": {
+    "mtime": 1779986887.8048863,
+    "ast_hash": "75f6ab3acbcf4ce9ccab0137120baae6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\reports\\cash-book\\page.tsx": {
+    "mtime": 1779986887.8048863,
+    "ast_hash": "dffae353d8d0355a0b4576bab39d17ef",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\reports\\chart-of-account\\page.tsx": {
+    "mtime": 1780082176.1564646,
+    "ast_hash": "051a44f8848a5fa9fdbd4570fadc1cef",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\reports\\customer-cylinder-balances\\page.tsx": {
+    "mtime": 1779986887.8048863,
+    "ast_hash": "3afd273ddfce2788e327c97c8dc75433",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\reports\\customer-ledger\\page.tsx": {
+    "mtime": 1779986887.8048863,
+    "ast_hash": "f9d99d88535977090504655bfdb7e4fb",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\reports\\customer-stock-ledger\\page.tsx": {
+    "mtime": 1779986887.8117158,
+    "ast_hash": "f817882bf9a2718b1b78c8616d9a9cfa",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\reports\\cylinder-conversion-between-dates\\page.tsx": {
+    "mtime": 1779986887.8117158,
+    "ast_hash": "cf6632f43a738ba4beff842addd2b0fc",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\reports\\daily-activity\\page.tsx": {
+    "mtime": 1780082176.1574712,
+    "ast_hash": "612a36a05ed6245c7f36a8c973233950",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\reports\\general-ledger\\page.tsx": {
+    "mtime": 1779986887.8117158,
+    "ast_hash": "592d1fdf0b35f9b0855ab8459d20d80a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\reports\\group-summary\\page.tsx": {
+    "mtime": 1780082176.1167397,
+    "ast_hash": "a99bdf677eebb96e5dcd4fd023db3870",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\reports\\one-customer-sale-history\\page.tsx": {
+    "mtime": 1779986887.8117158,
+    "ast_hash": "5db4f7679e0b8488d48b33199611780b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\reports\\profit-loss\\page.tsx": {
+    "mtime": 1780082176.1554658,
+    "ast_hash": "1d1a90107e0a4630809e2210f80856bd",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\reports\\purchase-return\\page.tsx": {
+    "mtime": 1779986887.8169563,
+    "ast_hash": "21c06da088fe9c9b32944bc97aa9e90b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\reports\\sale-between-dates\\page.tsx": {
+    "mtime": 1780082176.1574712,
+    "ast_hash": "2cc9a9f47e798554e9f4e9cd508d49e7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\reports\\sale-return\\page.tsx": {
+    "mtime": 1779986887.8169563,
+    "ast_hash": "75564164c7922cb3fbfd7749d0a3b9de",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\reports\\salewise-profit\\page.tsx": {
+    "mtime": 1779986887.8205295,
+    "ast_hash": "0cbf694e134a3e5740cfdf661f63af61",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\reports\\stock-summary\\page.tsx": {
+    "mtime": 1779986887.8205295,
+    "ast_hash": "c0b9a65073ec51c066fc0bd18572aa88",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\reports\\trial-balance\\page.tsx": {
+    "mtime": 1779986887.8205295,
+    "ast_hash": "caae361a11dbe4736ac7406b17cfd4d6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\reports\\vendor-ledger\\page.tsx": {
+    "mtime": 1779986887.8205295,
+    "ast_hash": "3e25e0bdf475629e999896b2e52876ba",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\reports\\vendor-wise-receiving\\page.tsx": {
+    "mtime": 1779986887.8242161,
+    "ast_hash": "d276ec50c816c31b445b7f7ea360aede",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\returns\\purchase-return-cylinder\\page.tsx": {
+    "mtime": 1779986887.8242161,
+    "ast_hash": "a96e3e265505fe786688ed8a0b1b966c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\returns\\purchase-return-cylinder\\print\\[documentNo]\\page.tsx": {
+    "mtime": 1779986887.8242161,
+    "ast_hash": "b4e8125b3d145d9a5505c0fc46e44438",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\returns\\purchase-return-other\\page.tsx": {
+    "mtime": 1779986887.8242161,
+    "ast_hash": "98ab208af7307f1f2119f157cc0d9607",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\returns\\purchase-return-other\\print\\[documentNo]\\page.tsx": {
+    "mtime": 1779986887.8242161,
+    "ast_hash": "051a529771a48c95f62eecd43d138e61",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\sale-purchase\\cylinder-conversion\\page.tsx": {
+    "mtime": 1779986887.8242161,
+    "ast_hash": "1c5e4473def1ee0682c109e7659f1d40",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\sale-purchase\\cylinder-conversion\\print\\[documentNo]\\page.tsx": {
+    "mtime": 1779986887.8242161,
+    "ast_hash": "82cf6e99741a2555a80f5a894b668183",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\sale-purchase\\decanting-sale\\page.tsx": {
+    "mtime": 1779986887.8242161,
+    "ast_hash": "de97334e96e98a4dde73460d34105b1d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\sale-purchase\\decanting-sale\\print\\[documentNo]\\page.tsx": {
+    "mtime": 1779986887.8242161,
+    "ast_hash": "6b092fb48ed2ffd55a66c7335a260a49",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\sale-purchase\\empty-sale\\page.tsx": {
+    "mtime": 1779986887.8242161,
+    "ast_hash": "79dc7e083a359022dcaeca33685dffc8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\sale-purchase\\empty-sale\\print\\[documentNo]\\page.tsx": {
+    "mtime": 1779986887.8242161,
+    "ast_hash": "18fb5348acde87d9d4168663cf02579c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\sale-purchase\\purchase-empty-cylinder\\page.tsx": {
+    "mtime": 1779986887.8242161,
+    "ast_hash": "d32adb1970d0a6b7ae0365a7d0da9f21",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\sale-purchase\\purchase-empty-cylinder\\print\\[documentNo]\\page.tsx": {
+    "mtime": 1779986887.8366156,
+    "ast_hash": "4ae511121154af0d507370aa4e8cf076",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\sale-purchase\\purchase-other\\page.tsx": {
+    "mtime": 1779986887.8366156,
+    "ast_hash": "bc6e40cc41d401457ceea750738ac375",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\sale-purchase\\purchase-other\\print\\[documentNo]\\page.tsx": {
+    "mtime": 1779986887.8395069,
+    "ast_hash": "f21ba66935a3a039da41737167d8367f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\settings\\roles\\page.tsx": {
+    "mtime": 1780090482.9444048,
+    "ast_hash": "91c8cbd2bcbb1d75eb7369bc584022e8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\settings\\roles\\RoleManagementClient.tsx": {
+    "mtime": 1779986887.841067,
+    "ast_hash": "c27a57b9f294f04a3d7990e1938432e3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(protected)\\stock-ledger\\page.tsx": {
+    "mtime": 1779986887.841067,
+    "ast_hash": "6fd1a7327306dc8f8c90ddf111b0a5d0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(setup)\\company\\page.tsx": {
+    "mtime": 1779986887.841067,
+    "ast_hash": "caa5953b8844b7fb7588bc7eef47179a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\(setup)\\financial-years\\page.tsx": {
+    "mtime": 1779986887.841067,
+    "ast_hash": "a1e37fac94c2d5f866c3c52b33536a59",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\accounting\\balances\\route.ts": {
+    "mtime": 1780082176.1554658,
+    "ast_hash": "9cc1a7dbf857def9852583d777e53bf1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\accounting\\chart-of-accounts\\route.ts": {
+    "mtime": 1779986887.841067,
+    "ast_hash": "f517a096db8d870f81e32687cc870333",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\accounting\\journal-vouchers\\route.ts": {
+    "mtime": 1779986887.841067,
+    "ast_hash": "1a2217f13c48f645faf6f11a47df9338",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\accounting\\vouchers\\route.ts": {
+    "mtime": 1779986887.841067,
+    "ast_hash": "504c05cdb3d30964ae98d11709786009",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\accounting\\vouchers\\[id]\\route.ts": {
+    "mtime": 1779986887.841067,
+    "ast_hash": "6c1a893191ccfd33b9a8369bc2a01a42",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\audit-logs\\route.ts": {
+    "mtime": 1779986887.841067,
+    "ast_hash": "ff5dd2f845913f365f55289ffd4fec57",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\auth\\change-password\\route.ts": {
+    "mtime": 1780082176.1574712,
+    "ast_hash": "51130db0106310b1c24f670f11913508",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\auth\\login\\route.ts": {
+    "mtime": 1780082176.1554658,
+    "ast_hash": "b7cac1bd65bd54ad6e614f54120ce04e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\auth\\login-options\\route.ts": {
+    "mtime": 1780082176.1574712,
+    "ast_hash": "6f0d8f4cce0aae2aac8f4cbfe07f2a7c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\auth\\logout\\route.ts": {
+    "mtime": 1779986887.841067,
+    "ast_hash": "1ad3811395584c51ac4d4ada624c44ce",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\auth\\session\\route.ts": {
+    "mtime": 1779986887.8524647,
+    "ast_hash": "93dad64566b8002e791054de29ecf881",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\banks\\route.ts": {
+    "mtime": 1780082176.1574712,
+    "ast_hash": "f2a6e4f97f230277ec69264cca798b24",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\banks\\[id]\\route.ts": {
+    "mtime": 1780082176.1554658,
+    "ast_hash": "83c1f1002f50da66590f4f951a2bc8ac",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\chart-of-accounts\\route.ts": {
+    "mtime": 1779986887.8524647,
+    "ast_hash": "c46450dc54721d65035825d2c275b7b4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\chart-of-accounts\\[id]\\route.ts": {
+    "mtime": 1779986887.8524647,
+    "ast_hash": "b63b4e10a9b4e9e912d671bcbef8c44a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\configuration\\area\\route.ts": {
+    "mtime": 1779986887.8524647,
+    "ast_hash": "bb574cbb8792c98dc7988e181b21f248",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\configuration\\area\\[id]\\route.ts": {
+    "mtime": 1779986887.8524647,
+    "ast_hash": "f5fbe358ea7c7f39d2685968ee27bfb1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\configuration\\brand-coding\\route.ts": {
+    "mtime": 1779986887.8524647,
+    "ast_hash": "885fcbac48eeb08694282e9c79f534c5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\configuration\\brand-coding\\[id]\\route.ts": {
+    "mtime": 1779986887.8524647,
+    "ast_hash": "6d943eec043df129e48ee6e14bd612c3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\configuration\\cash-opening\\route.ts": {
+    "mtime": 1779986887.8524647,
+    "ast_hash": "97140a814622df3fadfb68c8349dd8f5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\configuration\\cash-opening\\[id]\\route.ts": {
+    "mtime": 1779986887.8524647,
+    "ast_hash": "0d35494800c33af00da2dac49885ca4a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\configuration\\category-coding\\route.ts": {
+    "mtime": 1779986887.8524647,
+    "ast_hash": "40ce08fb4fce9d04a254662358fa773c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\configuration\\category-coding\\[id]\\route.ts": {
+    "mtime": 1779986887.8524647,
+    "ast_hash": "4303f62c78a003980d45618fbce2ae46",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\configuration\\cities\\route.ts": {
+    "mtime": 1779986887.8524647,
+    "ast_hash": "46ad6cf85dafd35c572c3e74b92bf805",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\configuration\\cities\\[id]\\route.ts": {
+    "mtime": 1779986887.8524647,
+    "ast_hash": "a00c848cf4f45b397b7e4cd2b8ab99bf",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\configuration\\company-information\\route.ts": {
+    "mtime": 1780082176.158467,
+    "ast_hash": "3b0addf2729a76411610f7caa4256786",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\configuration\\customer-opening-balance\\route.ts": {
+    "mtime": 1779986887.8683271,
+    "ast_hash": "d1fe4110063116a8ad4f72242186296b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\configuration\\customer-opening-balance\\[id]\\route.ts": {
+    "mtime": 1779986887.8524647,
+    "ast_hash": "d6458b01070087e38e9866c6ecf71808",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\configuration\\expense-type-coding\\route.ts": {
+    "mtime": 1779986887.8683271,
+    "ast_hash": "6d3708f21341d94fefbd2152b5b40d4e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\configuration\\expense-type-coding\\[id]\\route.ts": {
+    "mtime": 1779986887.8683271,
+    "ast_hash": "db7880d62b724fef5e0dd50dca6f269b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\configuration\\shop-opening-balance\\route.ts": {
+    "mtime": 1779986887.8683271,
+    "ast_hash": "8795648c953d59e7863d00aad1f1603f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\configuration\\shop-opening-balance\\[id]\\route.ts": {
+    "mtime": 1779986887.8683271,
+    "ast_hash": "edd9068b359a09c2b51d5ade537b82b6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\configuration\\user-management\\route.ts": {
+    "mtime": 1779986887.8683271,
+    "ast_hash": "97476e3d46f361e0f8fe636de5c881a8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\configuration\\user-management\\[id]\\route.ts": {
+    "mtime": 1779986887.8683271,
+    "ast_hash": "c5cb7ecab5796cdbf0bfda33e21fd863",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\configuration\\user-management\\[id]\\map-area\\route.ts": {
+    "mtime": 1779986887.8683271,
+    "ast_hash": "cd67710d1a62a499a2470da90bc2b381",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\configuration\\user-management\\[id]\\reset-password\\route.ts": {
+    "mtime": 1779986887.8683271,
+    "ast_hash": "afec38f2c305f16231295b25c00cbb1f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\configuration\\vendor-opening-balance\\route.ts": {
+    "mtime": 1779986887.8683271,
+    "ast_hash": "4d6769cbd2a75d6b5b28636a927c68bc",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\configuration\\vendor-opening-balance\\[id]\\route.ts": {
+    "mtime": 1779986887.8683271,
+    "ast_hash": "dfd746d39ddb5213957379889d3565d8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\context\\active-financial-year\\route.ts": {
+    "mtime": 1780082176.1564646,
+    "ast_hash": "0b902f7e80473760f5f40da983c7f9cc",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\context\\current-company\\route.ts": {
+    "mtime": 1779986887.8683271,
+    "ast_hash": "682a19bc7fbefed4ae5b9db36fde1872",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\customer-cylinder-balances\\route.ts": {
+    "mtime": 1779986887.8683271,
+    "ast_hash": "44a54e81c858f866562830805afb472b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\customers\\route.ts": {
+    "mtime": 1780082176.158467,
+    "ast_hash": "792f52d2d1539eb68e4a8de61eee7e74",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\customers\\[id]\\route.ts": {
+    "mtime": 1780082176.158467,
+    "ast_hash": "f4fea2c53a6183e0a4c5a82811b9d778",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\dashboard\\route.ts": {
+    "mtime": 1779986887.8683271,
+    "ast_hash": "f9537f92df7255137ab5c49d44e95d8b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\database-backup\\route.ts": {
+    "mtime": 1779986887.884163,
+    "ast_hash": "394accf9e67bc1716661fe1c77c71cf2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\database-backup\\download\\[filename]\\route.ts": {
+    "mtime": 1779986887.884163,
+    "ast_hash": "02e2a68e9467c5aeb891c9ac25f15fe5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\day-closing\\route.ts": {
+    "mtime": 1779986887.884163,
+    "ast_hash": "002d8fa98d9341305ca5f9f91e754cdd",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\day-closing\\reopen\\route.ts": {
+    "mtime": 1779986887.884163,
+    "ast_hash": "09bd4cf34e24ad1529bbfa4673e10a9b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\documents\\next-number\\route.ts": {
+    "mtime": 1780082176.1564646,
+    "ast_hash": "e5cda952bcd66ec5601e7e752d43ed9e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\health\\route.ts": {
+    "mtime": 1779986887.884163,
+    "ast_hash": "253f073e90073646a8ac1513b3222bed",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\items\\route.ts": {
+    "mtime": 1779986887.884163,
+    "ast_hash": "f438d8e148e77a8ff59c00c29dd83298",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\items\\[id]\\route.ts": {
+    "mtime": 1779986887.884163,
+    "ast_hash": "233f1c33e319b0ddaa946fe4be15a5c9",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\masters\\customers\\route.ts": {
+    "mtime": 1779986887.884163,
+    "ast_hash": "253f073e90073646a8ac1513b3222bed",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\masters\\items\\route.ts": {
+    "mtime": 1779986887.884163,
+    "ast_hash": "253f073e90073646a8ac1513b3222bed",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\masters\\vendors\\route.ts": {
+    "mtime": 1779986887.884163,
+    "ast_hash": "253f073e90073646a8ac1513b3222bed",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\payments\\bank-payment\\route.ts": {
+    "mtime": 1779986887.884163,
+    "ast_hash": "81d610f5636ebed62d086893eb063013",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\payments\\bank-receipt\\route.ts": {
+    "mtime": 1779986887.884163,
+    "ast_hash": "8e92f370266aec45ded5b32af90a4b7f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\payments\\cash-payment\\route.ts": {
+    "mtime": 1779986887.884163,
+    "ast_hash": "c168f5f2ee4f3296f660810bd1edd212",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\payments\\cash-receipt\\route.ts": {
+    "mtime": 1779986887.884163,
+    "ast_hash": "6f52a974a3782f16ded18c15d0548ad6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\payments\\security-receipt\\route.ts": {
+    "mtime": 1780082176.1564646,
+    "ast_hash": "a9a11421f8bfe476de4f939231fa1eb7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\purchases\\empty-cylinder\\route.ts": {
+    "mtime": 1780082176.1574712,
+    "ast_hash": "db43db449c5c2105911a2002a7439aed",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\purchases\\filled-cylinder\\route.ts": {
+    "mtime": 1780082176.1167397,
+    "ast_hash": "85d7bbae1475b09f9367d29529102320",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\purchases\\filled-cylinder\\context\\route.ts": {
+    "mtime": 1780082176.158467,
+    "ast_hash": "2a6e20a167861d1ab9aa0866b5d8663f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\purchases\\other\\route.ts": {
+    "mtime": 1780082176.1554658,
+    "ast_hash": "bf87f6826f671e18ca350fbed7882f9f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\rbac\\permissions\\route.ts": {
+    "mtime": 1779986887.899876,
+    "ast_hash": "72621302adb2a8149dbfdd9b2235b19a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\rbac\\roles\\route.ts": {
+    "mtime": 1779986887.9059873,
+    "ast_hash": "58456194156fb91e363db56ca4c0d733",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\rbac\\roles\\[id]\\route.ts": {
+    "mtime": 1779986887.899876,
+    "ast_hash": "179473d45f016c82ad52535cbac09eb6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\reports\\balance-sheet\\route.ts": {
+    "mtime": 1779986887.9059873,
+    "ast_hash": "1b3fccc01a539950e1bb640150395bb9",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\reports\\bank-book\\route.ts": {
+    "mtime": 1779986887.9077985,
+    "ast_hash": "3ff6f1f8752bf10f3a57a34a7936834c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\reports\\cash-book\\route.ts": {
+    "mtime": 1779986887.9077985,
+    "ast_hash": "5c3770b76c7025a355e489ec0c314b10",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\reports\\chart-of-account\\route.ts": {
+    "mtime": 1780082176.158467,
+    "ast_hash": "03d2a25c16a5ecbd6d437a2ab2815e6d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\reports\\customer-cylinder-balances\\route.ts": {
+    "mtime": 1779986887.9077985,
+    "ast_hash": "03bc0a015fe358fcc33f530ff0ea8a0d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\reports\\customer-ledger\\route.ts": {
+    "mtime": 1779986887.9077985,
+    "ast_hash": "3da824754b53f0f860aae8aac8b51536",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\reports\\customer-stock-ledger\\route.ts": {
+    "mtime": 1779986887.9077985,
+    "ast_hash": "4886acf3d74f22abed974c4c05821db5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\reports\\cylinder-conversion-between-dates\\route.ts": {
+    "mtime": 1779986887.9077985,
+    "ast_hash": "a32fcb0ae150312cb2472afccb8925ab",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\reports\\daily-activity\\route.ts": {
+    "mtime": 1780082176.1157367,
+    "ast_hash": "3bf48a83143c2e9eea20a1d993c505f5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\reports\\general-ledger\\route.ts": {
+    "mtime": 1779986887.9077985,
+    "ast_hash": "16bed64c9ad37395c3a68540c0739eed",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\reports\\group-summary\\route.ts": {
+    "mtime": 1780082176.1544542,
+    "ast_hash": "cc475fabd8e99e24a576475b892a5ef8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\reports\\one-customer-sale-history\\route.ts": {
+    "mtime": 1779986887.9077985,
+    "ast_hash": "0292b8b983c54e98501238eb9880841a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\reports\\profit-loss\\route.ts": {
+    "mtime": 1780082176.158467,
+    "ast_hash": "8dbc359e11c914134ce533dbce19cd95",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\reports\\purchase-return\\route.ts": {
+    "mtime": 1779986887.9157896,
+    "ast_hash": "21c2001d8ac8a508c4b90d9a43f21182",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\reports\\sale-between-dates\\route.ts": {
+    "mtime": 1780082176.1574712,
+    "ast_hash": "23d8d6336cb04eac2bc631e72304487f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\reports\\sale-return\\route.ts": {
+    "mtime": 1779986887.9186764,
+    "ast_hash": "a8558ce3d2035cdb9a265ff2c9767f3c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\reports\\salewise-profit\\route.ts": {
+    "mtime": 1779986887.9186764,
+    "ast_hash": "9e7f3c5e6f5f0e245698be92bf4ef219",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\reports\\stock-summary\\route.ts": {
+    "mtime": 1779986887.9186764,
+    "ast_hash": "1cb5a9e7b6f71a54026b334fe463dc19",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\reports\\trial-balance\\route.ts": {
+    "mtime": 1779986887.9186764,
+    "ast_hash": "0a8dee3120635905956dafb2ddf5e9e2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\reports\\vendor-ledger\\route.ts": {
+    "mtime": 1779986887.9186764,
+    "ast_hash": "cf800d3035c3134e7acaabaa68371b57",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\reports\\vendor-wise-receiving\\route.ts": {
+    "mtime": 1779986887.9186764,
+    "ast_hash": "99b3e5ae3526a30b8b1f0eb1faab2f95",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\returns\\cylinder\\route.ts": {
+    "mtime": 1780082176.1564646,
+    "ast_hash": "177c6c0e30c9829abef7adc9ea78f908",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\returns\\purchase-return-cylinder\\route.ts": {
+    "mtime": 1779986887.9186764,
+    "ast_hash": "72dbc1f2a53e5063929831831e6d725c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\returns\\purchase-return-other\\route.ts": {
+    "mtime": 1779986887.9186764,
+    "ast_hash": "a1148a0451b0a1d766bd7f62d15cd593",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\reversals\\route.ts": {
+    "mtime": 1779986887.9186764,
+    "ast_hash": "69074744870cddc8e9f488bd5ae10f31",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\sale-purchase\\cylinder-conversion\\route.ts": {
+    "mtime": 1779986887.9186764,
+    "ast_hash": "7e04dec911a7eecf1e1cbe5c39ff2fdf",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\sale-purchase\\decanting-sale\\route.ts": {
+    "mtime": 1779986887.930741,
+    "ast_hash": "8f3c8058bc7d6066ab98f74ec24f99f8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\sale-purchase\\empty-sale\\route.ts": {
+    "mtime": 1780082176.158467,
+    "ast_hash": "e17743c2ce50f755576b516894b4de92",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\sales\\lpg\\route.ts": {
+    "mtime": 1780082176.1564646,
+    "ast_hash": "e37ecbd798a5e5a7352b8dc2d92c81b7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\sales\\lpg\\batch\\route.ts": {
+    "mtime": 1780082176.1564646,
+    "ast_hash": "732e0c935b7702df88735d1f27e47a31",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\sales\\lpg\\context\\route.ts": {
+    "mtime": 1780089223.958898,
+    "ast_hash": "47b3c41f04d73504a2266a1ad77431a4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\setup\\status\\route.ts": {
+    "mtime": 1779986887.931752,
+    "ast_hash": "253f073e90073646a8ac1513b3222bed",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\stock-ledger\\route.ts": {
+    "mtime": 1779986887.931752,
+    "ast_hash": "b05c137a0eb84718dcf9bac23144114d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\transaction-documents\\[documentType]\\[documentNo]\\route.ts": {
+    "mtime": 1780090347.267286,
+    "ast_hash": "61b8a0fb653c5127ec9eea5793cac1fe",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\vendors\\route.ts": {
+    "mtime": 1780082176.1544542,
+    "ast_hash": "d322586d081eda53367ba7665f6ea5ca",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\app\\api\\vendors\\[id]\\route.ts": {
+    "mtime": 1780082176.1574712,
+    "ast_hash": "84a3489abe8003613612bb85a677a2e1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\ApiError.tsx": {
+    "mtime": 1779986887.9409525,
+    "ast_hash": "e11042c493680f1d688c3f1a39ee6298",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\AppShell.tsx": {
+    "mtime": 1780088317.228552,
+    "ast_hash": "3938cf76c2bf36963f71cd708ca9dbe1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\AuditLogViewer.tsx": {
+    "mtime": 1779986887.9450867,
+    "ast_hash": "904785ef0cae5f8ee9e9c0e5fe4e8161",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\BankCodingClient.tsx": {
+    "mtime": 1780082176.1564646,
+    "ast_hash": "7551fe96a836851e22f6fe3806d4a658",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\BankPaymentsReceiptsClient.tsx": {
+    "mtime": 1779986887.9450867,
+    "ast_hash": "d1c32125b399ce0411740de050191a5c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\BatchSaleForm.tsx": {
+    "mtime": 1780082176.1574712,
+    "ast_hash": "bce003641df9520cd992e6fb22cb5687",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\CompanyInformationForm.tsx": {
+    "mtime": 1780090482.942659,
+    "ast_hash": "addd170b1e5b63693790ef9fb526cbe2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\CylinderConversionForm.tsx": {
+    "mtime": 1779986887.9478376,
+    "ast_hash": "05b0af9df5af9768554c60dfa5fbe677",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\CylinderReturnForm.tsx": {
+    "mtime": 1780082176.1564646,
+    "ast_hash": "bd2bdc10c33adc0b3e0a01964d6f187a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\DataTable.tsx": {
+    "mtime": 1780088070.2015772,
+    "ast_hash": "6a4a5b12008162bc7b483020b3b423de",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\DayClosingPanel.tsx": {
+    "mtime": 1779986887.9505618,
+    "ast_hash": "c2ae6a034ec24e541b23b7b706c55a80",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\DecantingSaleForm.tsx": {
+    "mtime": 1779986887.9505618,
+    "ast_hash": "6d06aa0b47022d0b35ec496915fdceb2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\EmptySaleForm.tsx": {
+    "mtime": 1780082176.1554658,
+    "ast_hash": "f6453ffe49db66a230f0a4da8174a85c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\EntityList.tsx": {
+    "mtime": 1779986887.9505618,
+    "ast_hash": "c491a2dea2bb117f9faebcb45e0beb2d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\FinancialYearSwitcher.tsx": {
+    "mtime": 1780082176.1564646,
+    "ast_hash": "e13641882ea511750e35ac3787d371ff",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\FormSection.tsx": {
+    "mtime": 1779986887.9528086,
+    "ast_hash": "c91e40c331d735626e318dac1220bca9",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\JournalVoucherPage.tsx": {
+    "mtime": 1779986887.9528086,
+    "ast_hash": "1d3e8e7cba8783d05a4008caa5c42142",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\LoginForm.tsx": {
+    "mtime": 1780091017.0074263,
+    "ast_hash": "cb5884decf35883b798ea679d2ad0cfb",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\LogoutButton.tsx": {
+    "mtime": 1779986887.9528086,
+    "ast_hash": "6b1a1b79398848a2f78d772e95c5770a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\MasterDataManager.tsx": {
+    "mtime": 1779986887.954904,
+    "ast_hash": "0d3e97fb02f29dcf4c04ddc58004bd34",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\MultiLinePaymentForm.tsx": {
+    "mtime": 1779986887.954904,
+    "ast_hash": "cc4ee7f59220c8d64c614a96cdb589b7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\OpeningBalanceManagers.tsx": {
+    "mtime": 1779986887.954904,
+    "ast_hash": "b473338832de0181ac756c7ea99837f6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\OperationForm.tsx": {
+    "mtime": 1779986887.9575624,
+    "ast_hash": "11c2f3a3cb7fe249b8d7156b0c2a0410",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\PageHeader.tsx": {
+    "mtime": 1779986887.9575624,
+    "ast_hash": "c454be11e81ed090cd830c6bb08ff2f2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\PrintableTransactionDocument.tsx": {
+    "mtime": 1780090347.2652738,
+    "ast_hash": "8da1423163f5722cc7075914732e201b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\ProfitLossReportClient.tsx": {
+    "mtime": 1780082176.1574712,
+    "ast_hash": "fc083b2c8a47a78acedee4cd798f2d5a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\PurchaseEmptyOtherForm.tsx": {
+    "mtime": 1780082176.1574712,
+    "ast_hash": "93651a648ff93ca8f5d4a864edb7094e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\PurchaseFilledCylinderForm.tsx": {
+    "mtime": 1780082176.1574712,
+    "ast_hash": "11af3ab68c80f9e9672ab585e81feee8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\PurchaseReturnForm.tsx": {
+    "mtime": 1779986887.9598475,
+    "ast_hash": "469115b01196e93cebcb472a3e17dfa8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\ReversalPanel.tsx": {
+    "mtime": 1779986887.9598475,
+    "ast_hash": "d193cbab7c8df2b314b312267fbf5a05",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\SaleLpgForm.tsx": {
+    "mtime": 1780082176.1554658,
+    "ast_hash": "be7732d7fa7851aca29a83bd4847b708",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\SaleLpgList.tsx": {
+    "mtime": 1780082176.1564646,
+    "ast_hash": "9b173f915f65c4480476afb62ab44221",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\SecurityReceiptForm.tsx": {
+    "mtime": 1780082176.1554658,
+    "ast_hash": "4b1aab978c35481a23c528262f0feb79",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\SettlementPanel.tsx": {
+    "mtime": 1780082176.1574712,
+    "ast_hash": "055856359d209baf74ff60ac88f43ff0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\Sidebar.tsx": {
+    "mtime": 1780090347.2652738,
+    "ast_hash": "f5fcc25c98c3db07116c909273235707",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\StockLedgerPageClient.tsx": {
+    "mtime": 1779986887.962142,
+    "ast_hash": "d8869d590e35f35f86f47b99fd2530a5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\SubmitButton.tsx": {
+    "mtime": 1779986887.962142,
+    "ast_hash": "3686b331c4ea39d255cf97e76a1f74cb",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\SuccessMessage.tsx": {
+    "mtime": 1779986887.962142,
+    "ast_hash": "d342a4b5c50c4b5f576fcc34167510a5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\Topbar.tsx": {
+    "mtime": 1780082176.1544542,
+    "ast_hash": "189cb03da9608ab683c5e7428bd1465b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\VoucherDetailPageClient.tsx": {
+    "mtime": 1779986887.9638803,
+    "ast_hash": "f929adf65d69aeda701b2d84a9627cbf",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\components\\VoucherListPageClient.tsx": {
+    "mtime": 1779986887.9638803,
+    "ast_hash": "d4580203f27441283f27c6bac6f0087a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\lib\\accounting.ts": {
+    "mtime": 1779986887.9658902,
+    "ast_hash": "8d59ad5b6a60659047cb1d8f1ccd940f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\lib\\api-client.ts": {
+    "mtime": 1779986887.9658902,
+    "ast_hash": "d481ecaea3583216441951b6220637b2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\lib\\api-response.ts": {
+    "mtime": 1779986887.9658902,
+    "ast_hash": "434870f0e05dd7bf0fd0015ab7c180f4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\lib\\audit.ts": {
+    "mtime": 1779986887.9658902,
+    "ast_hash": "5af9ee92dc0720ad6c7fd25cf40de98e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\lib\\form-validation.ts": {
+    "mtime": 1779986887.9658902,
+    "ast_hash": "53db06b9bd4986dc305038cc91072337",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\lib\\permissions.ts": {
+    "mtime": 1779986887.9658902,
+    "ast_hash": "480c3e7bd35b02de4f3caa3001d2d6f3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\lib\\prisma.ts": {
+    "mtime": 1779986887.9658902,
+    "ast_hash": "c154a8d6f67f7a7b6775c1f21567b7f7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\lib\\rbac.ts": {
+    "mtime": 1779986887.9658902,
+    "ast_hash": "6d99aaa3822fc5fa3b2c547a747d7db1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\lib\\settlement.ts": {
+    "mtime": 1780082176.1574712,
+    "ast_hash": "c0bf17c321931440994c57f3e9ed3a94",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\api\\master-body.ts": {
+    "mtime": 1780082176.1554658,
+    "ast_hash": "02a4efbbba434ba1dc8f9986eb80bbdd",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\api\\request-context.ts": {
+    "mtime": 1779986887.9658902,
+    "ast_hash": "1ff9ae8772d7f7b7fe56d91899979f3d",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\api\\responses.ts": {
+    "mtime": 1779986887.9658902,
+    "ast_hash": "1475aa142244b184f35f41f676ce2c55",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\api\\validation.ts": {
+    "mtime": 1780082176.1544542,
+    "ast_hash": "4d018e94c738ffc207d7117614b9e826",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\auth\\app-shell-context.ts": {
+    "mtime": 1780090347.267286,
+    "ast_hash": "ab75543d9877c16fc5e410927739b087",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\auth\\session-cookies.ts": {
+    "mtime": 1779986887.9720924,
+    "ast_hash": "413120826a2fa06c5a5f506dbe0832fd",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\auth\\session.ts": {
+    "mtime": 1779986887.9720924,
+    "ast_hash": "6304889356fd046d04bf0271d5ffd793",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\accounting\\account-balances.ts": {
+    "mtime": 1780082176.1554658,
+    "ast_hash": "2f0d16dc7c6c662485e8c2bf78a5ca5e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\accounting\\accounts.ts": {
+    "mtime": 1780082176.158467,
+    "ast_hash": "e9e4d0482027d2d06290d3dafa644598",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\accounting\\document-numbers.ts": {
+    "mtime": 1780082176.1544542,
+    "ast_hash": "c6296c8c6481aad1a0b537995029f9c1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\accounting\\journal-voucher.ts": {
+    "mtime": 1779986887.975991,
+    "ast_hash": "edc8699da16a557f1ea545843001512e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\accounting\\settlement-vouchers.ts": {
+    "mtime": 1780089291.127307,
+    "ast_hash": "46b49246a5dc2db5cc7850bbc772c6f2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\accounting\\vouchers.ts": {
+    "mtime": 1779986887.975991,
+    "ast_hash": "5ad06624a18d9d04432b619adba15dd1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\audit\\audit-log.ts": {
+    "mtime": 1779986887.975991,
+    "ast_hash": "f02cf1ee574d3f80d00a9586e439e842",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\audit\\audit-read.ts": {
+    "mtime": 1779986887.975991,
+    "ast_hash": "f62c2dd10e6b81fc45a6f2255ab4b625",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\backup\\database-backup.ts": {
+    "mtime": 1780082176.1167397,
+    "ast_hash": "96ffbe08e3da9be6c97f2e5a5c0f43d7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\company\\company-information.ts": {
+    "mtime": 1780082176.1564646,
+    "ast_hash": "36fd83f2e2cd6270df2c842942010402",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\dashboard\\dashboard.ts": {
+    "mtime": 1780082176.1544542,
+    "ast_hash": "4f1f657fbc61fb96da29e3f8c02ce5cf",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\inventory\\cylinder-conversion.ts": {
+    "mtime": 1779986887.9796526,
+    "ast_hash": "bc818dcf61e4141db046d8712a878995",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\inventory\\day-closing-operations.ts": {
+    "mtime": 1779986887.9796526,
+    "ast_hash": "3e20594fff0c9217724e4256e91c3064",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\inventory\\day-closing.ts": {
+    "mtime": 1779986887.9796526,
+    "ast_hash": "2cd046e5265ae8c66679958ea4ba5f68",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\inventory\\stock-availability.ts": {
+    "mtime": 1780082176.158467,
+    "ast_hash": "d4aebe8c5538604c32cef264eb4d9cb7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\inventory\\stock-ledger.ts": {
+    "mtime": 1779986887.9796526,
+    "ast_hash": "8716cd8a9c0c32cca8db9fdb12144ac6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\master-data\\master-data.ts": {
+    "mtime": 1780089339.992539,
+    "ast_hash": "831f667ff2037b75eea51ff1421c059b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\opening-balances\\opening-balances.ts": {
+    "mtime": 1779986887.9796526,
+    "ast_hash": "1c444558163495d707b7189c3b955ad4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\payments\\bank-payment.ts": {
+    "mtime": 1779986887.986807,
+    "ast_hash": "bbd11ddfc22ee9d89ac989adc57d1225",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\payments\\bank-receipt.ts": {
+    "mtime": 1779986887.986807,
+    "ast_hash": "d41306a140b5bd8d5c536fd9e2e74d88",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\payments\\cash-payment.ts": {
+    "mtime": 1779986887.986807,
+    "ast_hash": "54bf2b4b94c578d6d392899ee85cecdf",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\payments\\cash-receipt.ts": {
+    "mtime": 1779986887.9887843,
+    "ast_hash": "99a00c9491e0607b5fc1473294766cbe",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\payments\\payment-services.ts": {
+    "mtime": 1780082176.1554658,
+    "ast_hash": "65946374fe7496dec7f594f27a88e390",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\payments\\security-receipt.ts": {
+    "mtime": 1779986887.9887843,
+    "ast_hash": "d60fdb27e5fb32c21b5b9efc93982da8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\purchases\\purchase-context.ts": {
+    "mtime": 1780082176.1574712,
+    "ast_hash": "ce6b4d84405e9c02c26adb08b5fb8fe2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\purchases\\purchase-empty-other.ts": {
+    "mtime": 1780082176.1564646,
+    "ast_hash": "e54e90833a2b45d58d2567aba9afe4e9",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\purchases\\purchase-filled-cylinder.ts": {
+    "mtime": 1780089415.7515275,
+    "ast_hash": "bf8687f7884b7703839111b0f02033a6",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\rbac\\enforce.ts": {
+    "mtime": 1779986887.990806,
+    "ast_hash": "12b42ba3056a3893bb31e2433bbad463",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\rbac\\permissions.ts": {
+    "mtime": 1779986887.9928732,
+    "ast_hash": "24e79686f9dacd39ce1e8f6908fd7a1e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\rbac\\role-management.ts": {
+    "mtime": 1779986887.9928732,
+    "ast_hash": "c900752875ee0069f8e5634cc83e01b7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\reports\\accounting-reports.ts": {
+    "mtime": 1780082176.1564646,
+    "ast_hash": "4f483d7c4dabbf291696969493bd06b9",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\reports\\financial-ledgers.ts": {
+    "mtime": 1780089465.1471293,
+    "ast_hash": "f2cf863077a43cb88fd87beb8cc8f430",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\reports\\operational-reports.ts": {
+    "mtime": 1780082176.1554658,
+    "ast_hash": "a476ff4b776361525b604e8d1a31715c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\reports\\purchase-reports.ts": {
+    "mtime": 1779986887.9949267,
+    "ast_hash": "04fa2093787991c227c0288114503eae",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\reports\\sales-reports.ts": {
+    "mtime": 1780090501.0834546,
+    "ast_hash": "76136fd8590117b1e63254305ccda6b3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\reports\\stock-cylinder-reports.ts": {
+    "mtime": 1779986887.9949267,
+    "ast_hash": "c2651849652ae4921f07dd90b1c0ee3f",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\returns\\cylinder-return.ts": {
+    "mtime": 1780082176.1564646,
+    "ast_hash": "90af1ee3faed79efb81f8680b93c680a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\returns\\purchase-return.ts": {
+    "mtime": 1779986887.998261,
+    "ast_hash": "1371da149f6433504aefec326a054c3a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\reversals\\reversal-policy.ts": {
+    "mtime": 1779986888.0001788,
+    "ast_hash": "ba87ba9bd5c345eaff091ba5ec779ce1",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\sales\\decanting-sale.ts": {
+    "mtime": 1779986888.0001788,
+    "ast_hash": "76ef895edde9f3bd8207d546ff84231b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\sales\\empty-sale.ts": {
+    "mtime": 1780082176.1564646,
+    "ast_hash": "9261628744736807f3f1fd3fc65ab223",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\sales\\sale-context.ts": {
+    "mtime": 1780082176.1574712,
+    "ast_hash": "91ac3936edd06d7e010aff160e69e7e4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\sales\\sale-lpg.ts": {
+    "mtime": 1780090552.6501658,
+    "ast_hash": "3f1deb59ef60a7ea9c180c9977685876",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\src\\server\\services\\user-management\\user-management.ts": {
+    "mtime": 1779986888.002179,
+    "ast_hash": "b29a8252f7b0582bf66a35d9d52665e4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\api-contract.test.mjs": {
+    "mtime": 1780082176.1564646,
+    "ast_hash": "0a1a810883fa3cde817512065c194a70",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\bank-book.test.mjs": {
+    "mtime": 1779986888.0042794,
+    "ast_hash": "ce951c095d79529878fbab9bc966f487",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\bank-payments-receipts.test.mjs": {
+    "mtime": 1779986888.0042794,
+    "ast_hash": "5003d3f13aa47ffe10ab1be85eff8f61",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\company-information.test.mjs": {
+    "mtime": 1779986888.0042794,
+    "ast_hash": "3013331ccf56292ffc6a0d2ed429d637",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\configuration-master-data.test.mjs": {
+    "mtime": 1779986888.0042794,
+    "ast_hash": "65a0d753b1ca39ed9650a006173996b2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\cylinder-conversion.test.mjs": {
+    "mtime": 1779986888.0042794,
+    "ast_hash": "a5dd1c1698dc2e5962530cd301ac6943",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\dashboard.test.mjs": {
+    "mtime": 1780082176.1574712,
+    "ast_hash": "1a7778ca8e650bc79d2a25c1bc812019",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\database-backup.test.mjs": {
+    "mtime": 1779986888.009224,
+    "ast_hash": "10e36d92ffb36f922bb629b9944681bf",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\decanting-sale.test.mjs": {
+    "mtime": 1779986888.009224,
+    "ast_hash": "cc889a05a58be6943a2a75374bbce7f8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\empty-sale.test.mjs": {
+    "mtime": 1779986888.0109625,
+    "ast_hash": "7e0fcd36b9f169a5430f42a69adf1536",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\financial-ledger-reports.test.mjs": {
+    "mtime": 1780082176.1554658,
+    "ast_hash": "51e51e1ef5425eabdbb13941c79b8c86",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\general-ledger.test.mjs": {
+    "mtime": 1779986888.0109625,
+    "ast_hash": "9da6975323fd59be8a4fba446067bac2",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\journal-voucher.test.mjs": {
+    "mtime": 1779986888.0109625,
+    "ast_hash": "57b1f4ad00796f62a95edb7ef62ef648",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\multi-line-payments.test.mjs": {
+    "mtime": 1779986888.0139604,
+    "ast_hash": "44b347c28580238096cfc36c9f762c47",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\opening-balances.test.mjs": {
+    "mtime": 1779986888.0139604,
+    "ast_hash": "fd2c05a8a38f2794b88d0af70a44e0cf",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\operational-reports.test.mjs": {
+    "mtime": 1780082176.158467,
+    "ast_hash": "d68cfc9e33b65950ce91add0711a7fa7",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\phase3c-auth-read.test.mjs": {
+    "mtime": 1779986888.0139604,
+    "ast_hash": "fddfc479bed0d308bf6f8c818a044b2a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\phase3d-controls.test.mjs": {
+    "mtime": 1779986888.0139604,
+    "ast_hash": "65d703ddfb5bec589f2ff21eba0e2eaa",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\purchase-empty-other.test.mjs": {
+    "mtime": 1779986888.0139604,
+    "ast_hash": "841fb24901abd5d9f99e82dee19fbc80",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\purchase-reports.test.mjs": {
+    "mtime": 1779986888.0139604,
+    "ast_hash": "5067088de77176beae7b4744aa358dec",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\purchase-return.test.mjs": {
+    "mtime": 1779986888.0190065,
+    "ast_hash": "4f1df28746c8483fab1da9524f440c17",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\rbac-management.test.mjs": {
+    "mtime": 1779986888.0190065,
+    "ast_hash": "ca8c12ed995d11df08b925f440d58e29",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\reversal-services.test.mjs": {
+    "mtime": 1779986888.0190065,
+    "ast_hash": "c615ee21eb1fb3fc29b1e456d48c875c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\sales-reports.test.mjs": {
+    "mtime": 1780082176.1564646,
+    "ast_hash": "f2b4b63322359af5b751e14a216cedef",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\salewise-profit.test.mjs": {
+    "mtime": 1779986888.0190065,
+    "ast_hash": "2a0bf182621d79418f9b305b4014dc4b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\schema-foundation.test.mjs": {
+    "mtime": 1779986888.0190065,
+    "ast_hash": "26d2a7ed74bd3646c2200819271489ce",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\service-layer.test.mjs": {
+    "mtime": 1780082176.158467,
+    "ast_hash": "57dee27a0f6955d28e20795273651ef5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\stock-cylinder-reports.test.mjs": {
+    "mtime": 1779986888.0190065,
+    "ast_hash": "5d213fbe158774b915cbbf458e28000a",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\transaction-documents.test.mjs": {
+    "mtime": 1779986888.0190065,
+    "ast_hash": "88b766da1fd12cad040000d85d593f8b",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\ui-phase3b.test.mjs": {
+    "mtime": 1780082176.1544542,
+    "ast_hash": "5273410273195a85bf7d78b5cbc24832",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\user-management.test.mjs": {
+    "mtime": 1779986888.0238163,
+    "ast_hash": "eb23c64b73954d00a5a8cf21afb478d0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\user-map-area.test.mjs": {
+    "mtime": 1779986888.0238163,
+    "ast_hash": "bb6cfaa02f0bf7e10fecd1615cd2d83c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\vendor-opening-balance.test.mjs": {
+    "mtime": 1779986888.0238163,
+    "ast_hash": "cf682986c54a29ddf6f52e11d7e12249",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\tests\\helpers\\lpg-fixtures.mjs": {
+    "mtime": 1779986888.0109625,
+    "ast_hash": "ea7bbcacfa04b219aadfe31b2e743067",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\Wireframe\\design-canvas.jsx": {
+    "mtime": 1779986887.6431293,
+    "ast_hash": "b44fadfcdab065bf146dfa31c606922c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\Wireframe\\erp-dashboard.jsx": {
+    "mtime": 1779986887.6431293,
+    "ast_hash": "a30991db2653d87468c53b74d7377563",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\Wireframe\\erp-ledger.jsx": {
+    "mtime": 1779986887.6470869,
+    "ast_hash": "47336577d5d917963b2b09e65d784953",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\Wireframe\\erp-primitives.jsx": {
+    "mtime": 1779986887.6470869,
+    "ast_hash": "14cb6c9f795918397e259c89672bb42e",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\Wireframe\\erp-sale-day.jsx": {
+    "mtime": 1779986887.6470869,
+    "ast_hash": "75ac67aa00e0d2f9e4d886746ca0db95",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\Wireframe\\erp-sale-list.jsx": {
+    "mtime": 1779986887.6470869,
+    "ast_hash": "1f0627f02ab4388dacacd0b966e07612",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\Wireframe\\erp-sale-new.jsx": {
+    "mtime": 1779986887.6470869,
+    "ast_hash": "d9b0eccb73265a2cf5cf5eb7d929e1d8",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\Wireframe\\erp-settings.jsx": {
+    "mtime": 1779986887.650793,
+    "ast_hash": "8d51b291b1f989d2872686ff3b97b1b3",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\Wireframe\\erp-shell.jsx": {
+    "mtime": 1779986887.650793,
+    "ast_hash": "6b45f0dd191b9302d61a01f32d7efb13",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\Wireframe\\tweaks-panel.jsx": {
+    "mtime": 1779986887.6533058,
+    "ast_hash": "a947ae7d089aa0c940dca18a2be3f854",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\Wireframe\\_combined_components.jsx": {
+    "mtime": 1779986887.6431293,
+    "ast_hash": "4b345b407b5d91ab931ea2c9e90112d4",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\# ERP Reverse Engineering Report.txt": {
+    "mtime": 1779986887.6193898,
+    "ast_hash": "e74613be94c55e997d640dfa05217aa0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\docker-compose.yml": {
+    "mtime": 1779986887.6533058,
+    "ast_hash": "e6c48e9077bac89e986f8029ddf5fd20",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\docs\\architecture-decisions.md": {
+    "mtime": 1779986887.6533058,
+    "ast_hash": "e49a0fcfd5be5a8d8c450f6778416f45",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\docs\\current-erp-inventory.md": {
+    "mtime": 1779986887.6533058,
+    "ast_hash": "a1da6b4a32afe617f0a509857cc40f28",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\docs\\development-workflow.md": {
+    "mtime": 1779986887.6555767,
+    "ast_hash": "00a26e028dde842389e7df4de1639e24",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\docs\\graphify-usage.md": {
+    "mtime": 1779986887.6555767,
+    "ast_hash": "636a37b92dedeb93dd036faa0c53879c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\docs\\original-module-study-build-plan.md": {
+    "mtime": 1779995500.802957,
+    "ast_hash": "04b817c63f111d7b1b24f672a894a925",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\docs\\parity-roadmap.md": {
+    "mtime": 1780086500.7467902,
+    "ast_hash": "310c7902398ef500e4cf656a91b3b158",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\docs\\phase-1-foundation.md": {
+    "mtime": 1779986887.6555767,
+    "ast_hash": "daf56e767aba8cad51b06463f1c1539c",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\docs\\revised-handoff-plan.md": {
+    "mtime": 1780086500.7477937,
+    "ast_hash": "697f5921fbce2ca35b8eef0de14c6578",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\docs\\uat-legacy-parity-checklist.md": {
+    "mtime": 1780082176.158467,
+    "ast_hash": "62c67b9cd70d55ba2424518b673543fa",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\graphify-output\\graph.html": {
+    "mtime": 1779986887.7409787,
+    "ast_hash": "331d0b64577278cc3f3ddae124615ea5",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\graphify-output\\GRAPH_REPORT.md": {
+    "mtime": 1779986887.7372286,
+    "ast_hash": "32d412e8dd5e2da02816d03c9b02aa53",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\Wireframe\\Hasnan Traders ERP.html": {
+    "mtime": 1779986887.6231406,
+    "ast_hash": "4e7d03537b83151f04c1c3b015fcb5c0",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\Wireframe\\LPG ERP \u2013 Wireframes.pdf": {
+    "mtime": 1779986887.641115,
+    "ast_hash": "a5a009183a5812d850717779b91a5807",
+    "semantic_hash": ""
+  },
+  "C:\\Users\\fusion4o\\Documents\\GitHub\\LPG-ERP\\public\\fusion4o-logo.png": {
+    "mtime": 1779986887.7545748,
+    "ast_hash": "420a2c4264e52ba6b701d36b04356f1f",
+    "semantic_hash": ""
+  }
+}

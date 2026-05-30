@@ -208,7 +208,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ docu
 
     return ok({
       document: {
-        heading: "LPG ERP",
+        heading: "LPG Management System",
         type: config.type,
         number: documentNo,
         date,

@@ -24,9 +24,19 @@ export type TriggerBackupResult = {
 };
 
 function ensureBackupDir() {
-  if (!fs.existsSync(BACKUP_DIR)) {
-    fs.mkdirSync(BACKUP_DIR, { recursive: true });
+  if (process.env.VERCEL === "1") return false;
+  try {
+    if (!fs.existsSync(BACKUP_DIR)) {
+      fs.mkdirSync(BACKUP_DIR, { recursive: true });
+    }
+    return true;
+  } catch {
+    return false;
   }
+}
+
+function localBackupsAvailable() {
+  return ensureBackupDir();
 }
 
 export function isPgDumpAvailable(): boolean {
@@ -49,7 +59,23 @@ async function checkPermission(userId: string) {
 export async function triggerBackup(context: Context): Promise<TriggerBackupResult> {
   await checkPermission(context.userId);
 
-  ensureBackupDir();
+  if (!localBackupsAvailable()) {
+    await prisma.$transaction(async (tx) => {
+      await writeAuditLog(tx, {
+        companyId: context.companyId,
+        userId: context.userId,
+        action: AuditAction.CREATE,
+        entityType: "DatabaseBackup",
+        entityId: `backup-attempt-${Date.now()}`,
+        after: { status: "skipped", reason: "local backup directory unavailable" },
+      });
+    });
+    return {
+      success: false,
+      pgDumpAvailable: false,
+      message: "Local database backups are not available in this hosting environment. Use your database provider's backup tools instead.",
+    };
+  }
 
   const pgAvailable = isPgDumpAvailable();
 
@@ -104,14 +130,18 @@ export async function triggerBackup(context: Context): Promise<TriggerBackupResu
 }
 
 export function listBackupFiles(): BackupFile[] {
-  ensureBackupDir();
-  const files = fs.readdirSync(BACKUP_DIR).filter((f) => /^backup-[\w.-]+\.(dump|sql|gz)$/.test(f));
-  return files
-    .map((filename) => {
-      const stat = fs.statSync(path.join(BACKUP_DIR, filename));
-      return { filename, size: stat.size, createdAt: stat.birthtime.toISOString() };
-    })
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  if (!localBackupsAvailable()) return [];
+  try {
+    const files = fs.readdirSync(BACKUP_DIR).filter((f) => /^backup-[\w.-]+\.(dump|sql|gz)$/.test(f));
+    return files
+      .map((filename) => {
+        const stat = fs.statSync(path.join(BACKUP_DIR, filename));
+        return { filename, size: stat.size, createdAt: stat.birthtime.toISOString() };
+      })
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  } catch {
+    return [];
+  }
 }
 
 export async function listBackups(context: Context): Promise<BackupFile[]> {

@@ -25,10 +25,10 @@ export function DataTable<T extends Record<string, unknown>>({
         <div className="overflow-x-auto">
           <table className="min-w-full border-collapse text-sm">
             <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
-                {columns.map((column) => (
+              <tr className="report-table-head">
+                {columns.map((column, columnIndex) => (
                   <th
-                    key={String(column.key)}
+                    key={`${String(column.key)}-${columnIndex}`}
                     className={`whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-400 ${
                       isNumericColumn(column.label) ? "text-right" : "text-left"
                     }`}
@@ -41,8 +41,8 @@ export function DataTable<T extends Record<string, unknown>>({
             <tbody className="divide-y divide-slate-100">
               {Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i}>
-                  {columns.map((column) => (
-                    <td key={String(column.key)} className="px-4 py-3">
+                  {columns.map((column, columnIndex) => (
+                    <td key={`${String(column.key)}-${columnIndex}`} className="px-4 py-3">
                       <div className="h-3.5 rounded-md bg-slate-100 animate-pulse" style={{ width: isNumericColumn(column.label) ? "60%" : "80%", marginLeft: isNumericColumn(column.label) ? "auto" : undefined }} />
                     </td>
                   ))}
@@ -60,10 +60,10 @@ export function DataTable<T extends Record<string, unknown>>({
       <div className="overflow-x-auto">
         <table className="min-w-full border-collapse text-sm">
           <thead className={stickyHeader ? "sticky top-0 z-10" : undefined}>
-            <tr className="bg-slate-50 border-b border-slate-200">
-              {columns.map((column) => (
+            <tr className="report-table-head">
+              {columns.map((column, columnIndex) => (
                 <th
-                  key={String(column.key)}
+                  key={`${String(column.key)}-${columnIndex}`}
                   className={`whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500 ${
                     isNumericColumn(column.label) ? "text-right" : "text-left"
                   }`}
@@ -90,11 +90,11 @@ export function DataTable<T extends Record<string, unknown>>({
               rows.map((row, index) => (
                 <tr
                   key={String(row.id ?? index)}
-                  className="hover:bg-blue-50/30 transition-colors"
+                  className="accent-row-hover transition-colors"
                 >
-                  {columns.map((column) => (
+                  {columns.map((column, columnIndex) => (
                     <td
-                      key={String(column.key)}
+                      key={`${String(column.key)}-${columnIndex}`}
                       className={`whitespace-nowrap px-4 py-2.5 text-sm text-slate-700 ${
                         isNumericColumn(column.label) ? "text-right tabular-nums font-medium" : ""
                       }`}

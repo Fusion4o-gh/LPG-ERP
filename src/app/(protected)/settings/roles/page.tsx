@@ -11,7 +11,7 @@ export default async function RolesPage() {
 
   return (
     <>
-      <PageHeader title="Roles & Permissions" description="Manage operational access for LPG ERP users." />
+      <PageHeader title="Roles & Permissions" description="Manage operational access for LPG Management System users." />
       <RoleManagementClient canManage={canManage} />
     </>
   );

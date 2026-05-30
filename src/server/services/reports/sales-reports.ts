@@ -298,7 +298,7 @@ export async function getSaleReturnReport(context: Context, input: ReportFilters
 }
 
 export async function getSaleBetweenDatesReportCsv(context: Context, input: SaleReportFilters = {}) {
-  const rows = await getSaleBetweenDatesReport(context, input);
+  const rows = (await getSaleBetweenDatesReport(context, input)) as Array<Record<string, string | number>>;
   const mode = (input.mode ?? "invoice").toLowerCase();
   if (mode === "item") {
     return toCsv(

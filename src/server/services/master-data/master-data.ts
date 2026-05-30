@@ -1,4 +1,4 @@
-import { AccountType, AuditAction, NormalBalance, PermissionAction, RecordStatus, type Prisma } from "@prisma/client";
+import { AccountType, AuditAction, NormalBalance, PermissionAction, RecordStatus, Prisma } from "@prisma/client";
 import { prisma } from "../../../lib/prisma.ts";
 import { writeAuditLog } from "../audit/audit-log.ts";
 import { enforcePermission } from "../rbac/enforce.ts";

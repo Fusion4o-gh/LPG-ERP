@@ -17,7 +17,7 @@ async function start() {
   await pg.start();
 
   try {
-    await pg.createDatabase("hasnan_lpg_erp");
+    await pg.createDatabase("lpg_management_system");
   } catch (error) {
     console.log(`createDatabase: ${error.message}`);
   }

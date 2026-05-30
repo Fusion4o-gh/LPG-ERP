@@ -264,7 +264,7 @@ export function PurchaseFilledCylinderForm() {
           </div>
         </section>
 
-        <section className="card rounded-xl overflow-hidden">
+        <section className="card rounded-xl">
           <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <div className="h-3.5 w-0.5 rounded-full bg-blue-500/60 shrink-0" />
@@ -274,13 +274,26 @@ export function PurchaseFilledCylinderForm() {
               + Add Row
             </button>
           </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-[1120px] border-collapse text-sm">
+          <div className="w-full overflow-x-auto md:overflow-x-visible">
+            <table className="w-full table-fixed border-collapse text-sm">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
-                  {["Item", "Type", "Received Qty", "Unit Price", "GST %", "Empty Return", "GST Amt", "Ex-GST", "Inc-GST", ""].map((h, i) => (
-                    <th key={i} className={`whitespace-nowrap px-2.5 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 ${[2, 3, 4, 5, 6, 7, 8].includes(i) ? "text-right" : "text-left"}`}>
-                      {h}
+                  {[
+                    { label: "Item", className: "w-[30%] text-left" },
+                    { label: "Type", className: "w-[9%] text-left" },
+                    { label: "Received Qty", className: "w-[8%] text-right" },
+                    { label: "Unit Price", className: "w-[9%] text-right" },
+                    { label: "GST %", className: "w-[7%] text-right" },
+                    { label: "Empty Return", className: "w-[9%] text-right" },
+                    { label: "GST Amt", className: "w-[8%] text-right" },
+                    { label: "Ex-GST", className: "w-[8%] text-right" },
+                    { label: "Inc-GST", className: "w-[10%] text-right" },
+                  ].map((col) => (
+                    <th
+                      key={col.label}
+                      className={`whitespace-nowrap px-2.5 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 ${col.className}`}
+                    >
+                      {col.label}
                     </th>
                   ))}
                 </tr>
@@ -289,9 +302,9 @@ export function PurchaseFilledCylinderForm() {
                 {lines.map((line, index) => {
                   const current = lineTotals(line);
                   return (
-                    <tr key={index} className="hover:bg-blue-50/30 transition-colors">
+                    <tr key={index} className="bg-white hover:bg-blue-50/30 transition-colors">
                       <td className="px-2.5 py-2">
-                        <select value={line.itemId} onChange={(e) => updateLine(index, { itemId: e.target.value })} disabled={lookupLoading} className="tbl-select w-52">
+                        <select value={line.itemId} onChange={(e) => updateLine(index, { itemId: e.target.value })} disabled={lookupLoading} className="tbl-select w-full min-w-0">
                           <option value="">Select Item</option>
                           {items.map((item) => (
                             <option key={String(item.id)} value={String(item.id)}>
@@ -301,28 +314,33 @@ export function PurchaseFilledCylinderForm() {
                         </select>
                       </td>
                       <td className="px-2.5 py-2">
-                        <select value={line.cylinderState} onChange={(e) => updateLine(index, { cylinderState: e.target.value as PurchaseLine["cylinderState"] })} className="tbl-select w-24">
+                        <select value={line.cylinderState} onChange={(e) => updateLine(index, { cylinderState: e.target.value as PurchaseLine["cylinderState"] })} className="tbl-select w-full min-w-0">
                           <option value="FILLED">Filled</option>
                           <option value="EMPTY">Empty</option>
                         </select>
                       </td>
                       <td className="px-2.5 py-2">
-                        <input type="number" min="1" value={line.quantity} onChange={(e) => updateLine(index, { quantity: e.target.value })} className="tbl-input w-20 text-right" />
+                        <input type="number" min="1" value={line.quantity} onChange={(e) => updateLine(index, { quantity: e.target.value })} className="tbl-input w-full min-w-0 text-right" />
                       </td>
                       <td className="px-2.5 py-2">
-                        <input type="number" min="0" value={line.unitCost} onChange={(e) => updateLine(index, { unitCost: e.target.value })} className="tbl-input w-24 text-right" />
+                        <input type="number" min="0" value={line.unitCost} onChange={(e) => updateLine(index, { unitCost: e.target.value })} className="tbl-input w-full min-w-0 text-right" />
                       </td>
                       <td className="px-2.5 py-2">
-                        <input type="number" min="0" value={line.gstPercent} onChange={(e) => updateLine(index, { gstPercent: e.target.value })} className="tbl-input w-16 text-right" />
+                        <input type="number" min="0" value={line.gstPercent} onChange={(e) => updateLine(index, { gstPercent: e.target.value })} className="tbl-input w-full min-w-0 text-right" />
                       </td>
                       <td className="px-2.5 py-2">
-                        <input type="number" min="0" value={line.emptyReturnQuantity} onChange={(e) => updateLine(index, { emptyReturnQuantity: e.target.value })} className="tbl-input w-20 text-right" />
+                        <input type="number" min="0" value={line.emptyReturnQuantity} onChange={(e) => updateLine(index, { emptyReturnQuantity: e.target.value })} className="tbl-input w-full min-w-0 text-right" />
                       </td>
                       <td className="px-2.5 py-2 text-right tabular-nums text-slate-600">{money(current.gstAmount)}</td>
                       <td className="px-2.5 py-2 text-right tabular-nums text-slate-600">{money(current.exGstAmount)}</td>
-                      <td className="px-2.5 py-2 text-right tabular-nums font-medium text-slate-800">{money(current.incGstAmount)}</td>
-                      <td className="px-2.5 py-2">
-                        <button type="button" onClick={() => removeLine(index)} disabled={lines.length === 1} className="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50 disabled:opacity-40 transition-colors">
+                      <td className="whitespace-nowrap px-2 py-2 text-right">
+                        <span className="tabular-nums font-medium text-slate-800">{money(current.incGstAmount)}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeLine(index)}
+                          disabled={lines.length === 1}
+                          className="ml-3 inline-flex rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50 disabled:opacity-40 transition-colors"
+                        >
                           Remove
                         </button>
                       </td>

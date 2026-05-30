@@ -558,7 +558,7 @@ export async function saleLpgCompleteDayBatch(input: BatchInput) {
         remarks: sale.remarks ?? input.remarks,
         saleType: sale.saleType ?? "Direct",
         receiveMode,
-        amountReceived: amountReceived.gt(0) ? amountReceived : undefined,
+        amountReceived: amountReceived.gt(0) ? String(amountReceived) : undefined,
         bankId: sale.bankId,
         chequeNo: sale.chequeNo,
         companyId: input.companyId,

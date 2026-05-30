@@ -1,0 +1,4 @@
+.local-postgres
+backups
+graphify-out
+*.log

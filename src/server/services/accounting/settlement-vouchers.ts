@@ -45,7 +45,7 @@ export async function postVendorPayment(tx: Prisma.TransactionClient, input: Set
     });
     const bankAccountId = await getBankAccountId(tx, input.bankId);
     const narration = input.chequeNo ? `Cheque ${input.chequeNo}` : undefined;
-    const { voucher } = await createBalancedVoucher(tx, {
+    const voucher = await createBalancedVoucher(tx, {
       companyId: input.companyId,
       financialYearId: input.financialYearId,
       voucherNo,
@@ -71,7 +71,7 @@ export async function postVendorPayment(tx: Prisma.TransactionClient, input: Set
     prefix: DOCUMENT_PREFIXES.cashPaymentVoucher,
   });
   const cashAccountId = await getCashAccountId(tx, input.companyId);
-  const { voucher } = await createBalancedVoucher(tx, {
+  const voucher = await createBalancedVoucher(tx, {
     companyId: input.companyId,
     financialYearId: input.financialYearId,
     voucherNo,
@@ -105,7 +105,7 @@ export async function postCustomerReceipt(tx: Prisma.TransactionClient, input: S
     });
     const bankAccountId = await getBankAccountId(tx, input.bankId);
     const narration = input.chequeNo ? `Cheque ${input.chequeNo}` : undefined;
-    const { voucher } = await createBalancedVoucher(tx, {
+    const voucher = await createBalancedVoucher(tx, {
       companyId: input.companyId,
       financialYearId: input.financialYearId,
       voucherNo: receiptNo,
@@ -138,7 +138,7 @@ export async function postCustomerReceipt(tx: Prisma.TransactionClient, input: S
     prefix: DOCUMENT_PREFIXES.cashReceiptVoucher,
   });
   const cashAccountId = await getCashAccountId(tx, input.companyId);
-  const { voucher } = await createBalancedVoucher(tx, {
+  const voucher = await createBalancedVoucher(tx, {
     companyId: input.companyId,
     financialYearId: input.financialYearId,
     voucherNo: receiptNo,

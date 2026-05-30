@@ -71,7 +71,7 @@ test("transaction document read API returns printable payload with metadata", as
 
   assert.equal(response.status, 200);
   assert.equal(body.success, true);
-  assert.equal(body.document.heading, "LPG ERP");
+  assert.equal(body.document.heading, "LPG Management System");
   assert.equal(body.document.type, "Sale LPG Invoice");
   assert.equal(body.document.number, issueNo);
   assert.equal(body.document.date, "2026-07-21");
@@ -232,7 +232,7 @@ test("printable transaction pages and component render document number and type 
   assert.match(component, /document\.generatedAt/);
   assert.match(component, /window\.print\(\)/);
   assert.match(component, /data-print-hidden/);
-  assert.match(component, /Powered by Fusion4o/);
+  assert.match(component, /LPG Management System/);
   assert.match(salePage, /documentType="sale-lpg"/);
   assert.match(securityPage, /documentType="security-receipt"/);
 });

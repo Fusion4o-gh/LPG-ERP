@@ -142,11 +142,11 @@ test("unified screen uses Fusion4o blue/white styling patterns", async () => {
   assert.match(client, /shadow-sm/);
 });
 
-test("sidebar Bank Payments / Receipt link requires bank-payments module permission", async () => {
+test("navigation Bank Payments / Receipt tab requires bank-payments module permission", async () => {
   const root = new URL("../", import.meta.url);
-  const sidebar = await readFile(new URL("src/components/Sidebar.tsx", root), "utf8");
+  const nav = await readFile(new URL("src/lib/navigation/modules.ts", root), "utf8");
   assert.match(
-    sidebar,
+    nav,
     /bank-payments-receipts[\s\S]{0,100}bank-payments|bank-payments[\s\S]{0,100}bank-payments-receipts/,
   );
 });

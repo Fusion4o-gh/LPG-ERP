@@ -149,7 +149,7 @@ export function CompanyInformationForm() {
 
   return (
     <>
-      <PageHeader title="Company Information" description="Maintain the company profile used across LPG ERP documents and operational screens." />
+      <PageHeader title="Company Information" description="Maintain the company profile used across LPG Management System documents and operational screens." />
       <form onSubmit={onSubmit} className="max-w-5xl space-y-5">
         <ApiError message={error} />
         <SuccessMessage message={success} />

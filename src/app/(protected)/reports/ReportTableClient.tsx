@@ -169,11 +169,12 @@ export function ReportTableClient({
       </div>
 
       {/* Filter panel */}
-      <form
-        onSubmit={submit}
-        data-print-hidden
-        className="card rounded-xl mb-4 p-4 grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 items-end"
-      >
+      <form onSubmit={submit} data-print-hidden className="card rounded-xl mb-4 overflow-hidden">
+        <div className="accent-section-header px-4 pt-3">
+          <div className="accent-bar" />
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Filters</p>
+        </div>
+        <div className="grid gap-3 p-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 items-end">
         {showItemFilter && (
           <div>
             <label className="form-label mb-1">Item</label>
@@ -269,6 +270,7 @@ export function ReportTableClient({
           <button type="submit" className="btn-primary w-full justify-center">
             Apply
           </button>
+        </div>
         </div>
       </form>
 
