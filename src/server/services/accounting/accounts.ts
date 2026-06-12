@@ -11,6 +11,15 @@ export const ACCOUNT_CODES = {
   gstReceivable: "2004003001",
   gstPayable: "1001003001",
   securityLiability: "1001002001",
+  // --- Bulk / import / dollar / plant extension ---
+  bulkStock: "2003002001",
+  bulkStockInTransit: "2003003001",
+  bulkSales: "3001002001",
+  inventoryGain: "3001003001",
+  exchangeGain: "3002001001",
+  freight: "4001003001",
+  inventoryLoss: "4001004001",
+  exchangeLoss: "4002001001",
 } as const;
 
 export async function getAccountIdByCode(tx: Tx, companyId: string, code: string) {

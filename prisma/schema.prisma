@@ -624,3 +624,594 @@ model AuditLog {
   @@index([companyId, entityType, entityId])
   @@index([companyId, createdAt])
 }
+
+// =============================================================================
+// BULK / IMPORT / DOLLAR / PLANT EXTENSION
+//
+// This block adds the bulk LPG import-trading domain (Taftan/Ship imports,
+// dollar contracts, plants, bowsers/transporters, partial receiving, sale &
+// purchase contracts) on top of the existing cylinder-distribution core.
+//
+// Design notes (locked 2026-06-12):
+//  - Bulk inventory uses a SEPARATE immutable ledger (BulkStockLedgerEntry).
+//    The cylinder StockLedgerEntry is left untouched.
+//  - Same company / unified GL: bulk stock, dollar gain/loss, and plant sales
+//    post into the same ChartAccount / AccountingVoucher engine.
+//  - New tables carry scalar FK ids (companyId, financialYearId, createdById,
+//    vendorId, customerId, ...) WITHOUT Prisma relations to the core models, to
+//    keep this module additive and avoid churn on Company/User/FinancialYear/
+//    Vendor/Customer. Referential integrity is enforced in the service layer
+//    (services fetch masters by id, matching the existing pattern). Relations
+//    are declared only among the NEW models (parent -> child).
+// =============================================================================
+
+enum UnitOfMeasure {
+  MT
+  KG
+  LITRE
+}
+
+enum BulkStockSourceType {
+  OPENING_STOCK
+  IMPORT_ARRIVAL
+  LOADING
+  LOCAL_PURCHASE
+  PLANT_SALE
+  FILLING_SALE
+  DELIVERED_SALE
+  PLANT_TRANSFER
+  PARTIAL_RECEIVING
+  DECANTING
+  LOSS_GAIN
+  DOLLAR_SALE
+  ADJUSTMENT
+}
+
+enum ContractStatus {
+  OPEN
+  CLOSED
+  CANCELLED
+  APPROVED
+  DISAPPROVED
+}
+
+enum ImportType {
+  TAFTAN
+  SHIP
+}
+
+enum ShipmentStatus {
+  PENDING
+  IN_TRANSIT
+  ARRIVED
+  RECEIVED
+}
+
+enum SaleContractStatus {
+  OPEN
+  PARTIAL
+  DELIVERED
+  CLOSED
+  CANCELLED
+}
+
+enum VehicleStatus {
+  ACTIVE
+  INACTIVE
+  IN_TRANSIT
+  MAINTENANCE
+}
+
+enum LocationType {
+  PLANT
+  IMPORT_TERMINAL
+  IN_TRANSIT
+  WAREHOUSE
+}
+
+enum DollarTxnType {
+  PURCHASE
+  SALE_WITH_CONTRACT
+  SALE_WITHOUT_CONTRACT
+  BULK_SALE
+  PAYMENT
+  RECEIPT
+}
+
+enum PlantSaleType {
+  FILLING
+  BULK
+}
+
+enum LossGainType {
+  LOSS
+  GAIN
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  DISAPPROVED
+}
+
+model Transporter {
+  id            String       @id @default(cuid())
+  companyId     String
+  code          String
+  name          String
+  contactPerson String?
+  phone         String?
+  address       String?
+  ntn           String?
+  status        RecordStatus @default(ACTIVE)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  vehicles Vehicle[]
+  drivers  Driver[]
+
+  @@unique([companyId, code])
+  @@index([companyId, name])
+}
+
+model Driver {
+  id            String       @id @default(cuid())
+  companyId     String
+  transporterId String?
+  name          String
+  cell          String?
+  cnic          String?
+  licenseNo     String?
+  status        RecordStatus @default(ACTIVE)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  transporter Transporter? @relation(fields: [transporterId], references: [id])
+  vehicles    Vehicle[]
+
+  @@unique([companyId, name, cell])
+  @@index([companyId, name])
+}
+
+model Vehicle {
+  id             String        @id @default(cuid())
+  companyId      String
+  transporterId  String?
+  driverId       String?
+  registrationNo String
+  bowserCapacity Decimal?      @db.Decimal(14, 3)
+  capacityUnit   UnitOfMeasure @default(MT)
+  status         VehicleStatus @default(ACTIVE)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  transporter Transporter? @relation(fields: [transporterId], references: [id])
+  driver      Driver?      @relation(fields: [driverId], references: [id])
+
+  @@unique([companyId, registrationNo])
+  @@index([companyId, status])
+}
+
+model Plant {
+  id        String       @id @default(cuid())
+  companyId String
+  code      String
+  name      String
+  cityId    String?
+  location  String?
+  status    RecordStatus @default(ACTIVE)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  stockLocations StockLocation[]
+
+  @@unique([companyId, code])
+  @@index([companyId, name])
+}
+
+model StockLocation {
+  id        String       @id @default(cuid())
+  companyId String
+  plantId   String?
+  code      String
+  name      String
+  type      LocationType @default(PLANT)
+  status    RecordStatus @default(ACTIVE)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  plant Plant? @relation(fields: [plantId], references: [id])
+
+  @@unique([companyId, code])
+  @@index([companyId, type])
+}
+
+model BulkProduct {
+  id        String        @id @default(cuid())
+  companyId String
+  code      String
+  name      String
+  unit      UnitOfMeasure @default(MT)
+  status    RecordStatus  @default(ACTIVE)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@unique([companyId, code])
+  @@index([companyId, name])
+}
+
+model BulkStockLedgerEntry {
+  id              String              @id @default(cuid())
+  companyId       String
+  financialYearId String
+  productId       String
+  locationId      String
+  plantId         String?
+  direction       StockDirection
+  quantity        Decimal             @db.Decimal(16, 3)
+  unit            UnitOfMeasure       @default(MT)
+  balanceAfter    Decimal             @db.Decimal(16, 3)
+  inTransit       Boolean             @default(false)
+  sourceType      BulkStockSourceType
+  sourceId        String
+  partyType       PartyType?
+  customerId      String?
+  vendorId        String?
+  transactionDate DateTime            @db.Date
+  remarks         String?
+  createdById     String
+  createdAt       DateTime            @default(now())
+
+  @@index([companyId, productId, locationId, transactionDate])
+  @@index([companyId, inTransit])
+  @@index([sourceType, sourceId])
+}
+
+model BulkOpeningStock {
+  id              String        @id @default(cuid())
+  companyId       String
+  financialYearId String
+  productId       String
+  locationId      String
+  quantity        Decimal       @db.Decimal(16, 3)
+  unit            UnitOfMeasure @default(MT)
+  valuationRate   Decimal       @default(0) @db.Decimal(16, 4)
+  locked          Boolean       @default(false)
+  createdById     String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([companyId, financialYearId, productId, locationId])
+}
+
+model ImportContract {
+  id              String         @id @default(cuid())
+  companyId       String
+  financialYearId String
+  contractNo      String
+  contractDate    DateTime       @db.Date
+  importType      ImportType
+  vendorId        String
+  productId       String
+  purchaseType    String?
+  quantity        Decimal        @db.Decimal(16, 3)
+  unit            UnitOfMeasure  @default(MT)
+  rateUsd         Decimal        @default(0) @db.Decimal(16, 4)
+  exchangeRate    Decimal        @default(0) @db.Decimal(12, 4)
+  amountUsd       Decimal        @default(0) @db.Decimal(16, 2)
+  amountPkr       Decimal        @default(0) @db.Decimal(16, 2)
+  status          ContractStatus @default(OPEN)
+  remarks         String?
+  createdById     String
+  approvedById    String?
+  approvedAt      DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  loadings Loading[]
+
+  @@unique([companyId, contractNo])
+  @@index([companyId, importType, status])
+  @@index([companyId, contractDate])
+}
+
+model Loading {
+  id               String         @id @default(cuid())
+  companyId        String
+  financialYearId  String
+  contractId       String
+  loadingType      ImportType
+  loadingNo        String
+  loadingDate      DateTime       @db.Date
+  loadingLocation  String?
+  vehicleId        String?
+  transporterId    String?
+  quantityLoaded   Decimal        @db.Decimal(16, 3)
+  unit             UnitOfMeasure  @default(MT)
+  rate             Decimal        @default(0) @db.Decimal(16, 4)
+  freight          Decimal        @default(0) @db.Decimal(16, 2)
+  finalRate        Decimal        @default(0) @db.Decimal(16, 4)
+  stockLocationId  String?
+  shipmentStatus   ShipmentStatus @default(IN_TRANSIT)
+  arrivalDate      DateTime?      @db.Date
+  arrivedQuantity  Decimal?       @db.Decimal(16, 3)
+  remarks          String?
+  createdById      String
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  contract ImportContract @relation(fields: [contractId], references: [id])
+
+  @@unique([companyId, loadingNo])
+  @@index([companyId, shipmentStatus])
+  @@index([contractId])
+}
+
+model PurchaseContract {
+  id              String         @id @default(cuid())
+  companyId       String
+  financialYearId String
+  contractNo      String
+  contractDate    DateTime       @db.Date
+  vendorId        String
+  productId       String
+  purchaseType    String?
+  quantity        Decimal        @db.Decimal(16, 3)
+  unit            UnitOfMeasure  @default(MT)
+  rate            Decimal        @default(0) @db.Decimal(16, 4)
+  amountPkr       Decimal        @default(0) @db.Decimal(16, 2)
+  deliveredQty    Decimal        @default(0) @db.Decimal(16, 3)
+  status          ContractStatus @default(OPEN)
+  remarks         String?
+  createdById     String
+  approvedById    String?
+  approvedAt      DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  localPurchases LocalPurchase[]
+
+  @@unique([companyId, contractNo])
+  @@index([companyId, status])
+}
+
+model LocalPurchase {
+  id              String        @id @default(cuid())
+  companyId       String
+  financialYearId String
+  documentNo      String
+  contractId      String?
+  vendorId        String
+  productId       String
+  locationId      String
+  quantity        Decimal       @db.Decimal(16, 3)
+  unit            UnitOfMeasure @default(MT)
+  rate            Decimal       @default(0) @db.Decimal(16, 4)
+  amount          Decimal       @default(0) @db.Decimal(16, 2)
+  transactionDate DateTime      @db.Date
+  voucherId       String?
+  remarks         String?
+  createdById     String
+  createdAt       DateTime      @default(now())
+
+  contract PurchaseContract? @relation(fields: [contractId], references: [id])
+
+  @@unique([companyId, documentNo])
+  @@index([companyId, transactionDate])
+}
+
+model SaleContract {
+  id               String             @id @default(cuid())
+  companyId        String
+  financialYearId  String
+  contractNo       String
+  contractDate     DateTime           @db.Date
+  customerId       String
+  productId        String
+  quantity         Decimal            @db.Decimal(16, 3)
+  unit             UnitOfMeasure      @default(MT)
+  rate             Decimal            @default(0) @db.Decimal(16, 4)
+  amount           Decimal            @default(0) @db.Decimal(16, 2)
+  numberOfBowsers  Int?
+  deliveryLocation String?
+  deliveredQty     Decimal            @default(0) @db.Decimal(16, 3)
+  contractStatus   ContractStatus     @default(OPEN)
+  saleStatus       SaleContractStatus @default(OPEN)
+  isDollar         Boolean            @default(false)
+  rateUsd          Decimal?           @db.Decimal(16, 4)
+  remarks          String?
+  createdById      String
+  approvedById     String?
+  approvedAt       DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  deliveries SaleDelivery[]
+
+  @@unique([companyId, contractNo])
+  @@index([companyId, saleStatus])
+}
+
+model SaleDelivery {
+  id              String        @id @default(cuid())
+  companyId       String
+  financialYearId String
+  documentNo      String
+  contractId      String?
+  customerId      String
+  productId       String
+  locationId      String
+  vehicleId       String?
+  transporterId   String?
+  deliveryWeight  Decimal       @default(0) @db.Decimal(16, 3)
+  loadWeight      Decimal       @default(0) @db.Decimal(16, 3)
+  quantity        Decimal       @db.Decimal(16, 3)
+  unit            UnitOfMeasure @default(MT)
+  rate            Decimal       @default(0) @db.Decimal(16, 4)
+  finalRate       Decimal       @default(0) @db.Decimal(16, 4)
+  amount          Decimal       @default(0) @db.Decimal(16, 2)
+  isDollar        Boolean       @default(false)
+  transactionDate DateTime      @db.Date
+  voucherId       String?
+  remarks         String?
+  createdById     String
+  createdAt       DateTime      @default(now())
+
+  contract SaleContract? @relation(fields: [contractId], references: [id])
+
+  @@unique([companyId, documentNo])
+  @@index([companyId, transactionDate])
+}
+
+model LossGain {
+  id               String       @id @default(cuid())
+  companyId        String
+  financialYearId  String
+  documentNo       String
+  type             LossGainType
+  productId        String
+  locationId       String
+  expectedQuantity Decimal      @db.Decimal(16, 3)
+  actualQuantity   Decimal      @db.Decimal(16, 3)
+  difference       Decimal      @db.Decimal(16, 3)
+  rate             Decimal      @default(0) @db.Decimal(16, 4)
+  financialImpact  Decimal      @default(0) @db.Decimal(16, 2)
+  reason           String?
+  status           ApprovalStatus @default(PENDING)
+  postedToPl       Boolean      @default(false)
+  voucherId        String?
+  transactionDate  DateTime     @db.Date
+  createdById      String
+  approvedById     String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@unique([companyId, documentNo])
+  @@index([companyId, status])
+}
+
+model DollarTransaction {
+  id              String        @id @default(cuid())
+  companyId       String
+  financialYearId String
+  documentNo      String
+  txnType         DollarTxnType
+  partyType       PartyType?
+  customerId      String?
+  vendorId        String?
+  contractId      String?
+  usdAmount       Decimal       @db.Decimal(16, 2)
+  exchangeRate    Decimal       @db.Decimal(12, 4)
+  pkrAmount       Decimal       @db.Decimal(16, 2)
+  exchangeGainLoss Decimal      @default(0) @db.Decimal(16, 2)
+  productId       String?
+  quantity        Decimal?      @db.Decimal(16, 3)
+  locationId      String?
+  voucherId       String?
+  transactionDate DateTime      @db.Date
+  remarks         String?
+  createdById     String
+  createdAt       DateTime      @default(now())
+
+  @@unique([companyId, documentNo])
+  @@index([companyId, txnType, transactionDate])
+}
+
+model PlantSale {
+  id              String        @id @default(cuid())
+  companyId       String
+  financialYearId String
+  documentNo      String
+  saleType        PlantSaleType
+  invoiceNo       String?
+  plantId         String
+  locationId      String
+  customerId      String
+  productId       String?
+  quantity        Decimal       @db.Decimal(16, 3)
+  unit            UnitOfMeasure @default(MT)
+  rate            Decimal       @default(0) @db.Decimal(16, 4)
+  amount          Decimal       @default(0) @db.Decimal(16, 2)
+  transporterId   String?
+  vehicleId       String?
+  paymentStatus   String?
+  isDollar        Boolean       @default(false)
+  transactionDate DateTime      @db.Date
+  voucherId       String?
+  remarks         String?
+  createdById     String
+  createdAt       DateTime      @default(now())
+
+  @@unique([companyId, documentNo])
+  @@index([companyId, saleType, transactionDate])
+}
+
+model PlantTransfer {
+  id              String        @id @default(cuid())
+  companyId       String
+  financialYearId String
+  documentNo      String
+  fromPlantId     String
+  toPlantId       String
+  fromLocationId  String
+  toLocationId    String
+  productId       String
+  quantity        Decimal       @db.Decimal(16, 3)
+  unit            UnitOfMeasure @default(MT)
+  vehicleId       String?
+  transporterId   String?
+  transactionDate DateTime      @db.Date
+  remarks         String?
+  createdById     String
+  createdAt       DateTime      @default(now())
+
+  @@unique([companyId, documentNo])
+  @@index([companyId, transactionDate])
+}
+
+model PartialReceiving {
+  id                 String         @id @default(cuid())
+  companyId          String
+  financialYearId    String
+  documentNo         String
+  vehicleId          String?
+  loadedFromLocation String?
+  plantId            String
+  locationId         String
+  productId          String
+  dispatchWeight     Decimal        @db.Decimal(16, 3)
+  totalQuantity      Decimal        @db.Decimal(16, 3)
+  receivedQuantity   Decimal        @default(0) @db.Decimal(16, 3)
+  remainingQuantity  Decimal        @db.Decimal(16, 3)
+  unit               UnitOfMeasure  @default(MT)
+  amount             Decimal        @default(0) @db.Decimal(16, 2)
+  transporterId      String?
+  loadWeight         Decimal        @default(0) @db.Decimal(16, 3)
+  finalRate          Decimal        @default(0) @db.Decimal(16, 4)
+  saleStatus         String?
+  arrivalStatus      ShipmentStatus @default(IN_TRANSIT)
+  transactionDate    DateTime       @db.Date
+  remarks            String?
+  createdById        String
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  events PartialReceivingEvent[]
+
+  @@unique([companyId, documentNo])
+  @@index([companyId, arrivalStatus])
+}
+
+model PartialReceivingEvent {
+  id                 String   @id @default(cuid())
+  partialReceivingId String
+  quantityReceived   Decimal  @db.Decimal(16, 3)
+  receivedDate       DateTime @db.Date
+  remarks            String?
+  createdById        String
+  createdAt          DateTime @default(now())
+
+  partialReceiving PartialReceiving @relation(fields: [partialReceivingId], references: [id], onDelete: Cascade)
+
+  @@index([partialReceivingId])
+}

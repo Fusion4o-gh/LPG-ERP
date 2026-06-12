@@ -30,6 +30,28 @@ const modules = [
   "day-closing",
   "day-closing.override",
   "audit-log",
+  // --- Bulk / import / dollar / plant extension ---
+  "transporters",
+  "vehicles",
+  "drivers",
+  "plants",
+  "stock-locations",
+  "bulk-products",
+  "bulk-opening-stock",
+  "opening-voucher",
+  "import-contracts",
+  "loadings",
+  "purchase-contracts",
+  "sale-contracts",
+  "local-purchase",
+  "delivered-sale",
+  "plant-decanting",
+  "loss-gain",
+  "filling-sale",
+  "plant-bulk-sale",
+  "plant-transfer",
+  "partial-receiving",
+  "dollar-transactions",
 ];
 
 const actions = [
@@ -167,6 +189,16 @@ async function main() {
   await upsertAccount(company.id, "4001002001", "Cost of Goods Sold LPG", AccountType.EXPENSE, NormalBalance.DEBIT, 3, expenses.id);
   await upsertAccount(company.id, "4001001501", "Sales Discount Allowed", AccountType.EXPENSE, NormalBalance.DEBIT, 3, expenses.id);
   await upsertAccount(company.id, "4001001502", "Purchase Discount Received", AccountType.EXPENSE, NormalBalance.DEBIT, 3, expenses.id);
+
+  // --- Bulk / import / dollar / plant control accounts ---
+  await upsertAccount(company.id, "2003002001", "Bulk LPG Stock", AccountType.ASSET, NormalBalance.DEBIT, 3, assets.id);
+  await upsertAccount(company.id, "2003003001", "Bulk Stock In Transit", AccountType.ASSET, NormalBalance.DEBIT, 3, assets.id);
+  await upsertAccount(company.id, "3001002001", "Bulk LPG Sales", AccountType.REVENUE, NormalBalance.CREDIT, 3, revenue.id);
+  await upsertAccount(company.id, "3001003001", "Inventory Gain", AccountType.REVENUE, NormalBalance.CREDIT, 3, revenue.id);
+  await upsertAccount(company.id, "3002001001", "Exchange Gain", AccountType.REVENUE, NormalBalance.CREDIT, 3, revenue.id);
+  await upsertAccount(company.id, "4001003001", "Freight and Transport", AccountType.EXPENSE, NormalBalance.DEBIT, 3, expenses.id);
+  await upsertAccount(company.id, "4001004001", "Inventory Loss", AccountType.EXPENSE, NormalBalance.DEBIT, 3, expenses.id);
+  await upsertAccount(company.id, "4002001001", "Exchange Loss", AccountType.EXPENSE, NormalBalance.DEBIT, 3, expenses.id);
 
   await prisma.company.update({
     where: { id: company.id },

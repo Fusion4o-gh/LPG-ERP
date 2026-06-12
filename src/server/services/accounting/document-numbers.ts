@@ -15,6 +15,22 @@ export const DOCUMENT_PREFIXES = {
   emptySaleIssue: "ES",
   decantingSaleIssue: "DS",
   journalVoucher: "JV",
+  // --- Bulk / import / dollar / plant extension ---
+  importContract: "IMC",
+  loading: "LOAD",
+  purchaseContract: "PUC",
+  saleContract: "SLC",
+  localPurchase: "LP",
+  deliveredSale: "DSL",
+  plantDecanting: "PDC",
+  fillingSale: "FS",
+  plantBulkSale: "PBS",
+  plantTransfer: "PT",
+  partialReceiving: "PRC",
+  lossGain: "LG",
+  dollarPurchase: "DP",
+  dollarSale: "DSALE",
+  openingVoucher: "OPV",
 } as const;
 
 type Tx = Prisma.TransactionClient;

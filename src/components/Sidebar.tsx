@@ -58,6 +58,24 @@ const MODULE_THEME: Record<string, ModuleTheme> = {
     bar: "bg-rose-500",
     row: "bg-rose-50 text-rose-800",
   },
+  import: {
+    idle: "border-sky-100 bg-sky-50 text-sky-600",
+    active: "border-transparent bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-sm",
+    bar: "bg-sky-500",
+    row: "bg-sky-50 text-sky-800",
+  },
+  plant: {
+    idle: "border-teal-100 bg-teal-50 text-teal-600",
+    active: "border-transparent bg-gradient-to-br from-teal-500 to-emerald-600 text-white shadow-sm",
+    bar: "bg-teal-500",
+    row: "bg-teal-50 text-teal-800",
+  },
+  dollar: {
+    idle: "border-green-100 bg-green-50 text-green-600",
+    active: "border-transparent bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-sm",
+    bar: "bg-green-500",
+    row: "bg-green-50 text-green-800",
+  },
 };
 
 const DEFAULT_THEME: ModuleTheme = MODULE_THEME.dashboard;
@@ -122,6 +140,27 @@ function SidebarIcon({ name, className }: { name: string; className: string }) {
         <path d="M5 7c0-1.7 3.1-3 7-3s7 1.3 7 3-3.1 3-7 3-7-1.3-7-3z" />
         <path d="M5 7v5c0 1.7 3.1 3 7 3s7-1.3 7-3V7" />
         <path d="M5 12v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5" />
+      </>
+    ),
+    import: (
+      <>
+        <path d="M3 13h13V8H3z" />
+        <path d="M16 10h3l2 3v3h-5z" />
+        <path d="M7 19a1.6 1.6 0 1 0 0-3.2A1.6 1.6 0 0 0 7 19z" />
+        <path d="M17 19a1.6 1.6 0 1 0 0-3.2 1.6 1.6 0 0 0 0 3.2z" />
+      </>
+    ),
+    plant: (
+      <>
+        <path d="M4 21V9l6 3V9l6 3V6l4 2v13z" />
+        <path d="M8 21v-3" />
+        <path d="M14 21v-3" />
+      </>
+    ),
+    dollar: (
+      <>
+        <path d="M12 3v18" />
+        <path d="M16 7.5C16 5.6 14.2 4.5 12 4.5S8 5.6 8 7.5s1.8 2.6 4 3 4 1.1 4 3-1.8 3-4 3-4-1.1-4-3" />
       </>
     ),
   };
