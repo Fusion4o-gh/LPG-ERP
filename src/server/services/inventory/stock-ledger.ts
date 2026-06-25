@@ -16,6 +16,7 @@ type StockLedgerInput = {
   partyType?: PartyType;
   customerId?: string;
   vendorId?: string;
+  locationId?: string;
   remarks?: string;
 };
 
@@ -29,6 +30,7 @@ export async function createStockLedgerEntry(tx: Tx, input: StockLedgerInput) {
       companyId: input.companyId,
       itemId: input.itemId,
       cylinderState: input.cylinderState,
+      locationId: input.locationId ?? null,
     },
     orderBy: [{ transactionDate: "desc" }, { createdAt: "desc" }],
     select: { balanceAfter: true },
@@ -62,6 +64,7 @@ export async function createStockLedgerEntry(tx: Tx, input: StockLedgerInput) {
       partyType: input.partyType,
       customerId: input.customerId,
       vendorId: input.vendorId,
+      locationId: input.locationId ?? null,
       remarks: input.remarks,
     },
   });
