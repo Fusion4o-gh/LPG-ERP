@@ -127,9 +127,21 @@
 
 ## Traceability
 
-| Phase | Requirements |
-|-------|-------------|
-| Phase 1 | WH-01, WH-02, WH-03, WH-04, PR-01, PR-02, PR-03 |
+### Past Milestones (Complete)
+
+| Phase | Requirements | Status |
+|-------|-------------|--------|
+| Phase 1 — Foundation & Setup | Company setup, financial years, user management, RBAC | Complete |
+| Phase 2 — Master Data & Inventory | Items, brands, categories, customers, vendors, stock ledger | Complete |
+| Phase 3 — Core Transactions | Cylinder purchase, sale, returns | Complete |
+| Phase 4 — Accounting & Compliance | Vouchers, day closing, audit, reports | Complete |
+| Phase 5 — Bulk Import & Financial Adjustments | Bulk LPG trading, dollar transactions, adjustments | Complete |
+
+### Active Phase
+
+| Phase | Requirements | Status |
+|-------|-------------|--------|
+| Phase 6 — Warehouse Management & KG Pricing | WH-01, WH-02, WH-03, WH-04, WH-05, PR-01, PR-02, PR-03 | Not started |
 
 ---
 
