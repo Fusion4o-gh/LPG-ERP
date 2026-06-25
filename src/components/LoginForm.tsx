@@ -67,11 +67,12 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm">
-      <ApiError message={error} />
-      {logoUrl ? <img src={logoUrl} alt="Business logo" className="mx-auto mb-2 h-14 w-auto max-w-[180px] object-contain" /> : null}
-      {companyName ? <p className="text-sm font-medium text-slate-700">{companyName}</p> : null}
-      <label className="block text-sm font-medium text-slate-700">
+    <div className="flex flex-col items-center">
+      {logoUrl ? <img src={logoUrl} alt="Business logo" className="mb-4 w-full max-w-md rounded-md border border-slate-200 bg-white object-contain p-4 shadow-sm" /> : null}
+      <form onSubmit={submit} className="w-full max-w-md space-y-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+        <ApiError message={error} />
+        {companyName ? <p className="text-sm font-medium text-slate-700">{companyName}</p> : null}
+        <label className="block text-sm font-medium text-slate-700">
         Login ID <span className="text-red-600">*</span>
         <input value={loginId} onChange={(event) => setLoginId(event.target.value)} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
       </label>
@@ -99,5 +100,6 @@ export function LoginForm() {
       </label>
       <SubmitButton loading={loading}>Login</SubmitButton>
     </form>
+    </div>
   );
 }
