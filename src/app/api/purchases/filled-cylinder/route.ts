@@ -20,9 +20,11 @@ export async function POST(request: Request) {
           emptyReturnQuantity: optionalPositiveNumberField(line, "emptyReturnQuantity"),
         }))
       : undefined;
+    const locationId = optionalStringField(body, "locationId");
     const result = await purchaseFilledCylinder({
       ...context,
       issueNo,
+      locationId,
       vendorId: stringField(body, "vendorId"),
       itemId: lines ? undefined : stringField(body, "itemId"),
       quantity: lines ? undefined : positiveIntegerField(body, "quantity"),

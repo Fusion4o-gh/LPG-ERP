@@ -30,6 +30,7 @@ type PurchaseFilledCylinderInput = {
   bankId?: string;
   chequeNo?: string;
   chequeDate?: string | Date;
+  locationId?: string;
 };
 
 type PurchaseFilledCylinderLineInput = {
@@ -132,6 +133,7 @@ export async function purchaseFilledCylinder(input: PurchaseFilledCylinderInput)
         createdById: input.userId,
         partyType: PartyType.VENDOR,
         vendorId: input.vendorId,
+        locationId: input.locationId,
       });
       stockEntries.push(stockEntry);
 
@@ -158,6 +160,7 @@ export async function purchaseFilledCylinder(input: PurchaseFilledCylinderInput)
           partyType: PartyType.VENDOR,
           vendorId: input.vendorId,
           remarks: "Empty cylinders returned to vendor with purchase receipt.",
+          locationId: input.locationId,
         });
         stockEntries.push(emptyReturnEntry);
         await tx.vendorCylinderReturnBalance.update({
