@@ -77,6 +77,7 @@ const salePurchaseTabs: NavTab[] = [
   { label: "Cylinder Conversion", href: "/sale-purchase/cylinder-conversion", module: "cylinder-conversions" },
   { label: "Empty Sale", href: "/sale-purchase/empty-sale", module: "empty-sales" },
   { label: "Warehouse Transfer", href: "/operations/warehouse-transfer", module: "stock-ledger" },
+  { label: "Physical Count", href: "/operations/physical-count", module: "stock-ledger" },
 ];
 
 const returnsTabs: NavTab[] = [
@@ -217,6 +218,7 @@ export const NAV_MODULES: NavModule[] = [
       "/operations/complete-day-sale",
       "/operations/sale-lpg",
       "/operations/warehouse-transfer",
+      "/operations/physical-count",
     ],
     tabs: salePurchaseTabs,
   },
