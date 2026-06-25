@@ -47,6 +47,19 @@ enum StockDirection {
   OUT
 }
 
+enum TransferStatus {
+  DRAFT
+  COMPLETED
+  CANCELLED
+}
+
+enum CountStatus {
+  DRAFT
+  IN_PROGRESS
+  APPROVED
+  CANCELLED
+}
+
 enum StockSourceType {
   OPENING_BALANCE
   PURCHASE_FILLED
@@ -54,6 +67,8 @@ enum StockSourceType {
   CYLINDER_RETURN
   PURCHASE_RETURN
   ADJUSTMENT
+  WAREHOUSE_TRANSFER
+  PHYSICAL_COUNT_ADJUSTMENT
 }
 
 enum PartyType {
@@ -349,6 +364,7 @@ model ItemPrice {
   itemId     String
   customerId String?
   price      Decimal   @db.Decimal(14, 2)
+  pricePerKg Decimal?  @db.Decimal(14, 4)
   validFrom  DateTime  @db.Date
   validTo    DateTime? @db.Date
   createdAt  DateTime  @default(now())
@@ -510,6 +526,7 @@ model StockLedgerEntry {
   partyType       PartyType?
   customerId      String?
   vendorId        String?
+  locationId      String?
   quantity        Int
   balanceAfter    Int
   sourceType      StockSourceType
@@ -524,12 +541,84 @@ model StockLedgerEntry {
   item          Item          @relation(fields: [itemId], references: [id])
   customer      Customer?     @relation(fields: [customerId], references: [id])
   vendor        Vendor?       @relation(fields: [vendorId], references: [id])
+  location      StockLocation? @relation(fields: [locationId], references: [id])
   createdBy     User          @relation("StockEntryCreatedBy", fields: [createdById], references: [id])
 
   @@index([companyId, itemId, cylinderState, transactionDate])
   @@index([customerId, itemId, transactionDate])
   @@index([vendorId, itemId, transactionDate])
   @@index([sourceType, sourceId])
+  @@index([companyId, itemId, cylinderState, locationId, transactionDate])
+}
+
+model WarehouseTransfer {
+  id                    String          @id @default(cuid())
+  companyId             String
+  financialYearId       String
+  documentNo            String          @unique
+  transferDate          DateTime        @db.Date
+  sourceLocationId      String
+  destinationLocationId String
+  status                TransferStatus  @default(DRAFT)
+  remarks               String?
+  createdById           String
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  lines WarehouseTransferLine[]
+
+  @@index([companyId, sourceLocationId])
+  @@index([companyId, destinationLocationId])
+  @@index([companyId, status])
+}
+
+model WarehouseTransferLine {
+  id            String          @id @default(cuid())
+  transferId    String
+  itemId        String
+  cylinderState CylinderState
+  quantity      Int
+  remarks       String?
+
+  transfer WarehouseTransfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
+
+  @@index([transferId])
+}
+
+model PhysicalCount {
+  id              String       @id @default(cuid())
+  companyId       String
+  financialYearId String
+  documentNo      String       @unique
+  locationId      String
+  countDate       DateTime     @db.Date
+  status          CountStatus  @default(DRAFT)
+  notes           String?
+  createdById     String
+  approvedById    String?
+  approvedAt      DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  lines PhysicalCountLine[]
+
+  @@index([companyId, locationId])
+  @@index([companyId, status])
+}
+
+model PhysicalCountLine {
+  id              String        @id @default(cuid())
+  physicalCountId String
+  itemId          String
+  cylinderState   CylinderState
+  ledgerQuantity  Int           @default(0)
+  countedQuantity Int           @default(0)
+  variance        Int           @default(0)
+  remarks         String?
+
+  physicalCount PhysicalCount @relation(fields: [physicalCountId], references: [id], onDelete: Cascade)
+
+  @@index([physicalCountId])
 }
 
 model AccountingVoucher {
@@ -820,7 +909,8 @@ model StockLocation {
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 
-  plant Plant? @relation(fields: [plantId], references: [id])
+  plant              Plant? @relation(fields: [plantId], references: [id])
+  stockLedgerEntries StockLedgerEntry[]
 
   @@unique([companyId, code])
   @@index([companyId, type])
