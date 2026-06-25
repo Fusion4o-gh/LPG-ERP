@@ -76,6 +76,7 @@ const salePurchaseTabs: NavTab[] = [
   { label: "Decanting Sale", href: "/sale-purchase/decanting-sale", module: "decanting-sales" },
   { label: "Cylinder Conversion", href: "/sale-purchase/cylinder-conversion", module: "cylinder-conversions" },
   { label: "Empty Sale", href: "/sale-purchase/empty-sale", module: "empty-sales" },
+  { label: "Warehouse Transfer", href: "/operations/warehouse-transfer", module: "stock-ledger" },
 ];
 
 const returnsTabs: NavTab[] = [
@@ -115,6 +116,7 @@ const reportsLedgers: NavTab[] = [
 
 const reportsStock: NavTab[] = [
   { label: "Stock Report", href: "/reports/stock-summary", module: "reports" },
+  { label: "Stock by Location", href: "/reports/stock-by-location", module: "reports" },
   { label: "Cylinder Conversion B/W Date", href: "/reports/cylinder-conversion-between-dates", module: "reports" },
   { label: "Access Cylinders", href: "/reports/customer-cylinder-balances", module: "reports" },
   { label: "Daily Activity Report", href: "/reports/daily-activity", module: "reports" },
@@ -214,6 +216,7 @@ export const NAV_MODULES: NavModule[] = [
       "/operations/purchase-filled-cylinder",
       "/operations/complete-day-sale",
       "/operations/sale-lpg",
+      "/operations/warehouse-transfer",
     ],
     tabs: salePurchaseTabs,
   },
