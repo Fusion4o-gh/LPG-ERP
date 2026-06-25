@@ -13,7 +13,7 @@ export async function GET(request: Request) {
         name: true,
         companyId: true,
         financialYearId: true,
-        company: { select: { tradeName: true, legalName: true } },
+        company: { select: { tradeName: true, legalName: true, logoUrl: true } },
       },
     });
     if (!user) return ok({ found: false, financialYears: [] });
@@ -28,6 +28,7 @@ export async function GET(request: Request) {
       found: true,
       userName: user.name,
       companyName: user.company.tradeName || user.company.legalName,
+      logoUrl: user.company.logoUrl,
       defaultFinancialYearId: user.financialYearId ?? financialYears.find((fy) => fy.isActive)?.id ?? financialYears[0]?.id,
       financialYears,
     });

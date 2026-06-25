@@ -5,6 +5,7 @@ export type AppShellContext = {
   userName: string;
   loginId: string;
   companyName: string;
+  logoUrl: string | null;
   financialYearLabel: string;
   themeId: ThemeId;
 };
@@ -19,7 +20,7 @@ export async function getAppShellContext(
       name: true,
       loginId: true,
       uiTheme: true,
-      company: { select: { legalName: true, tradeName: true } },
+      company: { select: { legalName: true, tradeName: true, logoUrl: true } },
       financialYear: { select: { label: true } },
     },
   });
@@ -35,6 +36,7 @@ export async function getAppShellContext(
     userName: user?.name ?? "User",
     loginId: user?.loginId ?? "",
     companyName: user?.company.tradeName ?? user?.company.legalName ?? "LPG Management System",
+    logoUrl: user?.company.logoUrl ?? null,
     financialYearLabel: financialYear?.label ?? "—",
     themeId: (user?.uiTheme && isThemeId(user.uiTheme) ? user.uiTheme : DEFAULT_THEME) as ThemeId,
   };

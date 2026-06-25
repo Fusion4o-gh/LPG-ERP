@@ -106,6 +106,7 @@ model Company {
   email                 String?
   taxRegistrationNumber String?
   nationalTaxNumber     String?
+  logoUrl               String?
   baseCurrency          String       @default("PKR")
   locale                String       @default("en")
   timeZone              String       @default("Asia/Karachi")

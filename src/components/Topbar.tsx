@@ -72,18 +72,22 @@ export function Topbar({ shell, permissions }: { shell: AppShellContext; permiss
         <span className="hidden text-xs text-slate-500 whitespace-nowrap xl:inline">{formatToday()}</span>
 
         <div className="flex items-center gap-2 border-l border-slate-200 pl-3">
-          <div
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-            style={{ background: "var(--fusion-gradient)" }}
-            aria-hidden
-          >
-            {shell.userName
-              .split(/\s+/)
-              .map((part) => part[0])
-              .join("")
-              .slice(0, 2)
-              .toUpperCase()}
-          </div>
+          {shell.logoUrl ? (
+            <img src={shell.logoUrl} alt="" className="h-8 w-8 shrink-0 rounded-full object-contain border border-slate-200" aria-hidden />
+          ) : (
+            <div
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+              style={{ background: "var(--fusion-gradient)" }}
+              aria-hidden
+            >
+              {shell.userName
+                .split(/\s+/)
+                .map((part) => part[0])
+                .join("")
+                .slice(0, 2)
+                .toUpperCase()}
+            </div>
+          )}
           <div className="hidden min-w-0 sm:block">
             <p className="truncate text-sm font-semibold text-slate-800 leading-tight">{shell.userName}</p>
             <p className="truncate text-[11px] text-slate-500">

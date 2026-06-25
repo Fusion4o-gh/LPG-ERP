@@ -300,18 +300,22 @@ export function Sidebar({
 
       <div className="px-3 py-4 space-y-3" style={{ borderTop: "1px solid var(--sidebar-border)" }}>
         <div className="flex items-center gap-3 px-2">
-          <div
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-            style={{ background: "var(--fusion-gradient)" }}
-            aria-hidden
-          >
-            {shell.userName
-              .split(/\s+/)
-              .map((part) => part[0])
-              .join("")
-              .slice(0, 2)
-              .toUpperCase()}
-          </div>
+          {shell.logoUrl ? (
+            <img src={shell.logoUrl} alt="" className="h-9 w-9 shrink-0 rounded-full object-contain border border-[var(--sidebar-border)]" aria-hidden />
+          ) : (
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+              style={{ background: "var(--fusion-gradient)" }}
+              aria-hidden
+            >
+              {shell.userName
+                .split(/\s+/)
+                .map((part) => part[0])
+                .join("")
+                .slice(0, 2)
+                .toUpperCase()}
+            </div>
+          )}
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-[color:var(--sidebar-heading)] leading-tight">{shell.userName}</p>
             <p className="truncate text-[11px]" style={{ color: "var(--sidebar-text)" }}>

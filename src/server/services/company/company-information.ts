@@ -14,6 +14,7 @@ export type CompanyInformationInput = {
   email?: string;
   taxRegistrationNumber?: string;
   nationalTaxNumber?: string;
+  logoUrl?: string | null;
   stockAvailableCheck?: boolean;
   centralizedPricing?: boolean;
   showDefaultDate?: boolean;
@@ -58,6 +59,7 @@ const companySelect = {
   email: true,
   taxRegistrationNumber: true,
   nationalTaxNumber: true,
+  logoUrl: true,
   baseCurrency: true,
   locale: true,
   timeZone: true,

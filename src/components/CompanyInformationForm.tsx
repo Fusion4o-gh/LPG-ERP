@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { apiGet, apiPut } from "@/lib/api-client";
 import { ApiError } from "./ApiError";
 import { FormSection } from "./FormSection";
@@ -18,6 +18,7 @@ type CompanyInfo = {
   email?: string | null;
   taxRegistrationNumber?: string | null;
   nationalTaxNumber?: string | null;
+  logoUrl?: string | null;
   stockAvailableCheck?: boolean;
   centralizedPricing?: boolean;
   showDefaultDate?: boolean;
@@ -111,13 +112,51 @@ export function CompanyInformationForm() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     apiGet<{ company: CompanyInfo }>("/api/configuration/company-information")
-      .then((data) => setValues(valuesFromCompany(data.company)))
+      .then((data) => {
+        setValues(valuesFromCompany(data.company));
+        setLogoUrl(data.company.logoUrl ?? null);
+      })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
+
+  async function handleLogoUpload(file: File) {
+    setUploading(true);
+    setError("");
+    try {
+      const formData = new FormData();
+      formData.append("logo", file);
+      const res = await fetch("/api/configuration/company-logo", { method: "POST", body: formData });
+      const body = await res.json();
+      if (!res.ok || !body.success) throw new Error(body?.error?.message ?? "Upload failed.");
+      setLogoUrl(body.logoUrl);
+      setSuccess("Logo uploaded.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function handleLogoRemove() {
+    setError("");
+    try {
+      const res = await fetch("/api/configuration/company-logo", { method: "DELETE" });
+      const body = await res.json();
+      if (!res.ok || !body.success) throw new Error(body?.error?.message ?? "Remove failed.");
+      setLogoUrl(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      setSuccess("Logo removed.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Remove failed.");
+    }
+  }
 
   function setField(name: keyof FormValues, value: string) {
     setValues((current) => ({ ...current, [name]: value }));
@@ -179,8 +218,24 @@ export function CompanyInformationForm() {
               <Field label="GST Number">
                 <input value={values.taxRegistrationNumber} onChange={(event) => setField("taxRegistrationNumber", event.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2" />
               </Field>
-              <Field label="Logo Path / Upload">
-                <input value="Upload pending" disabled className="w-full rounded-md border border-slate-200 bg-slate-100 px-3 py-2 text-slate-500" />
+              <Field label="Business Logo">
+                <div className="flex items-start gap-4">
+                  {logoUrl ? (
+                    <div className="relative shrink-0">
+                      <img src={logoUrl} alt="Business logo" className="h-16 w-auto max-w-[160px] rounded-md border border-slate-200 object-contain" />
+                      <button type="button" onClick={handleLogoRemove} className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] text-white hover:bg-red-700" title="Remove logo">&times;</button>
+                    </div>
+                  ) : (
+                    <div className="flex h-16 w-32 shrink-0 items-center justify-center rounded-md border border-dashed border-slate-300 bg-slate-50 text-xs text-slate-400">No logo</div>
+                  )}
+                  <div className="flex flex-col gap-2">
+                    <input ref={fileInputRef} type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleLogoUpload(f); }} className="hidden" />
+                    <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} className="rounded-md bg-blue-950 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-900 disabled:opacity-60">
+                      {uploading ? "Uploading..." : "Upload Logo"}
+                    </button>
+                    <span className="text-[10px] text-slate-400">PNG, JPG, WEBP &middot; max 2 MB</span>
+                  </div>
+                </div>
               </Field>
               <Field label="Address">
                 <textarea value={values.address} onChange={(event) => setField("address", event.target.value)} rows={3} className="w-full rounded-md border border-slate-300 px-3 py-2 md:col-span-2" />

@@ -14,6 +14,7 @@ export function LoginForm() {
   const [financialYearId, setFinancialYearId] = useState("");
   const [financialYears, setFinancialYears] = useState<FinancialYear[]>([]);
   const [companyName, setCompanyName] = useState("");
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -34,6 +35,7 @@ export function LoginForm() {
           }
           setFinancialYears(body.financialYears ?? []);
           setCompanyName(body.companyName ?? "");
+          setLogoUrl(body.logoUrl ?? null);
           setFinancialYearId(body.defaultFinancialYearId ?? body.financialYears?.[0]?.id ?? "");
         })
         .catch(() => undefined);
@@ -67,6 +69,7 @@ export function LoginForm() {
   return (
     <form onSubmit={submit} className="space-y-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm">
       <ApiError message={error} />
+      {logoUrl ? <img src={logoUrl} alt="Business logo" className="mx-auto mb-2 h-14 w-auto max-w-[180px] object-contain" /> : null}
       {companyName ? <p className="text-sm font-medium text-slate-700">{companyName}</p> : null}
       <label className="block text-sm font-medium text-slate-700">
         Login ID <span className="text-red-600">*</span>
