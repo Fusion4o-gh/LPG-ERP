@@ -67,39 +67,56 @@ export function LoginForm() {
   }
 
   return (
-    <div className="flex flex-col items-center">
-      {logoUrl ? <img src={logoUrl} alt="Business logo" className="mb-4 w-full max-w-md rounded-md border border-slate-200 bg-white object-contain p-4 shadow-sm" /> : null}
-      <form onSubmit={submit} className="w-full max-w-md space-y-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="flex flex-col items-center gap-5">
+      {logoUrl ? (
+        <img
+          src={logoUrl}
+          alt="Business logo"
+          className="w-full max-h-24 rounded-xl border border-slate-200/80 bg-white object-contain p-5 shadow-sm"
+        />
+      ) : null}
+      <form onSubmit={submit} className="card-md w-full space-y-4 p-5">
         <ApiError message={error} />
-        {companyName ? <p className="text-sm font-medium text-slate-700">{companyName}</p> : null}
-        <label className="block text-sm font-medium text-slate-700">
-        Login ID <span className="text-red-600">*</span>
-        <input value={loginId} onChange={(event) => setLoginId(event.target.value)} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
-      </label>
-      <label className="block text-sm font-medium text-slate-700">
-        Financial Year <span className="text-red-600">*</span>
-        <select
-          value={financialYearId}
-          onChange={(e) => setFinancialYearId(e.target.value)}
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2"
-          required
-          disabled={financialYears.length === 0}
-        >
-          <option value="">{financialYears.length ? "Select financial year" : "Enter login ID first"}</option>
-          {financialYears.map((year) => (
-            <option key={year.id} value={year.id}>
-              {year.label}
-              {year.isActive ? " (active)" : ""}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="block text-sm font-medium text-slate-700">
-        Password <span className="text-red-600">*</span>
-        <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
-      </label>
-      <SubmitButton loading={loading}>Login</SubmitButton>
-    </form>
+        {companyName ? (
+          <p className="text-center text-sm font-semibold text-slate-800">{companyName}</p>
+        ) : null}
+        <label className="form-label">
+          Login ID <span className="text-red-600">*</span>
+          <input
+            value={loginId}
+            onChange={(event) => setLoginId(event.target.value)}
+            className="form-input"
+          />
+        </label>
+        <label className="form-label">
+          Financial Year <span className="text-red-600">*</span>
+          <select
+            value={financialYearId}
+            onChange={(e) => setFinancialYearId(e.target.value)}
+            className="form-input"
+            required
+            disabled={financialYears.length === 0}
+          >
+            <option value="">{financialYears.length ? "Select financial year" : "Enter login ID first"}</option>
+            {financialYears.map((year) => (
+              <option key={year.id} value={year.id}>
+                {year.label}
+                {year.isActive ? " (active)" : ""}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="form-label">
+          Password <span className="text-red-600">*</span>
+          <input
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            className="form-input"
+          />
+        </label>
+        <SubmitButton loading={loading}>Sign in</SubmitButton>
+      </form>
     </div>
   );
 }
