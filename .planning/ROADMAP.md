@@ -110,12 +110,15 @@ The LPG Management System is an established multi-tenant ERP for LPG cylinder di
   5. Users can perform physical inventory counts per warehouse and post adjustments
   6. All existing tests still pass; new tests cover warehouse and KG pricing features
   7. TypeScript compilation clean
-**Status**: Not started
-**Plans**: TBD
+**Status**: Planned
+**Plans**: 4 plans
 **UI hint**: yes
 
 Plans:
-_(to be defined during planning — see Phase 6 PLAN.md)_
+- [ ] 06-01-PLAN.md — Schema & Foundation: Prisma migrations, location-aware stock ledger, StockLocation CRUD, WarehouseSelector
+- [ ] 06-02-PLAN.md — Warehouse Transfers: atomic OUT/IN transfer service + API + UI + cancel workflow
+- [ ] 06-03-PLAN.md — KG Pricing & Warehouse Receipt/Dispatch: kg-pricing service, locationId + KG pricing in sale/purchase flows, UI
+- [ ] 06-04-PLAN.md — Physical Counts & Stock-by-Location Report: count service with adjustment posting, stock report by warehouse
 
 ---
 
