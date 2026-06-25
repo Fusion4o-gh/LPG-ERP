@@ -24,10 +24,12 @@ The LPG Management System is an established multi-tenant ERP for LPG cylinder di
 **Depends on**: Nothing (first phase)
 **Requirements**: Existing — No formal requirement IDs
 **Success Criteria** (what was delivered):
+
   1. User can create and manage companies with multi-tenant isolation
   2. User can define financial years and open/close them
   3. User can create users with role-based permissions
   4. User login enforces RBAC scoped by companyId
+
 **Status**: Complete
 **Plans**: N/A (past milestone)
 
@@ -39,10 +41,12 @@ The LPG Management System is an established multi-tenant ERP for LPG cylinder di
 **Depends on**: Phase 1
 **Requirements**: Existing — No formal requirement IDs
 **Success Criteria** (what was delivered):
+
   1. User can create and manage items with brand, category, and cylinderWeightKg
   2. User can manage customer and vendor records
   3. System maintains append-only StockLedgerEntry for filled/empty cylinder stock
   4. Stock availability queries return real-time balances
+
 **Status**: Complete
 **Plans**: N/A (past milestone)
 
@@ -54,11 +58,13 @@ The LPG Management System is an established multi-tenant ERP for LPG cylinder di
 **Depends on**: Phase 2
 **Requirements**: Existing — No formal requirement IDs
 **Success Criteria** (what was delivered):
+
   1. User can purchase filled cylinders from vendors with auto-stock-in
   2. User can sell LPG in filled cylinders to customers with auto-stock-out
   3. User can process empty cylinder returns from customers
   4. User can process purchase returns to vendors
   5. Every transaction creates balanced double-entry vouchers
+
 **Status**: Complete
 **Plans**: N/A (past milestone)
 
@@ -70,11 +76,13 @@ The LPG Management System is an established multi-tenant ERP for LPG cylinder di
 **Depends on**: Phase 3
 **Requirements**: Existing — No formal requirement IDs
 **Success Criteria** (what was delivered):
+
   1. System maintains a chart of accounts with double-entry voucher posting
   2. User can view account-wise transaction history
   3. Day closing ensures all transactions balance before close
   4. Audit log captures all data-modifying operations
   5. Reports (sales, purchases, stock, P&L, bank book) are available
+
 **Status**: Complete
 **Plans**: N/A (past milestone)
 
@@ -86,11 +94,13 @@ The LPG Management System is an established multi-tenant ERP for LPG cylinder di
 **Depends on**: Phase 4
 **Requirements**: Existing — No formal requirement IDs
 **Success Criteria** (what was delivered):
+
   1. User can manage bulk LPG import contracts with loading/unloading tracking
   2. User can manage plant inventory and local bulk purchases
   3. User can perform inter-plant bulk stock transfers
   4. Dollar-denominated transactions are handled with FX conversion
   5. Loss/gain adjustments are recorded against bulk stock
+
 **Status**: Complete
 **Plans**: N/A (past milestone)
 
@@ -103,6 +113,7 @@ The LPG Management System is an established multi-tenant ERP for LPG cylinder di
 **Depends on**: Phase 5
 **Requirements**: WH-01, WH-02, WH-03, WH-04, WH-05, PR-01, PR-02, PR-03
 **Success Criteria** (what must be TRUE):
+
   1. StockLedgerEntry has locationId and queries show stock by warehouse
   2. Users can transfer cylinders between warehouses with dispatch/receipt workflow
   3. Purchase/sale flows record warehouse location
@@ -110,12 +121,14 @@ The LPG Management System is an established multi-tenant ERP for LPG cylinder di
   5. Users can perform physical inventory counts per warehouse and post adjustments
   6. All existing tests still pass; new tests cover warehouse and KG pricing features
   7. TypeScript compilation clean
+
 **Status**: Planned
-**Plans**: 4 plans
+**Plans**: 1/4 plans executed
 **UI hint**: yes
 
 Plans:
-- [ ] 06-01-PLAN.md — Schema & Foundation: Prisma migrations, location-aware stock ledger, StockLocation CRUD, WarehouseSelector
+
+- [x] 06-01-PLAN.md — Schema & Foundation: Prisma migrations, location-aware stock ledger, StockLocation CRUD, WarehouseSelector
 - [ ] 06-02-PLAN.md — Warehouse Transfers: atomic OUT/IN transfer service + API + UI + cancel workflow
 - [ ] 06-03-PLAN.md — KG Pricing & Warehouse Receipt/Dispatch: kg-pricing service, locationId + KG pricing in sale/purchase flows, UI
 - [ ] 06-04-PLAN.md — Physical Counts & Stock-by-Location Report: count service with adjustment posting, stock report by warehouse
@@ -131,4 +144,4 @@ Plans:
 | 3. Core Transactions | — | Complete | Past milestone |
 | 4. Accounting & Compliance | — | Complete | Past milestone |
 | 5. Bulk Import & Financial Adjustments | — | Complete | Past milestone |
-| 6. Warehouse Management & KG Pricing | 0/TBD | Not started | — |
+| 6. Warehouse Management & KG Pricing | 1/4 | In Progress|  |
