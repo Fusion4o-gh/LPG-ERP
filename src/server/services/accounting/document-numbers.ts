@@ -32,6 +32,7 @@ export const DOCUMENT_PREFIXES = {
   dollarSale: "DSALE",
   openingVoucher: "OPV",
   warehouseTransfer: "WT",
+  physicalCount: "PC",
 } as const;
 
 type Tx = Prisma.TransactionClient;
