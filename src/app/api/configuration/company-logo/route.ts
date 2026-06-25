@@ -1,5 +1,3 @@
-import { writeFile, mkdir } from "node:fs/promises";
-import { join } from "node:path";
 import { prisma } from "@/lib/prisma";
 import { getSessionContextFromRequest } from "@/server/auth/session";
 import { writeAuditLog } from "@/server/services/audit/audit-log";
@@ -24,20 +22,17 @@ export async function POST(request: Request) {
     if (!file.type.startsWith("image/")) return fail("Only image files are allowed.");
     if (file.size > 2 * 1024 * 1024) return fail("File size must be under 2 MB.");
 
-    const ext = file.name.split(".").pop() ?? "png";
-    const fileName = `${companyId}.${ext}`;
-    const publicDir = join(process.cwd(), "public", "company-logos");
-    await mkdir(publicDir, { recursive: true });
-    await writeFile(join(publicDir, fileName), Buffer.from(await file.arrayBuffer()));
-
-    const logoUrl = `/company-logos/${fileName}`;
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const binary = Array.from(bytes).map((b) => String.fromCharCode(b)).join("");
+    const base64 = btoa(binary);
+    const dataUrl = `data:${file.type};base64,${base64}`;
 
     await prisma.$transaction(async (tx) => {
-      await tx.company.update({ where: { id: companyId }, data: { logoUrl } });
-      await writeAuditLog(tx, { companyId, userId, entityType: "Company", entityId: companyId, after: { logoUrl } });
+      await tx.company.update({ where: { id: companyId }, data: { logoUrl: dataUrl } });
+      await writeAuditLog(tx, { companyId, userId, entityType: "Company", entityId: companyId, after: { logoUrl: dataUrl } });
     });
 
-    return ok({ logoUrl });
+    return ok({ logoUrl: dataUrl });
   } catch (error) {
     return serviceError(error);
   }
