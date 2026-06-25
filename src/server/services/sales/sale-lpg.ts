@@ -36,6 +36,7 @@ type SaleInput = {
   chequeDate?: string | Date;
   returnGasKg?: string | number;
   gasReturnRate?: string | number;
+  locationId?: string;
 };
 
 type SaleLpgLineInput = {
@@ -271,6 +272,7 @@ async function createSaleInTransaction(tx: Prisma.TransactionClient, input: Sale
     await assertFilledStockAvailable(tx, {
       companyId: input.companyId,
       financialYearId: input.financialYearId,
+      locationId: input.locationId,
       lines: lines.map((line) => {
         const item = itemById.get(line.itemId);
         return {
@@ -296,6 +298,7 @@ async function createSaleInTransaction(tx: Prisma.TransactionClient, input: Sale
       createdById: input.userId,
       partyType: PartyType.CUSTOMER,
       customerId: input.customerId,
+      locationId: input.locationId,
     });
     stockEntries.push(stockEntry);
 
@@ -328,6 +331,7 @@ async function createSaleInTransaction(tx: Prisma.TransactionClient, input: Sale
         partyType: PartyType.CUSTOMER,
         customerId: input.customerId,
         remarks: "Empty cylinders returned by customer with sale invoice.",
+        locationId: input.locationId,
       });
       stockEntries.push(emptyReturnEntry);
       await decrementCustomerEmptyOwed(tx, input.customerId, line.emptyReturnItemId, line.emptyReturnQuantity);

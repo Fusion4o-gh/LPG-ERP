@@ -36,9 +36,11 @@ export async function POST(request: Request) {
           emptyReturnQuantity: optionalPositiveNumberField(line, "emptyReturnQuantity"),
         }))
       : undefined;
+    const locationId = optionalStringField(body, "locationId");
     const result = await saleLpgSingle({
       ...context,
       issueNo,
+      locationId,
       customerId: stringField(body, "customerId"),
       itemId: lines ? undefined : stringField(body, "itemId"),
       quantity: lines ? undefined : positiveIntegerField(body, "quantity"),

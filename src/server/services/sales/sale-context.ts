@@ -2,6 +2,7 @@ import { PermissionAction, type Prisma } from "@prisma/client";
 import { prisma } from "../../../lib/prisma.ts";
 import { enforcePermission } from "../rbac/enforce.ts";
 import { getFilledStockByItem } from "../inventory/stock-availability.ts";
+import { resolveItemPrice } from "../pricing/kg-pricing.ts";
 
 type Context = { companyId: string; financialYearId: string; userId: string };
 
@@ -53,6 +54,28 @@ export async function getSaleLpgContext(context: Context, input: { customerId?: 
     });
     const filledStock = Object.fromEntries(itemIds.map((id) => [id, stockMap.get(id) ?? 0]));
 
+    // Resolve KG pricing for each item when customerId is provided
+    const kgPricing: Record<string, { unitPrice: string; pricePerKg: string | null; cylinderWeightKg: string | null; usingKgPricing: boolean } | null> = {};
+    const transactionDate = new Date().toISOString();
+    for (const itemId of itemIds) {
+      try {
+        const result = await resolveItemPrice(tx, {
+          companyId: context.companyId,
+          itemId,
+          customerId: input.customerId,
+          transactionDate,
+        });
+        kgPricing[itemId] = {
+          unitPrice: result.unitPrice.toString(),
+          pricePerKg: result.pricePerKg?.toString() ?? null,
+          cylinderWeightKg: result.cylinderWeightKg?.toString() ?? null,
+          usingKgPricing: result.usingKgPricing,
+        };
+      } catch {
+        kgPricing[itemId] = null;
+      }
+    }
+
     const company = await tx.company.findUniqueOrThrow({
       where: { id: context.companyId },
       select: {
@@ -63,6 +86,6 @@ export async function getSaleLpgContext(context: Context, input: { customerId?: 
       },
     });
 
-    return { customerBalance, filledStock, company };
+    return { customerBalance, filledStock, kgPricing, company };
   });
 }
