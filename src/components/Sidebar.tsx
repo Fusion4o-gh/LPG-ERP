@@ -163,6 +163,16 @@ function SidebarIcon({ name, className }: { name: string; className: string }) {
         <path d="M16 7.5C16 5.6 14.2 4.5 12 4.5S8 5.6 8 7.5s1.8 2.6 4 3 4 1.1 4 3-1.8 3-4 3-4-1.1-4-3" />
       </>
     ),
+    warehouse: (
+      <>
+        <path d="M2 20V8l10-5 10 5v12" />
+        <path d="M6 14v6" />
+        <path d="M10 14v6" />
+        <path d="M14 14v6" />
+        <path d="M18 14v6" />
+        <path d="M2 20h20" />
+      </>
+    ),
   };
 
   return (

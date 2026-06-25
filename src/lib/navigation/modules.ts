@@ -76,6 +76,10 @@ const salePurchaseTabs: NavTab[] = [
   { label: "Decanting Sale", href: "/sale-purchase/decanting-sale", module: "decanting-sales" },
   { label: "Cylinder Conversion", href: "/sale-purchase/cylinder-conversion", module: "cylinder-conversions" },
   { label: "Empty Sale", href: "/sale-purchase/empty-sale", module: "empty-sales" },
+];
+
+const warehouseTabs: NavTab[] = [
+  { label: "Stock Locations", href: "/configuration/stock-locations", module: "stock-locations" },
   { label: "Warehouse Transfer", href: "/operations/warehouse-transfer", module: "stock-ledger" },
   { label: "Physical Count", href: "/operations/physical-count", module: "stock-ledger" },
 ];
@@ -217,8 +221,6 @@ export const NAV_MODULES: NavModule[] = [
       "/operations/purchase-filled-cylinder",
       "/operations/complete-day-sale",
       "/operations/sale-lpg",
-      "/operations/warehouse-transfer",
-      "/operations/physical-count",
     ],
     tabs: salePurchaseTabs,
   },
@@ -237,6 +239,14 @@ export const NAV_MODULES: NavModule[] = [
     defaultHref: "/payments/cash-payment",
     matchPrefixes: ["/payments", "/accounting/chart-of-accounts"],
     tabs: paymentTabs,
+  },
+  {
+    id: "warehouse",
+    label: "Warehouse",
+    icon: "warehouse",
+    defaultHref: "/configuration/stock-locations",
+    matchPrefixes: ["/operations/warehouse-transfer", "/operations/physical-count"],
+    tabs: warehouseTabs,
   },
   // NOTE: Import, Plant/Bulk, and Dollar modules (and their report groups) are
   // defined above and wired into NAV_MODULES as each module's pages are built
