@@ -5,10 +5,12 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api-client";
 import { emptySettlement } from "@/lib/settlement";
 import { ApiError } from "./ApiError";
+import { KgPriceField } from "./KgPriceField";
 import { PageHeader } from "./PageHeader";
 import { SettlementPanel } from "./SettlementPanel";
 import { SubmitButton } from "./SubmitButton";
 import { SuccessMessage } from "./SuccessMessage";
+import { WarehouseSelector } from "./WarehouseSelector";
 
 type Lookup = Record<string, unknown>;
 type SaleLine = {
@@ -76,6 +78,8 @@ export function SaleLpgForm() {
     filledOutstanding: number;
   } | null>(null);
   const [filledStock, setFilledStock] = useState<Record<string, number>>({});
+  const [locationId, setLocationId] = useState("");
+  const [kgPricing, setKgPricing] = useState<Record<string, { unitPrice: string; pricePerKg: string | null; cylinderWeightKg: string | null; usingKgPricing: boolean } | null>>({});
 
   useEffect(() => {
     Promise.all([
@@ -108,14 +112,17 @@ export function SaleLpgForm() {
     apiGet<{
       customerBalance: { receivableBalance: number; emptyOwed: number; filledOutstanding: number } | null;
       filledStock: Record<string, number>;
+      kgPricing: Record<string, { unitPrice: string; pricePerKg: string | null; cylinderWeightKg: string | null; usingKgPricing: boolean } | null>;
     }>(`/api/sales/lpg/context?${params.toString()}`)
       .then((data) => {
         setCustomerBalance(data.customerBalance);
         setFilledStock(data.filledStock);
+        setKgPricing(data.kgPricing ?? {});
       })
       .catch(() => {
         setCustomerBalance(null);
         setFilledStock({});
+        setKgPricing({});
       });
   }, [customerId, lines]);
 
@@ -157,6 +164,8 @@ export function SaleLpgForm() {
     setGasReturn({ returnGasKg: "", rate: "" });
     setCustomerBalance(null);
     setFilledStock({});
+    setLocationId("");
+    setKgPricing({});
   }
 
   function payload() {
@@ -186,6 +195,7 @@ export function SaleLpgForm() {
     });
     return {
       customerId,
+      locationId: locationId || undefined,
       transactionDate,
       saleType,
       remarks,
@@ -278,6 +288,10 @@ export function SaleLpgForm() {
                 </select>
               </div>
               <div>
+                <label className="form-label" htmlFor="locationId">Dispatch Warehouse</label>
+                <WarehouseSelector value={locationId} onChange={setLocationId} disabled={lookupLoading} />
+              </div>
+              <div>
                 <label className="form-label" htmlFor="transactionDate">Date *</label>
                 <input id="transactionDate" type="date" value={transactionDate} onChange={(e) => setTransactionDate(e.target.value)} className="form-input" />
               </div>
@@ -349,7 +363,18 @@ export function SaleLpgForm() {
                         </select>
                       </td>
                       <td className="px-2.5 py-2"><input type="number" min="1" value={line.quantity} onChange={(e) => updateLine(index, { quantity: e.target.value })} className="tbl-input w-20 text-right" /></td>
-                      <td className="px-2.5 py-2"><input type="number" min="0" value={line.unitPrice} onChange={(e) => updateLine(index, { unitPrice: e.target.value })} className="tbl-input w-24 text-right" /></td>
+                      <td className="px-2.5 py-2">
+                        <input type="number" min="0" value={line.unitPrice} onChange={(e) => updateLine(index, { unitPrice: e.target.value })} className="tbl-input w-24 text-right" />
+                        {line.itemId && kgPricing[line.itemId] ? (
+                          <KgPriceField
+                            pricePerKg={kgPricing[line.itemId]?.pricePerKg ? Number(kgPricing[line.itemId]!.pricePerKg) : null}
+                            cylinderWeightKg={kgPricing[line.itemId]?.cylinderWeightKg ? Number(kgPricing[line.itemId]!.cylinderWeightKg) : null}
+                            quantity={amount(line.quantity)}
+                            unitPrice={amount(line.unitPrice)}
+                            onUnitPriceChange={(price) => updateLine(index, { unitPrice: String(price) })}
+                          />
+                        ) : null}
+                      </td>
                       <td className="px-2.5 py-2"><input type="number" min="0" value={line.gstPercent} onChange={(e) => updateLine(index, { gstPercent: e.target.value })} className="tbl-input w-16 text-right" /></td>
                       <td className="px-2.5 py-2"><input type="number" min="0" value={line.securityDepositAmount} onChange={(e) => updateLine(index, { securityDepositAmount: e.target.value })} className="tbl-input w-20 text-right" /></td>
                       <td className="px-2.5 py-2">

@@ -5,10 +5,12 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api-client";
 import { emptySettlement } from "@/lib/settlement";
 import { ApiError } from "./ApiError";
+import { KgPriceField } from "./KgPriceField";
 import { PageHeader } from "./PageHeader";
 import { SettlementPanel } from "./SettlementPanel";
 import { SubmitButton } from "./SubmitButton";
 import { SuccessMessage } from "./SuccessMessage";
+import { WarehouseSelector } from "./WarehouseSelector";
 
 type Lookup = Record<string, unknown>;
 type PurchaseLine = {
@@ -65,6 +67,8 @@ export function PurchaseFilledCylinderForm() {
   const [banks, setBanks] = useState<{ id: string; name: string }[]>([]);
   const [settlement, setSettlement] = useState(emptySettlement);
   const [vendorBalance, setVendorBalance] = useState<{ payableBalance: number } | null>(null);
+  const [locationId, setLocationId] = useState("");
+  const [kgPricing, setKgPricing] = useState<Record<string, { unitPrice: string; pricePerKg: string | null; cylinderWeightKg: string | null; usingKgPricing: boolean } | null>>({});
 
   useEffect(() => {
     Promise.all([
@@ -84,14 +88,29 @@ export function PurchaseFilledCylinderForm() {
   }, []);
 
   useEffect(() => {
-    if (!vendorId) {
+    if (!vendorId && lines.every((line) => !line.itemId)) {
       setVendorBalance(null);
+      setKgPricing({});
       return;
     }
-    apiGet<{ vendorBalance: { payableBalance: number } | null }>(`/api/purchases/filled-cylinder/context?vendorId=${vendorId}`)
-      .then((data) => setVendorBalance(data.vendorBalance))
-      .catch(() => setVendorBalance(null));
-  }, [vendorId]);
+    const params = new URLSearchParams();
+    if (vendorId) params.set("vendorId", vendorId);
+    for (const line of lines) {
+      if (line.itemId) params.append("itemId", line.itemId);
+    }
+    apiGet<{
+      vendorBalance: { payableBalance: number } | null;
+      kgPricing: Record<string, { unitPrice: string; pricePerKg: string | null; cylinderWeightKg: string | null; usingKgPricing: boolean } | null>;
+    }>(`/api/purchases/filled-cylinder/context?${params.toString()}`)
+      .then((data) => {
+        setVendorBalance(data.vendorBalance);
+        setKgPricing(data.kgPricing ?? {});
+      })
+      .catch(() => {
+        setVendorBalance(null);
+        setKgPricing({});
+      });
+  }, [vendorId, lines]);
 
   const totals = useMemo(
     () =>
@@ -126,6 +145,8 @@ export function PurchaseFilledCylinderForm() {
     setPrintDocumentNo("");
     setSettlement(emptySettlement());
     setVendorBalance(null);
+    setLocationId("");
+    setKgPricing({});
   }
 
   function payload() {
@@ -145,6 +166,7 @@ export function PurchaseFilledCylinderForm() {
     });
     return {
       vendorId,
+      locationId: locationId || undefined,
       transactionDate,
       remarks,
       elevenPointEightKgPrice: elevenPointEightKgPrice ? Number(elevenPointEightKgPrice) : undefined,
@@ -233,6 +255,10 @@ export function PurchaseFilledCylinderForm() {
                     </option>
                   ))}
                 </select>
+              </div>
+              <div>
+                <label className="form-label" htmlFor="locationId">Receiving Warehouse</label>
+                <WarehouseSelector value={locationId} onChange={setLocationId} disabled={lookupLoading} />
               </div>
               <div>
                 <label className="form-label" htmlFor="transactionDate">
@@ -324,6 +350,15 @@ export function PurchaseFilledCylinderForm() {
                       </td>
                       <td className="px-2.5 py-2">
                         <input type="number" min="0" value={line.unitCost} onChange={(e) => updateLine(index, { unitCost: e.target.value })} className="tbl-input w-full min-w-0 text-right" />
+                        {line.itemId && kgPricing[line.itemId] ? (
+                          <KgPriceField
+                            pricePerKg={kgPricing[line.itemId]?.pricePerKg ? Number(kgPricing[line.itemId]!.pricePerKg) : null}
+                            cylinderWeightKg={kgPricing[line.itemId]?.cylinderWeightKg ? Number(kgPricing[line.itemId]!.cylinderWeightKg) : null}
+                            quantity={amount(line.quantity)}
+                            unitPrice={amount(line.unitCost)}
+                            onUnitPriceChange={(price) => updateLine(index, { unitCost: String(price) })}
+                          />
+                        ) : null}
                       </td>
                       <td className="px-2.5 py-2">
                         <input type="number" min="0" value={line.gstPercent} onChange={(e) => updateLine(index, { gstPercent: e.target.value })} className="tbl-input w-full min-w-0 text-right" />
