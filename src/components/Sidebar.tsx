@@ -207,15 +207,9 @@ export function Sidebar({
       className="flex h-screen w-72 max-w-[85vw] shrink-0 flex-col"
       style={{ background: 'linear-gradient(180deg, #0C2845 0%, #123A5A 40%, #0F3150 100%)', borderRight: '1px solid rgba(0,0,0,0.3)', boxShadow: '3px 0 15px rgba(0,0,0,0.2)' }}
     >
-      {/* Brand header */}
+      {/* Brand header — no logo */}
       <div className="px-5 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)' }}>
         <div className="flex items-center gap-3">
-          <span
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
-            style={{ background: 'linear-gradient(135deg, #F28C28, #D97823)', boxShadow: '2px 2px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)' }}
-          >
-            <img src="/fusion4o-logo.png" alt="LPG Management System" className="h-7 w-7 object-contain" />
-          </span>
           <div className="flex-1 min-w-0">
             <div className="truncate text-[15px] font-bold text-white leading-tight tracking-tight" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
               {shell.companyName}
