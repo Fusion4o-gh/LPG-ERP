@@ -67,65 +67,76 @@ export function LoginForm() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4" style={{ background: 'var(--skeu-surface)' }}>
-      <div className="w-full max-w-sm space-y-5">
-        {logoUrl ? (
-          <img
-            src={logoUrl}
-            alt="Business logo"
-            className="w-full max-h-24 rounded-xl object-contain p-5"
-            style={{ background: 'var(--skeu-raised)', boxShadow: 'var(--skeu-shadow)' }}
-          />
+    <div className="w-full max-w-sm space-y-5 login-fadein">
+      {/* Company logo — shown above the card once the user account is resolved */}
+      {logoUrl ? (
+        <img
+          src={logoUrl}
+          alt="Company logo"
+          className="mx-auto max-h-24 w-auto rounded-xl object-contain px-6 py-4"
+          style={{
+            background: 'rgba(255,255,255,0.92)',
+            boxShadow: '0 4px 24px rgba(0,0,0,0.25)',
+          }}
+        />
+      ) : null}
+
+      <form
+        onSubmit={submit}
+        className="rounded-2xl p-7 space-y-4"
+        style={{
+          background: 'rgba(255,255,255,0.88)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          boxShadow: '0 8px 40px rgba(0,0,0,0.35)',
+        }}
+      >
+        <div className="text-center">
+          <h1 className="text-xl font-bold text-gas-800">LPG Management</h1>
+          <p className="mt-1 text-sm text-steel-500">Sign in to your account</p>
+        </div>
+
+        <ApiError message={error} />
+
+        {companyName ? (
+          <p className="text-center text-sm font-bold text-gas-700">{companyName}</p>
         ) : null}
 
-        <form onSubmit={submit} className="rounded-xl p-6 space-y-4" style={{ background: 'var(--skeu-raised)', boxShadow: 'var(--skeu-shadow-lg)' }}>
-          <div className="text-center">
-            <h1 className="text-xl font-bold text-gas-800" style={{ textShadow: '0 1px 0 rgba(255,255,255,0.8)' }}>LPG Management</h1>
-            <p className="mt-1 text-sm text-steel-500">Sign in to your account</p>
-          </div>
+        <label className="form-label">
+          Login ID <span className="text-red-600">*</span>
+          <input value={loginId} onChange={(event) => setLoginId(event.target.value)} className="form-input" />
+        </label>
 
-          <ApiError message={error} />
+        <label className="form-label">
+          Financial Year <span className="text-red-600">*</span>
+          <select
+            value={financialYearId}
+            onChange={(e) => setFinancialYearId(e.target.value)}
+            className="form-input"
+            required
+            disabled={financialYears.length === 0}
+          >
+            <option value="">{financialYears.length ? "Select financial year" : "Enter login ID first"}</option>
+            {financialYears.map((year) => (
+              <option key={year.id} value={year.id}>
+                {year.label}{year.isActive ? " (active)" : ""}
+              </option>
+            ))}
+          </select>
+        </label>
 
-          {companyName ? (
-            <p className="text-center text-sm font-bold text-gas-700">{companyName}</p>
-          ) : null}
+        <label className="form-label">
+          Password <span className="text-red-600">*</span>
+          <input
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            className="form-input"
+          />
+        </label>
 
-          <label className="form-label">
-            Login ID <span className="text-red-600">*</span>
-            <input value={loginId} onChange={(event) => setLoginId(event.target.value)} className="form-input" />
-          </label>
-
-          <label className="form-label">
-            Financial Year <span className="text-red-600">*</span>
-            <select
-              value={financialYearId}
-              onChange={(e) => setFinancialYearId(e.target.value)}
-              className="form-input"
-              required
-              disabled={financialYears.length === 0}
-            >
-              <option value="">{financialYears.length ? "Select financial year" : "Enter login ID first"}</option>
-              {financialYears.map((year) => (
-                <option key={year.id} value={year.id}>
-                  {year.label}{year.isActive ? " (active)" : ""}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="form-label">
-            Password <span className="text-red-600">*</span>
-            <input
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="form-input"
-            />
-          </label>
-
-          <SubmitButton loading={loading}>Sign in</SubmitButton>
-        </form>
-      </div>
+        <SubmitButton loading={loading}>Sign in</SubmitButton>
+      </form>
     </div>
   );
 }
