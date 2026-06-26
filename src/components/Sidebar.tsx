@@ -205,21 +205,22 @@ export function Sidebar({
     <aside
       data-print-hidden
       className="flex h-screen w-72 max-w-[85vw] shrink-0 flex-col"
-      style={{ background: "var(--sidebar-bg)", borderRight: "1px solid var(--sidebar-border)" }}
+      style={{ background: 'linear-gradient(180deg, #0C2845 0%, #123A5A 40%, #0F3150 100%)', borderRight: '1px solid rgba(0,0,0,0.3)', boxShadow: '3px 0 15px rgba(0,0,0,0.2)' }}
     >
-      <div className="px-5 py-5" style={{ borderBottom: "1px solid var(--sidebar-border)" }}>
+      {/* Brand header */}
+      <div className="px-5 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)' }}>
         <div className="flex items-center gap-3">
           <span
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-sm"
-            style={{ background: "var(--fusion-gradient)" }}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+            style={{ background: 'linear-gradient(135deg, #F28C28, #D97823)', boxShadow: '2px 2px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)' }}
           >
             <img src="/fusion4o-logo.png" alt="LPG Management System" className="h-7 w-7 object-contain" />
           </span>
           <div className="flex-1 min-w-0">
-            <div className="truncate text-[15px] font-bold text-[color:var(--sidebar-heading)] leading-tight tracking-tight">
+            <div className="truncate text-[15px] font-bold text-white leading-tight tracking-tight" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
               {shell.companyName}
             </div>
-            <div className="text-[11px] mt-0.5" style={{ color: "var(--sidebar-text)" }}>
+            <div className="text-[11px] mt-0.5 text-flame-200">
               LPG Management System · FY {shell.financialYearLabel}
             </div>
           </div>
@@ -227,7 +228,7 @@ export function Sidebar({
             <button
               type="button"
               onClick={onClose}
-              className="md:hidden rounded-md p-1 text-[color:var(--sidebar-muted)] hover:text-[color:var(--sidebar-heading)] transition-colors"
+              className="md:hidden rounded-md p-1 text-steel-300 hover:text-white transition-colors"
               aria-label="Close navigation"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -241,26 +242,29 @@ export function Sidebar({
       <nav className="flex-1 overflow-y-auto px-3 py-3">
         {canViewDashboard ? (
           (() => {
-            const theme = MODULE_THEME.dashboard ?? DEFAULT_THEME;
             return (
               <Link
                 href="/dashboard"
-                className={`group relative mb-2 flex items-center gap-3 rounded-xl px-2.5 py-2 transition-all ${
-                  dashboardActive ? theme.row : "text-[color:var(--sidebar-text)] hover:bg-[var(--sidebar-hover-bg)]"
+                className={`group relative mb-2 flex items-center gap-3 rounded-lg px-2.5 py-2.5 transition-all ${
+                  dashboardActive
+                    ? 'sidebar-link-active'
+                    : 'text-steel-200 hover:text-white sidebar-link-hover'
                 }`}
+                style={dashboardActive ? { boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)' } : {}}
               >
-                <span
-                  className={`absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full transition-all ${
-                    dashboardActive ? theme.bar : "bg-transparent"
-                  }`}
-                  aria-hidden
-                />
-                <SidebarIcon name="dashboard" className={dashboardActive ? theme.active : theme.idle} />
+                <div
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
+                  style={dashboardActive
+                    ? { background: 'linear-gradient(135deg, #F28C28, #D97823)', boxShadow: '2px 2px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)' }
+                    : { background: 'rgba(255,255,255,0.08)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1)' }}
+                >
+                  <svg aria-hidden="true" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} viewBox="0 0 24 24">
+                    <path d="M4 13h7V4H4v9z" /><path d="M13 20h7V4h-7v16z" /><path d="M4 20h7v-5H4v5z" />
+                  </svg>
+                </div>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-semibold leading-tight">Dashboard</span>
-                  <span className={`block text-[10px] leading-tight ${dashboardActive ? "opacity-70" : "text-[color:var(--sidebar-muted)]"}`}>
-                    Overview
-                  </span>
+                  <span className={`block truncate text-sm font-semibold leading-tight ${dashboardActive ? 'text-white' : 'text-steel-100'}`}>Dashboard</span>
+                  <span className={`block text-[10px] leading-tight ${dashboardActive ? 'text-flame-200' : 'text-steel-400'}`}>Overview</span>
                 </span>
               </Link>
             );
@@ -270,42 +274,42 @@ export function Sidebar({
         {visibleModules.map((module) => {
           const href = moduleSidebarHref(module, permissions);
           const isActive = activeModule === module.id;
-          const theme = MODULE_THEME[module.id] ?? DEFAULT_THEME;
           return (
             <Link
               key={module.id}
               href={href}
               onClick={() => rememberModuleTab(module.id, href)}
-              className={`group relative mb-1.5 flex items-center gap-3 rounded-xl px-2.5 py-2 transition-all ${
-                isActive ? theme.row : "text-[color:var(--sidebar-text)] hover:bg-[var(--sidebar-hover-bg)]"
+              className={`group relative mb-1.5 flex items-center gap-3 rounded-lg px-2.5 py-2.5 transition-all ${
+                isActive
+                  ? 'sidebar-link-active'
+                  : 'text-steel-200 hover:text-white sidebar-link-hover'
               }`}
+              style={isActive ? { boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)' } : {}}
             >
-              <span
-                className={`absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full transition-all ${
-                  isActive ? theme.bar : "bg-transparent"
-                }`}
-                aria-hidden
+              <SidebarIcon
+                name={module.icon}
+                className={isActive
+                  ? "border-transparent bg-gradient-to-br from-flame-500 to-flame-600 text-white shadow-sm"
+                  : "border-white/10 bg-white/10 text-steel-300"}
               />
-              <SidebarIcon name={module.icon} className={isActive ? theme.active : theme.idle} />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-semibold leading-tight">{module.label}</span>
-                <span className={`block text-[10px] leading-tight ${isActive ? "opacity-70" : "text-[color:var(--sidebar-muted)]"}`}>
-                  Module
-                </span>
+                <span className={`block truncate text-sm font-semibold leading-tight ${isActive ? 'text-white' : 'text-steel-100'}`}>{module.label}</span>
+                <span className={`block text-[10px] leading-tight ${isActive ? 'text-flame-200' : 'text-steel-400'}`}>Module</span>
               </span>
             </Link>
           );
         })}
       </nav>
 
-      <div className="px-3 py-4 space-y-3" style={{ borderTop: "1px solid var(--sidebar-border)" }}>
+      {/* User footer */}
+      <div className="px-3 py-4 space-y-3" style={{ borderTop: '1px solid rgba(255,255,255,0.06)', boxShadow: 'inset 0 1px 0 rgba(0,0,0,0.2)' }}>
         <div className="flex items-center gap-3 px-2">
           {shell.logoUrl ? (
-            <img src={shell.logoUrl} alt="" className="h-9 w-9 shrink-0 rounded-full object-contain border border-[var(--sidebar-border)]" aria-hidden />
+            <img src={shell.logoUrl} alt="" className="h-9 w-9 shrink-0 rounded-full object-contain" style={{ border: '2px solid rgba(242,140,40,0.3)', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} aria-hidden />
           ) : (
             <div
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-              style={{ background: "var(--fusion-gradient)" }}
+              style={{ background: 'var(--flame-gradient)', boxShadow: '2px 2px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)' }}
               aria-hidden
             >
               {shell.userName
@@ -317,10 +321,8 @@ export function Sidebar({
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-[color:var(--sidebar-heading)] leading-tight">{shell.userName}</p>
-            <p className="truncate text-[11px]" style={{ color: "var(--sidebar-text)" }}>
-              {shell.loginId}
-            </p>
+            <p className="truncate text-sm font-semibold text-white leading-tight">{shell.userName}</p>
+            <p className="truncate text-[11px] text-flame-200">{shell.loginId}</p>
           </div>
         </div>
         <LogoutButton />

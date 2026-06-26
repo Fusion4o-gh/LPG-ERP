@@ -67,56 +67,65 @@ export function LoginForm() {
   }
 
   return (
-    <div className="flex flex-col items-center gap-5">
-      {logoUrl ? (
-        <img
-          src={logoUrl}
-          alt="Business logo"
-          className="w-full max-h-24 rounded-xl border border-slate-200/80 bg-white object-contain p-5 shadow-sm"
-        />
-      ) : null}
-      <form onSubmit={submit} className="card-md w-full space-y-4 p-5">
-        <ApiError message={error} />
-        {companyName ? (
-          <p className="text-center text-sm font-semibold text-slate-800">{companyName}</p>
+    <div className="flex min-h-screen flex-col items-center justify-center px-4" style={{ background: 'var(--skeu-surface)' }}>
+      <div className="w-full max-w-sm space-y-5">
+        {logoUrl ? (
+          <img
+            src={logoUrl}
+            alt="Business logo"
+            className="w-full max-h-24 rounded-xl object-contain p-5"
+            style={{ background: 'var(--skeu-raised)', boxShadow: 'var(--skeu-shadow)' }}
+          />
         ) : null}
-        <label className="form-label">
-          Login ID <span className="text-red-600">*</span>
-          <input
-            value={loginId}
-            onChange={(event) => setLoginId(event.target.value)}
-            className="form-input"
-          />
-        </label>
-        <label className="form-label">
-          Financial Year <span className="text-red-600">*</span>
-          <select
-            value={financialYearId}
-            onChange={(e) => setFinancialYearId(e.target.value)}
-            className="form-input"
-            required
-            disabled={financialYears.length === 0}
-          >
-            <option value="">{financialYears.length ? "Select financial year" : "Enter login ID first"}</option>
-            {financialYears.map((year) => (
-              <option key={year.id} value={year.id}>
-                {year.label}
-                {year.isActive ? " (active)" : ""}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="form-label">
-          Password <span className="text-red-600">*</span>
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className="form-input"
-          />
-        </label>
-        <SubmitButton loading={loading}>Sign in</SubmitButton>
-      </form>
+
+        <form onSubmit={submit} className="rounded-xl p-6 space-y-4" style={{ background: 'var(--skeu-raised)', boxShadow: 'var(--skeu-shadow-lg)' }}>
+          <div className="text-center">
+            <h1 className="text-xl font-bold text-gas-800" style={{ textShadow: '0 1px 0 rgba(255,255,255,0.8)' }}>LPG Management</h1>
+            <p className="mt-1 text-sm text-steel-500">Sign in to your account</p>
+          </div>
+
+          <ApiError message={error} />
+
+          {companyName ? (
+            <p className="text-center text-sm font-bold text-gas-700">{companyName}</p>
+          ) : null}
+
+          <label className="form-label">
+            Login ID <span className="text-red-600">*</span>
+            <input value={loginId} onChange={(event) => setLoginId(event.target.value)} className="form-input" />
+          </label>
+
+          <label className="form-label">
+            Financial Year <span className="text-red-600">*</span>
+            <select
+              value={financialYearId}
+              onChange={(e) => setFinancialYearId(e.target.value)}
+              className="form-input"
+              required
+              disabled={financialYears.length === 0}
+            >
+              <option value="">{financialYears.length ? "Select financial year" : "Enter login ID first"}</option>
+              {financialYears.map((year) => (
+                <option key={year.id} value={year.id}>
+                  {year.label}{year.isActive ? " (active)" : ""}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="form-label">
+            Password <span className="text-red-600">*</span>
+            <input
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              className="form-input"
+            />
+          </label>
+
+          <SubmitButton loading={loading}>Sign in</SubmitButton>
+        </form>
+      </div>
     </div>
   );
 }

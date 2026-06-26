@@ -4,7 +4,6 @@ export function SubmitButton({ loading, disabled, children }: { loading: boolean
       type="submit"
       disabled={loading || disabled}
       className="btn-primary disabled:opacity-60 disabled:cursor-not-allowed"
-      style={loading ? { background: "#94a3b8" } : undefined}
     >
       {loading && (
         <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">

@@ -68,25 +68,14 @@ const QUICK_LINKS = [
 ];
 
 const KPI_DEFS = [
-  { key: "todayCash" as const, label: "Today Cash", icon: "cash", tone: "emerald" },
-  { key: "cashPosition" as const, label: "Cash Position", icon: "bank", tone: "blue" },
-  { key: "payables" as const, label: "Payables", icon: "arrowUp", tone: "rose" },
-  { key: "receivables" as const, label: "Receivables", icon: "arrowDown", tone: "amber" },
-  { key: "todaySale" as const, label: "Today's Sale", icon: "sale", tone: "indigo" },
-  { key: "expenses" as const, label: "Expenses", icon: "receipt", tone: "orange" },
-  { key: "mExpenses" as const, label: "Month Expenses", icon: "calendar", tone: "violet" },
+  { key: "todayCash" as const, label: "Today Cash", icon: "cash", bar: "from-flame-400 to-flame-600" },
+  { key: "cashPosition" as const, label: "Cash Position", icon: "bank", bar: "from-gas-400 to-gas-600" },
+  { key: "payables" as const, label: "Payables", icon: "arrowUp", bar: "from-red-400 to-red-600" },
+  { key: "receivables" as const, label: "Receivables", icon: "arrowDown", bar: "from-amber-400 to-amber-600" },
+  { key: "todaySale" as const, label: "Today's Sale", icon: "sale", bar: "from-flame-400 to-flame-600" },
+  { key: "expenses" as const, label: "Expenses", icon: "receipt", bar: "from-steel-400 to-steel-600" },
+  { key: "mExpenses" as const, label: "Month Expenses", icon: "calendar", bar: "from-violet-400 to-violet-600" },
 ];
-
-/** Semantic color per KPI. Full literal classes so Tailwind JIT keeps them. */
-const KPI_TONE: Record<string, { chip: string; bar: string }> = {
-  emerald: { chip: "border-emerald-100 bg-emerald-50 text-emerald-600", bar: "from-emerald-400 to-emerald-600" },
-  blue: { chip: "border-blue-100 bg-blue-50 text-blue-600", bar: "from-blue-400 to-blue-600" },
-  rose: { chip: "border-rose-100 bg-rose-50 text-rose-600", bar: "from-rose-400 to-rose-600" },
-  amber: { chip: "border-amber-100 bg-amber-50 text-amber-600", bar: "from-amber-400 to-amber-600" },
-  indigo: { chip: "border-indigo-100 bg-indigo-50 text-indigo-600", bar: "from-indigo-400 to-indigo-600" },
-  orange: { chip: "border-orange-100 bg-orange-50 text-orange-600", bar: "from-orange-400 to-orange-600" },
-  violet: { chip: "border-violet-100 bg-violet-50 text-violet-600", bar: "from-violet-400 to-violet-600" },
-};
 
 type KpiIconName = (typeof KPI_DEFS)[number]["icon"];
 
@@ -169,10 +158,11 @@ function CollapsibleSection({
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="surface-press flex w-full items-center justify-between border-b border-slate-100 bg-slate-50/70 px-4 py-3 text-left"
+        className="surface-press flex w-full items-center justify-between px-4 py-3 text-left"
+        style={{ background: 'linear-gradient(180deg, #f4f6f9, #e8ecf1)', borderBottom: '1px solid rgba(0,0,0,0.06)' }}
       >
-        <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">{title}</p>
-        <span className="flex items-center gap-2 text-xs font-medium text-slate-400">
+        <p className="text-xs font-bold uppercase tracking-widest text-steel-600">{title}</p>
+        <span className="flex items-center gap-2 text-xs font-semibold text-steel-400">
           {open ? "Hide" : "Show"}
           <svg
             className={`h-3.5 w-3.5 transition-transform duration-150 ${open ? "rotate-90" : ""}`}
@@ -186,7 +176,7 @@ function CollapsibleSection({
           </svg>
         </span>
       </button>
-      {open ? children : null}
+      {open ? <div style={{ background: '#fafbfc' }}>{children}</div> : null}
     </div>
   );
 }
@@ -198,10 +188,10 @@ function KpiSkeleton() {
         <div key={i} className="card rounded-xl p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-3">
-              <div className="h-3 w-24 animate-pulse rounded bg-slate-100" />
-              <div className="h-7 w-32 animate-pulse rounded bg-slate-100" />
+              <div className="h-3 w-24 rounded" style={{ background: '#d9dde3', boxShadow: 'inset 1px 1px 2px rgba(0,0,0,0.06)' }} />
+              <div className="h-7 w-32 rounded" style={{ background: '#d9dde3', boxShadow: 'inset 1px 1px 2px rgba(0,0,0,0.06)' }} />
             </div>
-            <div className="h-9 w-9 animate-pulse rounded-lg bg-slate-100" />
+            <div className="h-9 w-9 rounded-lg" style={{ background: '#d9dde3', boxShadow: 'inset 1px 1px 2px rgba(0,0,0,0.06)' }} />
           </div>
         </div>
       ))}
@@ -229,44 +219,40 @@ export function DashboardClient() {
       <ApiError message={error} />
 
       {data?.backup.needsFirstBackup ? (
-        <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+        <div className="mb-4 rounded-lg px-4 py-3 text-sm text-gas-800" style={{ background: 'linear-gradient(145deg, #E8F0F7, #C5D9E9)', boxShadow: '3px 3px 8px rgba(0,0,0,0.1), -3px -3px 8px rgba(255,255,255,0.6)' }}>
           <strong>Set up your first database backup.</strong>{" "}
           Schedule a backup when you are ready so your data can be restored if needed.{" "}
-          <Link href="/database-backup" className="font-semibold underline">
-            Open Database Backup
-          </Link>
+          <Link href="/database-backup" className="font-bold underline text-flame-600">Open Database Backup</Link>
         </div>
       ) : null}
 
       {data?.backup.isStale ? (
-        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <div className="mb-4 rounded-lg px-4 py-3 text-sm text-amber-900" style={{ background: 'linear-gradient(145deg, #FFF8E1, #FFECB3)', boxShadow: '3px 3px 8px rgba(0,0,0,0.1), -3px -3px 8px rgba(255,255,255,0.6)' }}>
           <strong>Database backup overdue.</strong> Last backup was {data.backup.backupStaleDays} day(s) ago.
           Maintain a regular backup log in case of data loss.{" "}
-          <Link href="/database-backup" className="font-semibold underline">
-            Open Database Backup
-          </Link>
+          <Link href="/database-backup" className="font-bold underline text-flame-600">Open Database Backup</Link>
         </div>
       ) : null}
 
       {data && (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-5">
           {KPI_DEFS.map((kpi) => {
-            const tone = KPI_TONE[kpi.tone] ?? KPI_TONE.blue;
             return (
               <div
                 key={kpi.key}
                 className="card surface-press relative overflow-hidden rounded-xl p-4 pl-5 flex items-start justify-between gap-3"
               >
                 <span
-                  className={`absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b ${tone.bar}`}
+                  className={`absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b ${kpi.bar}`}
                   aria-hidden="true"
                 />
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">{kpi.label}</p>
-                  <p className="mt-2 text-2xl font-bold text-slate-800 tabular-nums leading-none">{fmt(data.kpis[kpi.key])}</p>
+                  <p className="text-xs font-bold text-steel-500 uppercase tracking-wide">{kpi.label}</p>
+                  <p className="mt-2 text-2xl font-bold text-gas-800 tabular-nums leading-none">{fmt(data.kpis[kpi.key])}</p>
                 </div>
                 <span
-                  className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] ${tone.chip}`}
+                  className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-flame-500"
+                  style={{ background: 'linear-gradient(145deg, #fef3e7, #fde0c3)', boxShadow: '2px 2px 5px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.6)' }}
                   aria-hidden="true"
                 >
                   <KpiIcon name={kpi.icon} />
@@ -283,17 +269,17 @@ export function DashboardClient() {
             <div className="max-h-[520px] overflow-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-100 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                    <th className="px-4 py-2.5 bg-slate-50/70">Bank</th>
-                    <th className="px-4 py-2.5 text-right bg-slate-50/70">Debit</th>
-                    <th className="px-4 py-2.5 text-right bg-slate-50/70">Credit</th>
-                    <th className="px-4 py-2.5 text-right bg-slate-50/70">Balance</th>
+                  <tr className="text-left text-xs font-bold text-steel-500 uppercase tracking-wide" style={{ background: 'linear-gradient(180deg, #f4f6f9, #e2e6ec)', borderBottom: '2px solid rgba(18,58,90,0.15)' }}>
+                    <th className="px-4 py-2.5">Bank</th>
+                    <th className="px-4 py-2.5 text-right">Debit</th>
+                    <th className="px-4 py-2.5 text-right">Credit</th>
+                    <th className="px-4 py-2.5 text-right">Balance</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-white/50">
                   {data.bankPosition.map((b) => (
                     <tr key={b.id} className="accent-row-hover transition-colors">
-                      <td className="px-4 py-2.5 text-slate-700 font-medium">
+                      <td className="px-4 py-2.5 text-steel-700 font-semibold">
                         <Link
                           href={`/reports/general-ledger?accountId=${encodeURIComponent(b.accountId)}`}
                           className="accent-link hover:underline"
@@ -301,9 +287,9 @@ export function DashboardClient() {
                           {b.name}
                         </Link>
                       </td>
-                      <td className="px-4 py-2.5 text-right tabular-nums text-slate-600">{fmt(b.totalDebit)}</td>
-                      <td className="px-4 py-2.5 text-right tabular-nums text-slate-600">{fmt(b.totalCredit)}</td>
-                      <td className={`px-4 py-2.5 text-right tabular-nums font-semibold ${b.balance >= 0 ? "text-blue-700" : "text-red-600"}`}>
+                      <td className="px-4 py-2.5 text-right tabular-nums text-steel-600">{fmt(b.totalDebit)}</td>
+                      <td className="px-4 py-2.5 text-right tabular-nums text-steel-600">{fmt(b.totalCredit)}</td>
+                      <td className={`px-4 py-2.5 text-right tabular-nums font-bold ${b.balance >= 0 ? "text-gas-600" : "text-red-600"}`}>
                         {fmt(b.balance)}
                       </td>
                     </tr>
@@ -316,7 +302,7 @@ export function DashboardClient() {
 
         {data && (
           <CollapsibleSection title="Sale Stats" defaultOpen>
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-white/50">
               {[
                 { label: "Today — Transactions", value: String(data.saleStats.today.count) },
                 { label: "Today — Amount", value: fmt(data.saleStats.today.amount) },
@@ -324,8 +310,8 @@ export function DashboardClient() {
                 { label: "This Month — Amount", value: fmt(data.saleStats.month.amount) },
               ].map((row) => (
                 <div key={row.label} className="flex items-center justify-between px-4 py-3">
-                  <p className="text-sm text-slate-500">{row.label}</p>
-                  <p className="text-sm font-semibold tabular-nums text-slate-800">{row.value}</p>
+                  <p className="text-sm text-steel-500">{row.label}</p>
+                  <p className="text-sm font-bold tabular-nums text-gas-800">{row.value}</p>
                 </div>
               ))}
             </div>
@@ -338,21 +324,21 @@ export function DashboardClient() {
           <div className="mb-5 max-h-[520px] overflow-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                  <th className="px-4 py-2.5 bg-slate-50/70">Item</th>
-                  <th className="px-4 py-2.5 text-right bg-slate-50/70">Filled</th>
-                  <th className="px-4 py-2.5 text-right bg-slate-50/70">Empty</th>
+                <tr className="text-left text-xs font-bold text-steel-500 uppercase tracking-wide" style={{ background: 'linear-gradient(180deg, #f4f6f9, #e2e6ec)', borderBottom: '2px solid rgba(18,58,90,0.15)' }}>
+                  <th className="px-4 py-2.5">Item</th>
+                  <th className="px-4 py-2.5 text-right">Filled</th>
+                  <th className="px-4 py-2.5 text-right">Empty</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-white/50">
                 {data.currentStock.map((s) => (
                   <tr key={s.id} className="accent-row-hover transition-colors">
-                    <td className="px-4 py-2.5 text-slate-700">
-                      <span className="font-medium text-slate-900">{s.itemCode}</span>
-                      <span className="ml-2 text-slate-400 text-xs">{s.itemName}</span>
+                    <td className="px-4 py-2.5 text-steel-700">
+                      <span className="font-bold text-gas-800">{s.itemCode}</span>
+                      <span className="ml-2 text-steel-400 text-xs">{s.itemName}</span>
                     </td>
-                    <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-blue-700">{s.filled}</td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-slate-500">{s.empty}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums font-bold text-gas-600">{s.filled}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-steel-500">{s.empty}</td>
                   </tr>
                 ))}
               </tbody>
@@ -364,14 +350,14 @@ export function DashboardClient() {
       <div className="card rounded-xl overflow-hidden">
         <div className="accent-section-header">
           <div className="accent-bar" />
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Quick Links</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-steel-600">Quick Links</p>
         </div>
-        <div className="grid grid-cols-2 gap-2 p-4 sm:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 p-4 sm:grid-cols-3 xl:grid-cols-4" style={{ background: '#fafbfc' }}>
           {QUICK_LINKS.map((link) => (
             <button
               key={link.label}
               onClick={() => router.push(link.href)}
-              className="accent-tile surface-press rounded-lg px-3 py-2.5 text-left text-sm font-medium"
+              className="accent-tile surface-press rounded-lg px-3 py-2.5 text-left text-sm font-semibold"
             >
               {link.label}
             </button>
