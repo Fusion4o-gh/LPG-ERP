@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { ApiError } from "./ApiError";
 import { SubmitButton } from "./SubmitButton";
 
@@ -67,21 +68,26 @@ export function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-sm space-y-5 login-fadein">
-      {/* Company logo — shown above the card once the user account is resolved */}
-      {logoUrl ? (
-        <img
-          src={logoUrl}
-          alt="Company logo"
-          className="mx-auto max-h-24 w-auto rounded-xl object-contain px-6 py-4"
-          style={{
-            background: 'rgba(255,255,255,0.92)',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.25)',
-          }}
-        />
-      ) : null}
+    <div className="w-full max-w-sm space-y-6">
+      {/* Company logo — bare, no container, swirl + fade in when it appears */}
+      <AnimatePresence>
+        {logoUrl && (
+          <motion.img
+            key="logo"
+            src={logoUrl}
+            alt="Company logo"
+            className="mx-auto block object-contain"
+            style={{ maxHeight: 112, width: "auto", maxWidth: "100%" }}
+            initial={{ opacity: 0, scale: 0.7, rotate: -180 }}
+            animate={{ opacity: 1, scale: 1, rotate: 0 }}
+            exit={{ opacity: 0, scale: 0.7, rotate: 180 }}
+            transition={{ duration: 0.65, ease: [0.23, 1, 0.32, 1] }}
+          />
+        )}
+      </AnimatePresence>
 
-      <form
+      {/* Login card */}
+      <motion.form
         onSubmit={submit}
         className="rounded-2xl p-7 space-y-4"
         style={{
@@ -90,6 +96,9 @@ export function LoginForm() {
           WebkitBackdropFilter: 'blur(12px)',
           boxShadow: '0 8px 40px rgba(0,0,0,0.35)',
         }}
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.55, ease: [0.23, 1, 0.32, 1] }}
       >
         <div className="text-center">
           <h1 className="text-xl font-bold text-gas-800">LPG Management</h1>
@@ -136,7 +145,7 @@ export function LoginForm() {
         </label>
 
         <SubmitButton loading={loading}>Sign in</SubmitButton>
-      </form>
+      </motion.form>
     </div>
   );
 }
