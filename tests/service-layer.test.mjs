@@ -230,8 +230,8 @@ test("multi-line LPG sale creates one document with sale stock outs, same-sale e
   assert.equal(Number(result.totalGstAmount), 700);
   assert.equal(Number(result.totalSecurityAmount), 750);
   assert.equal(Number(result.totalReceivableAmount), 9450);
-  assert.equal(Number(result.voucher.totalDebit), 9450);
-  assert.equal(Number(result.voucher.totalCredit), 9450);
+  assert.equal(Number(result.voucher.totalDebit), 15650);
+  assert.equal(Number(result.voucher.totalCredit), 15650);
 
   const stockEntries = await prisma.stockLedgerEntry.findMany({
     where: { sourceId: issueNo },
@@ -382,8 +382,8 @@ test("complete day sale batch supports multi-item rows, cash receipts, credit ro
   assert.ok(result.sales[0].receiptVoucher);
   assert.equal(Number(result.sales[0].receiptVoucher.totalDebit), 4000);
   assert.equal(result.sales[1].receiptVoucher, null);
-  assert.equal(Number(result.sales[0].voucher.totalDebit), 8000);
-  assert.equal(Number(result.sales[1].voucher.totalDebit), 3200);
+  assert.equal(Number(result.sales[0].voucher.totalDebit), 15400);
+  assert.equal(Number(result.sales[1].voucher.totalDebit), 5400);
 
   const stockEntries = await prisma.stockLedgerEntry.findMany({ where: { sourceId: { in: result.issueNos } } });
   assert.equal(stockEntries.filter((entry) => entry.direction === "OUT" && entry.cylinderState === "FILLED").length, 4);

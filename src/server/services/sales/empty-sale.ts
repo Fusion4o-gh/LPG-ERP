@@ -2,7 +2,8 @@ import { CylinderState, PartyType, PermissionAction, Prisma, StockDirection, Sto
 import { prisma } from "../../../lib/prisma.ts";
 import { ACCOUNT_CODES, getAccountIdByCode } from "../accounting/accounts.ts";
 import { capDiscount, postCustomerReceipt } from "../accounting/settlement-vouchers.ts";
-import { createBalancedVoucher } from "../accounting/vouchers.ts";
+import { createBalancedVoucher, type VoucherLineInput } from "../accounting/vouchers.ts";
+import { getWeightedAverageCost } from "../inventory/stock-ledger.ts";
 import { writeAuditLog } from "../audit/audit-log.ts";
 import { assertWritableBusinessDate } from "../inventory/day-closing.ts";
 import { createStockLedgerEntry } from "../inventory/stock-ledger.ts";
@@ -119,6 +120,19 @@ export async function emptySale(input: EmptySaleInput) {
       );
     }
 
+    // COGS for empty cylinders sold
+    const cogsAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.cogs);
+    const stockAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.stock);
+    const cogsLines: VoucherLineInput[] = [];
+    for (const line of lines) {
+      const avgCost = await getWeightedAverageCost(tx, input.companyId, line.itemId, CylinderState.EMPTY);
+      if (avgCost.gt(0) && line.quantity > 0) {
+        const totalCost = avgCost.times(line.quantity);
+        cogsLines.push({ accountId: cogsAccountId, debit: totalCost });
+        cogsLines.push({ accountId: stockAccountId, credit: totalCost });
+      }
+    }
+
     const voucher = await createBalancedVoucher(tx, {
       companyId: input.companyId,
       financialYearId: input.financialYearId,
@@ -134,6 +148,7 @@ export async function emptySale(input: EmptySaleInput) {
         { accountId: salesAccountId, credit: totalExGstAmount },
         ...(totalGstAmount.gt(0) ? [{ accountId: gstPayableAccountId, credit: totalGstAmount }] : []),
         ...(discountAmount.gt(0) && salesDiscountAccountId ? [{ accountId: salesDiscountAccountId, debit: discountAmount }] : []),
+        ...cogsLines,
       ],
     });
 

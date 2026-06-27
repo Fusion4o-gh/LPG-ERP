@@ -188,7 +188,7 @@ async function main() {
   await upsertAccount(company.id, "3001001001", "Retail Sales LPG", AccountType.REVENUE, NormalBalance.CREDIT, 3, revenue.id);
   await upsertAccount(company.id, "4001002001", "Cost of Goods Sold LPG", AccountType.EXPENSE, NormalBalance.DEBIT, 3, expenses.id);
   await upsertAccount(company.id, "4001001501", "Sales Discount Allowed", AccountType.EXPENSE, NormalBalance.DEBIT, 3, expenses.id);
-  await upsertAccount(company.id, "4001001502", "Purchase Discount Received", AccountType.EXPENSE, NormalBalance.DEBIT, 3, expenses.id);
+  await upsertAccount(company.id, "4001001502", "Purchase Discount Received", AccountType.REVENUE, NormalBalance.CREDIT, 3, expenses.id);
 
   // --- Bulk / import / dollar / plant control accounts ---
   await upsertAccount(company.id, "2003002001", "Bulk LPG Stock", AccountType.ASSET, NormalBalance.DEBIT, 3, assets.id);

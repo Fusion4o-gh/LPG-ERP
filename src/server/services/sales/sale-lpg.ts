@@ -2,11 +2,11 @@ import { CylinderState, PartyType, PermissionAction, Prisma, StockDirection, Sto
 import { prisma } from "../../../lib/prisma.ts";
 import { ACCOUNT_CODES, getAccountIdByCode, getBankAccountId, getCashAccountId } from "../accounting/accounts.ts";
 import { assertFilledStockAvailable } from "../inventory/stock-availability.ts";
+import { createStockLedgerEntry, getWeightedAverageCost } from "../inventory/stock-ledger.ts";
 import { DOCUMENT_PREFIXES, nextDocumentNumberInTransaction } from "../accounting/document-numbers.ts";
-import { createBalancedVoucher } from "../accounting/vouchers.ts";
+import { createBalancedVoucher, type VoucherLineInput } from "../accounting/vouchers.ts";
 import { writeAuditLog } from "../audit/audit-log.ts";
 import { assertWritableBusinessDate } from "../inventory/day-closing.ts";
-import { createStockLedgerEntry } from "../inventory/stock-ledger.ts";
 import { enforcePermission } from "../rbac/enforce.ts";
 
 type SaleInput = {
@@ -338,6 +338,29 @@ async function createSaleInTransaction(tx: Prisma.TransactionClient, input: Sale
     }
   }
 
+  // COGS: weighted-average cost for FILLED cylinders sold
+  const cogsAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.cogs);
+  const stockAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.stock);
+  const uniqueItems = new Map<string, { itemId: string; qty: number; locationId?: string | null }>();
+  for (const line of lines) {
+    const key = `${line.itemId}::${input.locationId ?? ""}`;
+    const existing = uniqueItems.get(key);
+    if (existing) {
+      existing.qty += line.quantity;
+    } else {
+      uniqueItems.set(key, { itemId: line.itemId, qty: line.quantity, locationId: input.locationId });
+    }
+  }
+  const cogsLines: VoucherLineInput[] = [];
+  for (const entry of uniqueItems.values()) {
+    const avgCost = await getWeightedAverageCost(tx, input.companyId, entry.itemId, CylinderState.FILLED, entry.locationId);
+    if (avgCost.gt(0) && entry.qty > 0) {
+      const totalCost = avgCost.times(entry.qty);
+      cogsLines.push({ accountId: cogsAccountId, debit: totalCost });
+      cogsLines.push({ accountId: stockAccountId, credit: totalCost });
+    }
+  }
+
   const salesCredit = discountAmount.gt(0) && !discountAccountId ? saleAmount.minus(discountAmount) : saleAmount;
   const voucher = await createBalancedVoucher(tx, {
     companyId: input.companyId,
@@ -355,6 +378,7 @@ async function createSaleInTransaction(tx: Prisma.TransactionClient, input: Sale
       { accountId: salesAccountId, credit: salesCredit },
       ...(gstAmount.gt(0) ? [{ accountId: gstPayableAccountId, credit: gstAmount }] : []),
       ...(securityAmount.gt(0) ? [{ accountId: securityLiabilityAccountId, credit: securityAmount }] : []),
+      ...cogsLines,
     ],
   });
 

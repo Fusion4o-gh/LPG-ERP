@@ -5,6 +5,7 @@ type Tx = Prisma.TransactionClient;
 export const ACCOUNT_CODES = {
   cash: "2003010001",
   stock: "2003001001",
+  cogs: "4001002001",
   sales: "3001001001",
   salesDiscount: "4001001501",
   purchaseDiscount: "4001001502",

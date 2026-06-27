@@ -125,6 +125,7 @@ export async function purchaseFilledCylinder(input: PurchaseFilledCylinderInput)
         financialYearId: input.financialYearId,
         itemId: line.itemId,
         cylinderState: line.cylinderState,
+        unitCost: line.cylinderState === CylinderState.FILLED ? line.unitCost : undefined,
         direction: StockDirection.IN,
         sourceType: StockSourceType.PURCHASE_FILLED,
         sourceId: input.issueNo,

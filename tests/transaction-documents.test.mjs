@@ -166,7 +166,7 @@ test("sale print payload includes every LPG invoice line with selected invoice l
   assert.equal(body.document.lineItems[0].gstAmount, "600");
   assert.equal(body.document.lineItems[0].securityDepositAmount, "500");
   assert.equal(body.document.lineItems[0].incGstAmount, "6600");
-  assert.equal(body.document.totals.totalDebit, "9450");
+  assert.equal(body.document.totals.totalDebit, "14450");
 });
 
 test("cylinder return print payload includes all return lines and return type", async () => {

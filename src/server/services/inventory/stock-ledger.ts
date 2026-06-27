@@ -1,4 +1,4 @@
-import { CylinderState, PartyType, StockDirection, StockSourceType, type Prisma } from "@prisma/client";
+import { CylinderState, PartyType, StockDirection, StockSourceType, Prisma } from "@prisma/client";
 
 type Tx = Prisma.TransactionClient;
 
@@ -12,6 +12,7 @@ type StockLedgerInput = {
   sourceId: string;
   transactionDate: string | Date;
   quantity: number;
+  unitCost?: string | number | Prisma.Decimal;
   createdById: string;
   partyType?: PartyType;
   customerId?: string;
@@ -48,12 +49,15 @@ export async function createStockLedgerEntry(tx: Tx, input: StockLedgerInput) {
     throw new Error("Insufficient stock for this cylinder movement.");
   }
 
+  const unitCost = input.unitCost !== undefined ? new Prisma.Decimal(input.unitCost) : null;
+
   return tx.stockLedgerEntry.create({
     data: {
       companyId: input.companyId,
       financialYearId: input.financialYearId,
       itemId: input.itemId,
       cylinderState: input.cylinderState,
+      unitCost,
       direction: input.direction,
       sourceType: input.sourceType,
       sourceId: input.sourceId,
@@ -68,4 +72,36 @@ export async function createStockLedgerEntry(tx: Tx, input: StockLedgerInput) {
       remarks: input.remarks,
     },
   });
+}
+
+export async function getWeightedAverageCost(
+  tx: Tx,
+  companyId: string,
+  itemId: string,
+  cylinderState: CylinderState,
+  locationId?: string | null,
+): Promise<Prisma.Decimal> {
+  const entries = await tx.stockLedgerEntry.findMany({
+    where: {
+      companyId,
+      itemId,
+      cylinderState,
+      direction: StockDirection.IN,
+      unitCost: { not: null },
+      locationId: locationId ?? null,
+    },
+    select: { quantity: true, unitCost: true },
+  });
+
+  if (entries.length === 0) return new Prisma.Decimal(0);
+
+  const totalCost = entries.reduce(
+    (sum, e) => sum.plus(new Prisma.Decimal(e.quantity).times(new Prisma.Decimal(e.unitCost!))),
+    new Prisma.Decimal(0),
+  );
+  const totalQty = entries.reduce((sum, e) => sum + e.quantity, 0);
+
+  if (totalQty === 0) return new Prisma.Decimal(0);
+
+  return totalCost.dividedBy(totalQty).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
 }

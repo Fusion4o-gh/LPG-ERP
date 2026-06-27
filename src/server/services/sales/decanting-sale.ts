@@ -1,7 +1,8 @@
 import { CylinderState, PartyType, PermissionAction, Prisma, StockDirection, StockSourceType, VoucherType } from "@prisma/client";
 import { prisma } from "../../../lib/prisma.ts";
 import { ACCOUNT_CODES, getAccountIdByCode } from "../accounting/accounts.ts";
-import { createBalancedVoucher } from "../accounting/vouchers.ts";
+import { createBalancedVoucher, type VoucherLineInput } from "../accounting/vouchers.ts";
+import { getWeightedAverageCost } from "../inventory/stock-ledger.ts";
 import { writeAuditLog } from "../audit/audit-log.ts";
 import { assertWritableBusinessDate } from "../inventory/day-closing.ts";
 import { createStockLedgerEntry } from "../inventory/stock-ledger.ts";
@@ -83,6 +84,18 @@ export async function decantingSale(input: DecantingSaleInput) {
       customer = await tx.customer.findUniqueOrThrow({ where: { id: input.customerId }, select: { accountId: true, code: true, name: true } });
       const salesAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.sales);
       const gstPayableAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.gstPayable);
+
+      // COGS for decanted filled cylinders
+      const cogsAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.cogs);
+      const stockAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.stock);
+      const avgCost = await getWeightedAverageCost(tx, input.companyId, input.sourceItemId, CylinderState.FILLED);
+      const cogsLines: VoucherLineInput[] = [];
+      if (avgCost.gt(0) && input.sourceQuantity > 0) {
+        const totalCost = avgCost.times(input.sourceQuantity);
+        cogsLines.push({ accountId: cogsAccountId, debit: totalCost });
+        cogsLines.push({ accountId: stockAccountId, credit: totalCost });
+      }
+
       voucher = await createBalancedVoucher(tx, {
         companyId: input.companyId,
         financialYearId: input.financialYearId,
@@ -97,6 +110,7 @@ export async function decantingSale(input: DecantingSaleInput) {
           { accountId: customer.accountId, debit: amounts.incGstAmount },
           { accountId: salesAccountId, credit: amounts.exGstAmount },
           ...(amounts.gstAmount.gt(0) ? [{ accountId: gstPayableAccountId, credit: amounts.gstAmount }] : []),
+          ...cogsLines,
         ],
       });
     }
