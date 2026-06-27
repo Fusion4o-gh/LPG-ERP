@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     });
     return ok({ voucherNo: result.voucherNo, voucherId: result.voucher.id });
   } catch (error) {
-    return error instanceof Error && /required|balanced|must/i.test(error.message)
+    return error instanceof Error && /required|balanced|must|permitted|posted to|does not exist/i.test(error.message)
       ? fail(error.message)
       : serviceError(error);
   }

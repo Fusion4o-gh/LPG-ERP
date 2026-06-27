@@ -1,6 +1,7 @@
 import { PermissionAction, Prisma, VoucherType } from "@prisma/client";
 import { prisma } from "../../../lib/prisma.ts";
 import { getBankAccountId, getCashAccountId, getAccountIdByCode, ACCOUNT_CODES } from "../accounting/accounts.ts";
+import { assertPostingAccountsAllowed, type PostingRuleKey } from "../accounting/posting-rules.ts";
 import { createBalancedVoucher } from "../accounting/vouchers.ts";
 import { writeAuditLog } from "../audit/audit-log.ts";
 import { assertWritableBusinessDate } from "../inventory/day-closing.ts";
@@ -126,6 +127,11 @@ async function createMultiLinePaymentVoucher(
   if (!input.lines.length) throw new Error("lines must not be empty.");
   const total = input.lines.reduce((sum, l) => sum + Number(l.amount), 0);
   if (total <= 0) throw new Error("Total amount must be positive.");
+
+  // Authoritative server-side guard: the user-selected counter lines must be of an
+  // account type permitted for this voucher kind, and may not be control accounts.
+  // Prevents sales/purchase accounts from being mixed into expense vouchers (and vice-versa).
+  await assertPostingAccountsAllowed(tx, input.companyId, input.module as PostingRuleKey, input.lines.map((l) => l.accountId));
 
   const systemLine = input.systemSide === "debit"
     ? { accountId: input.systemAccountId, debit: total, credit: 0 }

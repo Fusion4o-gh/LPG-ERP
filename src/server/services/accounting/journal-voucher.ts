@@ -2,6 +2,7 @@ import { PermissionAction, VoucherType } from "@prisma/client";
 import { prisma } from "../../../lib/prisma.ts";
 import { DOCUMENT_PREFIXES, nextDocumentNumberInTransaction } from "./document-numbers.ts";
 import { assertBalancedVoucher, createBalancedVoucher, type VoucherLineInput } from "./vouchers.ts";
+import { assertPostingAccountsAllowed } from "./posting-rules.ts";
 import { writeAuditLog } from "../audit/audit-log.ts";
 import { assertWritableBusinessDate } from "../inventory/day-closing.ts";
 import { enforcePermission } from "../rbac/enforce.ts";
@@ -49,6 +50,10 @@ export async function createJournalVoucher(input: CreateJournalVoucherInput) {
 
     // assertBalancedVoucher is called inside createBalancedVoucher
     assertBalancedVoucher(voucherLines);
+
+    // Block manual JV postings to roll-up/subledger control accounts so the GL cannot
+    // drift from the customer/vendor/stock subledgers. All five account types are allowed.
+    await assertPostingAccountsAllowed(tx, input.companyId, "journal-vouchers", voucherLines.map((l) => l.accountId));
 
     const voucherNo = await nextDocumentNumberInTransaction(tx, {
       companyId: input.companyId,

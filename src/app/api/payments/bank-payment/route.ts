@@ -48,6 +48,6 @@ export async function POST(request: Request) {
     });
     return ok({ voucherNo, ids: { voucherId: result.voucher.id } });
   } catch (error) {
-    return error instanceof Error && /required|positive|balanced|must/i.test(error.message) ? fail(error.message) : serviceError(error);
+    return error instanceof Error && /required|positive|balanced|must|permitted|posted to|does not exist/i.test(error.message) ? fail(error.message) : serviceError(error);
   }
 }

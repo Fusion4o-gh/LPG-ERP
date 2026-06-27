@@ -332,6 +332,81 @@ test("closed-day guard is enforced for multi-line cash payment", async () => {
   }
 });
 
+// ── Account-type guard tests (sales/purchase must not mix with expenses) ───────
+
+async function findAccountByCode(companyId, code) {
+  return prisma.chartAccount.findFirstOrThrow({ where: { companyId, code } });
+}
+
+test("cash payment rejects a REVENUE (sales) account on a counter line", async () => {
+  const { company, financialYear, user } = await fixture();
+  const sales = await findAccountByCode(company.id, "3001001001"); // Retail Sales LPG
+
+  await assert.rejects(
+    payments.multiLineCashPayment({
+      companyId: company.id,
+      financialYearId: financialYear.id,
+      userId: user.id,
+      documentNo: doc("ML-CP-REV"),
+      transactionDate: "2027-11-12",
+      lines: [{ accountId: sales.id, amount: 500, description: "should be blocked" }],
+    }),
+    /not permitted on this voucher/i,
+  );
+});
+
+test("cash receipt rejects an EXPENSE account on a counter line", async () => {
+  const { company, financialYear, user } = await fixture();
+  const expensesParent = await findExpensesParent(company.id);
+  const expenseAccount = await createExpenseAccount(company.id, expensesParent.id);
+
+  await assert.rejects(
+    payments.multiLineCashReceipt({
+      companyId: company.id,
+      financialYearId: financialYear.id,
+      userId: user.id,
+      documentNo: doc("ML-CR-EXP"),
+      transactionDate: "2027-11-13",
+      lines: [{ accountId: expenseAccount.id, amount: 500, description: "should be blocked" }],
+    }),
+    /not permitted on this voucher/i,
+  );
+});
+
+test("payment rejects a top-level group (roll-up) account", async () => {
+  const { company, financialYear, user } = await fixture();
+  const expensesRoot = await findExpensesParent(company.id); // 4000000000, no parent
+
+  await assert.rejects(
+    payments.multiLineCashPayment({
+      companyId: company.id,
+      financialYearId: financialYear.id,
+      userId: user.id,
+      documentNo: doc("ML-CP-ROOT"),
+      transactionDate: "2027-11-14",
+      lines: [{ accountId: expensesRoot.id, amount: 500, description: "should be blocked" }],
+    }),
+    /top-level group/i,
+  );
+});
+
+test("multi-line cash payment still accepts a customer (Trade Debtors control) account", async () => {
+  // Customers/vendors share the Trade Debtors/Creditors control account by design;
+  // posting to it must remain allowed (ASSET type, has a parent).
+  const { company, financialYear, user, seedCustomer } = await fixture();
+
+  const result = await payments.multiLineCashPayment({
+    companyId: company.id,
+    financialYearId: financialYear.id,
+    userId: user.id,
+    documentNo: doc("ML-CP-CTRL"),
+    transactionDate: "2027-11-15",
+    lines: [{ accountId: seedCustomer.accountId, amount: 500, description: "refund to customer" }],
+  });
+
+  assert.ok(result.voucher.id, "posting to the debtors control account must be allowed");
+});
+
 // ── API route tests ───────────────────────────────────────────────────────────
 
 test("cash-receipt API route handles multi-line POST", async () => {
