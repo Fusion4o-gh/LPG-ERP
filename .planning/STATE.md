@@ -56,10 +56,11 @@ Progress: [████████████████████] 100%
 
 ### Pending Todos
 
-None yet.
+- **Fix pre-existing test failures (7 remaining):** bank-payments-receipts (regex), theme (4 failures), ui-phase3b, phase3c-auth-read
 
 ### Blockers/Concerns
 
+- **Concurrent test runs cause non-deterministic failures:** `node:test` runs files concurrently by default. Aggregate GL queries in tests can pick up entries from concurrently running test files. Fixed for accounting-integrity by using voucher-specific queries instead of aggregate account balances. Same pattern may affect other tests.
 - **WH-05 (Physical Counts):** Concurrent transactions during physical count require location-level freeze mechanism. Needs research on PostgreSQL advisory locks vs application-level status flag.
 - **Transfer in-transit duration:** What happens if a transfer is initiated but never confirmed? Need timeout/stale-cleanup logic during Phase 6 design.
 - **Null locationId reporting:** Legacy StockLedgerEntry records have null locationId. Show as "Unassigned" in reports — validate with users.
@@ -72,9 +73,10 @@ None yet.
 | v2 | Customer cylinder balances per warehouse | Deferred | Roadmap v1 |
 | v2 | Transfer timeout/stale-cleanup workflow | Deferred | Roadmap v1 |
 | v2 | Individual cylinder serial number tracking | Deferred | Roadmap v1 |
+| maintenance | Fix remaining pre-existing test failures | Pending | 2026-06-27 |
 
 ## Session Continuity
 
-Last session: 2026-06-25
-Stopped at: Phase 6 fully executed — all 4 plans complete (Schema & Foundation, Warehouse Transfers, KG Pricing, Physical Counts + Reports)
+Last session: 2026-06-27
+Stopped at: Fixed non-deterministic accounting-integrity test failure (concurrent aggregate GL queries). Test now passes in full suite (331 tests, 324 pass, 7 fail — pre-existing failures only).
 Resume file: None

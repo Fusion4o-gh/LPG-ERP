@@ -23,10 +23,16 @@ test("resolveModule maps day closing to configuration setup group", () => {
   assert.equal(resolved?.activeTab?.href, "/operations/day-closing");
 });
 
-test("resolveModule maps sale purchase operations routes", () => {
+test("resolveModule maps sale operations routes to sales module", () => {
   const resolved = navigation.resolveModule("/operations/sale-lpg");
-  assert.equal(resolved?.module.id, "sale-purchase");
+  assert.equal(resolved?.module.id, "sales");
   assert.equal(resolved?.activeTab?.label, "Sale LPG");
+});
+
+test("resolveModule maps purchase operations routes to stock module", () => {
+  const resolved = navigation.resolveModule("/operations/purchase-filled-cylinder");
+  assert.equal(resolved?.module.id, "stock");
+  assert.equal(resolved?.activeTab?.label, "Purchase Filled Cylinder");
 });
 
 test("resolveModule hides tab bar context on dashboard and print routes", () => {

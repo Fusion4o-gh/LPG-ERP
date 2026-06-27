@@ -67,18 +67,18 @@ const configurationSystem: NavTab[] = [
   { label: "Database Backup", href: "/database-backup", module: "rbac", action: "MANAGE_RBAC" },
 ];
 
-const salePurchaseTabs: NavTab[] = [
-  { label: "Purchase Filled Cylinder", href: "/operations/purchase-filled-cylinder", module: "purchase-filled-cylinders" },
-  { label: "Purchase Empty Cylinder", href: "/sale-purchase/purchase-empty-cylinder", module: "purchase-filled-cylinders" },
-  { label: "Purchase Other", href: "/sale-purchase/purchase-other", module: "purchase-filled-cylinders" },
-  { label: "Complete Day Sale", href: "/operations/complete-day-sale", module: "sale-lpg" },
+const salesTabs: NavTab[] = [
   { label: "Sale LPG", href: "/operations/sale-lpg", module: "sale-lpg" },
+  { label: "Complete Day Sale", href: "/operations/complete-day-sale", module: "sale-lpg" },
   { label: "Decanting Sale", href: "/sale-purchase/decanting-sale", module: "decanting-sales" },
-  { label: "Cylinder Conversion", href: "/sale-purchase/cylinder-conversion", module: "cylinder-conversions" },
   { label: "Empty Sale", href: "/sale-purchase/empty-sale", module: "empty-sales" },
 ];
 
-const warehouseTabs: NavTab[] = [
+const stockTabs: NavTab[] = [
+  { label: "Purchase Filled Cylinder", href: "/operations/purchase-filled-cylinder", module: "purchase-filled-cylinders" },
+  { label: "Purchase Empty Cylinder", href: "/sale-purchase/purchase-empty-cylinder", module: "purchase-filled-cylinders" },
+  { label: "Purchase Other", href: "/sale-purchase/purchase-other", module: "purchase-filled-cylinders" },
+  { label: "Cylinder Conversion", href: "/sale-purchase/cylinder-conversion", module: "cylinder-conversions" },
   { label: "Stock Locations", href: "/configuration/stock-locations", module: "stock-locations" },
   { label: "Warehouse Transfer", href: "/operations/warehouse-transfer", module: "stock-ledger" },
   { label: "Physical Count", href: "/operations/physical-count", module: "stock-ledger" },
@@ -212,17 +212,34 @@ export const NAV_MODULES: NavModule[] = [
     ],
   },
   {
-    id: "sale-purchase",
-    label: "Sale / Purchase",
+    id: "sales",
+    label: "Sales",
     icon: "sales",
+    defaultHref: "/sales",
+    matchPrefixes: [
+      "/sales",
+      "/operations/sale-lpg",
+      "/operations/complete-day-sale",
+      "/sale-purchase/decanting-sale",
+      "/sale-purchase/empty-sale",
+    ],
+    tabs: salesTabs,
+  },
+  {
+    id: "stock",
+    label: "Stock",
+    icon: "warehouse",
     defaultHref: "/operations/purchase-filled-cylinder",
     matchPrefixes: [
-      "/sale-purchase",
       "/operations/purchase-filled-cylinder",
-      "/operations/complete-day-sale",
-      "/operations/sale-lpg",
+      "/sale-purchase/purchase-empty-cylinder",
+      "/sale-purchase/purchase-other",
+      "/sale-purchase/cylinder-conversion",
+      "/configuration/stock-locations",
+      "/operations/warehouse-transfer",
+      "/operations/physical-count",
     ],
-    tabs: salePurchaseTabs,
+    tabs: stockTabs,
   },
   {
     id: "returns",
@@ -239,14 +256,6 @@ export const NAV_MODULES: NavModule[] = [
     defaultHref: "/payments/cash-payment",
     matchPrefixes: ["/payments", "/accounting/chart-of-accounts"],
     tabs: paymentTabs,
-  },
-  {
-    id: "warehouse",
-    label: "Warehouse",
-    icon: "warehouse",
-    defaultHref: "/configuration/stock-locations",
-    matchPrefixes: ["/operations/warehouse-transfer", "/operations/physical-count"],
-    tabs: warehouseTabs,
   },
   // NOTE: Import, Plant/Bulk, and Dollar modules (and their report groups) are
   // defined above and wired into NAV_MODULES as each module's pages are built

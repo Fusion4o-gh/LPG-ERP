@@ -61,7 +61,6 @@ test("purchase discount received appears under revenue section of P&L", async ()
 test("sale with COGS produces a balanced voucher that reduces stock asset balance", async () => {
   const { company, financialYear, user, item, customer, vendor } = await fixture();
 
-  // Get stock account GL balance before sale
   const stockAccount = await prisma.chartAccount.findUniqueOrThrow({
     where: { companyId_code: { companyId: company.id, code: "2003001001" } },
   });
@@ -69,19 +68,13 @@ test("sale with COGS produces a balanced voucher that reduces stock asset balanc
     where: { companyId_code: { companyId: company.id, code: "4001002001" } },
   });
 
-  // Capture stock balance before our purchase
-  const stockInitial = await prisma.accountingVoucherLine.aggregate({
-    where: { accountId: stockAccount.id, voucher: { companyId: company.id, financialYearId: financialYear.id, isPosted: true } },
-    _sum: { debit: true, credit: true },
-  });
-  const stockInitialBalance = Number(stockInitial._sum.debit ?? 0) - Number(stockInitial._sum.credit ?? 0);
-
   // Purchase 2 units at 1000 each
+  const purIssueNo = doc("AI-PUR-COGS");
   await purchases.purchaseFilledCylinder({
     companyId: company.id,
     financialYearId: financialYear.id,
     userId: user.id,
-    issueNo: doc("AI-PUR-COGS"),
+    issueNo: purIssueNo,
     vendorId: vendor.id,
     itemId: item.id,
     quantity: 2,
@@ -89,19 +82,13 @@ test("sale with COGS produces a balanced voucher that reduces stock asset balanc
     transactionDate: "2026-08-01",
   });
 
-  // Check stock account has debit of 2000 from purchase
-  const stockBefore = await prisma.accountingVoucherLine.aggregate({
-    where: { accountId: stockAccount.id, voucher: { companyId: company.id, financialYearId: financialYear.id, isPosted: true } },
-    _sum: { debit: true, credit: true },
+  // Verify purchase created 2000 stock debit
+  const purVoucher = await prisma.accountingVoucher.findFirstOrThrow({
+    where: { companyId: company.id, sourceId: purIssueNo },
+    include: { lines: { where: { accountId: stockAccount.id } } },
   });
-  const stockBeforeBalance = Number(stockBefore._sum.debit ?? 0) - Number(stockBefore._sum.credit ?? 0);
-  assert.equal(stockBeforeBalance - stockInitialBalance, 2000, "Stock should increase by 2000 after purchase (2 units x 1000)");
-
-  // Capture COGS balance before sale
-  const cogsInitial = await prisma.accountingVoucherLine.aggregate({
-    where: { accountId: cogsAccount.id, voucher: { companyId: company.id, financialYearId: financialYear.id, isPosted: true } },
-    _sum: { debit: true, credit: true },
-  });
+  assert.equal(purVoucher.lines.length, 1, "Purchase should have one stock line");
+  assert.equal(Number(purVoucher.lines[0].debit), 2000, "Purchase stock debit should be 2000");
 
   // Sell 1 unit at 1500
   const issueNo = doc("AI-SALE-COGS");
@@ -133,22 +120,6 @@ test("sale with COGS produces a balanced voucher that reduces stock asset balanc
   const stockCreditLine = voucher.lines.find((l) => l.accountId === stockAccount.id && Number(l.credit) > 0);
   assert.ok(stockCreditLine, "Stock credit line should exist on the sale voucher");
   assert.equal(Number(stockCreditLine.credit), 1000, "Stock credit should be 1000");
-
-  // Stock asset balance should reduce to stockInitialBalance + 1000 after sale (2000 purchase - 1000 COGS)
-  const stockAfter = await prisma.accountingVoucherLine.aggregate({
-    where: { accountId: stockAccount.id, voucher: { companyId: company.id, financialYearId: financialYear.id, isPosted: true } },
-    _sum: { debit: true, credit: true },
-  });
-  const stockAfterBalance = Number(stockAfter._sum.debit ?? 0) - Number(stockAfter._sum.credit ?? 0);
-  assert.equal(stockAfterBalance - stockInitialBalance, 1000, "Stock should be 1000 after sale (initial 2000 - 1000 COGS)");
-
-  // COGS account should have debit increase of 1000 from this sale
-  const cogsAfter = await prisma.accountingVoucherLine.aggregate({
-    where: { accountId: cogsAccount.id, voucher: { companyId: company.id, financialYearId: financialYear.id, isPosted: true } },
-    _sum: { debit: true, credit: true },
-  });
-  const cogsDelta = Number(cogsAfter._sum.debit ?? 0) - Number(cogsInitial._sum.debit ?? 0);
-  assert.equal(cogsDelta, 1000, "COGS should increase by 1000 from sale");
 });
 
 test("multi-line sale with COGS produces balanced voucher for each unique item", async () => {

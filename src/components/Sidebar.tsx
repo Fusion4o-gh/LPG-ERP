@@ -28,11 +28,17 @@ const MODULE_THEME: Record<string, ModuleTheme> = {
     bar: "bg-violet-500",
     row: "bg-violet-50 text-violet-800",
   },
-  "sale-purchase": {
+  sales: {
     idle: "border-emerald-100 bg-emerald-50 text-emerald-600",
     active: "border-transparent bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-sm",
     bar: "bg-emerald-500",
     row: "bg-emerald-50 text-emerald-800",
+  },
+  stock: {
+    idle: "border-sky-100 bg-sky-50 text-sky-600",
+    active: "border-transparent bg-gradient-to-br from-sky-500 to-teal-500 text-white shadow-sm",
+    bar: "bg-sky-500",
+    row: "bg-sky-50 text-sky-800",
   },
   returns: {
     idle: "border-amber-100 bg-amber-50 text-amber-600",

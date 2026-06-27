@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 import { breadcrumbsForPath } from "@/lib/navigation/modules";
+import { canAccess } from "@/lib/permissions";
 import type { AppShellContext } from "@/server/auth/app-shell-context";
 import { FinancialYearSwitcher } from "./FinancialYearSwitcher";
 
@@ -68,6 +69,23 @@ export function Topbar({ shell, permissions }: { shell: AppShellContext; permiss
             aria-label="Global search (coming soon)"
           />
         </div>
+
+        {(() => {
+          const canSales = canAccess(permissions, "sale-lpg", "VIEW");
+          if (!canSales) return null;
+          return (
+            <Link
+              href="/sales"
+              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-white shadow-sm transition-all hover:brightness-110 active:scale-95"
+              style={{ background: 'var(--flame-gradient)', boxShadow: 'var(--skeu-shadow-btn)' }}
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 7h16" /><path d="M7 4h10l2 3v13H5V7l2-3z" /><path d="M9 11h6" /><path d="M9 15h4" />
+              </svg>
+              Sales
+            </Link>
+          );
+        })()}
 
         <FinancialYearSwitcher currentLabel={shell.financialYearLabel} />
 

@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
+import { canAccess } from "@/lib/permissions";
 import type { AppShellContext } from "@/server/auth/app-shell-context";
 import { ModuleTabBar } from "./ModuleTabBar";
 import { ModuleTransition } from "./ModuleTransition";
@@ -63,6 +65,21 @@ export function AppShell({
               <img src="/fusion4o-logo.png" alt="" className="h-6 w-6 object-contain" aria-hidden="true" />
               <span className="truncate text-sm font-bold text-white tracking-tight">{shell.companyName}</span>
             </div>
+            {(() => {
+              const canSales = canAccess(permissions, "sale-lpg", "VIEW");
+              if (!canSales) return null;
+              return (
+                <Link
+                  href="/sales"
+                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-white"
+                  style={{ background: 'var(--flame-gradient)', boxShadow: 'var(--skeu-shadow-sm)' }}
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 7h16" /><path d="M7 4h10l2 3v13H5V7l2-3z" /><path d="M9 11h6" /><path d="M9 15h4" />
+                  </svg>
+                </Link>
+              );
+            })()}
             <span className="shrink-0 rounded-md px-2 py-0.5 text-[10px] font-bold text-white" style={{ background: 'var(--flame-gradient)', boxShadow: 'var(--skeu-shadow-sm)' }}>
               FY {shell.financialYearLabel}
             </span>
