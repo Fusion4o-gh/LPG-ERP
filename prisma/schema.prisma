@@ -117,6 +117,7 @@ model Company {
   workStartTime         String?
   workEndTime           String?
   workingDays           Json?
+  standardPurchaseCylinderKg Decimal @default(11.8) @db.Decimal(8, 2)
   status                RecordStatus @default(ACTIVE)
   createdAt             DateTime     @default(now())
   updatedAt             DateTime     @updatedAt
@@ -132,6 +133,7 @@ model Company {
   accountingVouchers AccountingVoucher[]
   auditLogs          AuditLog[]
   documentSequences  DocumentSequence[]
+  gasCostRates       GasCostRate[]
 }
 
 model FinancialYear {
@@ -374,6 +376,21 @@ model ItemPrice {
   customer Customer? @relation(fields: [customerId], references: [id])
 
   @@index([itemId, customerId, validFrom])
+}
+
+model GasCostRate {
+  id            String   @id @default(cuid())
+  companyId     String
+  costPerKg     Decimal  @db.Decimal(14, 4)
+  sourceType    String
+  sourceId      String?
+  effectiveFrom DateTime @default(now())
+  createdById   String
+  createdAt     DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  @@index([companyId, effectiveFrom])
 }
 
 model ChartAccount {

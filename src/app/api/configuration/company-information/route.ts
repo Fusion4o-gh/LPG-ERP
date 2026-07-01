@@ -1,6 +1,6 @@
 import { fail, ok, serviceError } from "../../../../server/api/responses.ts";
 import { getRequestContext } from "../../../../server/api/request-context.ts";
-import { optionalStringField, readJson, stringField } from "../../../../server/api/validation.ts";
+import { optionalPositiveNumberField, optionalStringField, readJson, stringField } from "../../../../server/api/validation.ts";
 import { getCompanyInformation, updateCompanyInformation } from "../../../../server/services/company/company-information.ts";
 
 function optionalWorkingDays(body: Record<string, unknown>) {
@@ -40,6 +40,7 @@ export async function PUT(request: Request) {
       workStartTime: optionalStringField(body, "workStartTime"),
       workEndTime: optionalStringField(body, "workEndTime"),
       workingDays: optionalWorkingDays(body),
+      standardPurchaseCylinderKg: optionalPositiveNumberField(body, "standardPurchaseCylinderKg"),
     });
     return ok({ company });
   } catch (error) {

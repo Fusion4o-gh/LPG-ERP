@@ -49,6 +49,15 @@ function money(value: number) {
   return value.toFixed(2);
 }
 
+function estimatedMargin(item: Lookup | undefined, gasCostPerKg: number | null, unitPrice: number) {
+  const cylinderWeightKg = item?.cylinderWeightKg != null ? Number(item.cylinderWeightKg) : null;
+  if (gasCostPerKg == null || cylinderWeightKg == null || !Number.isFinite(cylinderWeightKg) || unitPrice <= 0) return null;
+  const estimatedCost = gasCostPerKg * cylinderWeightKg;
+  const marginAmount = unitPrice - estimatedCost;
+  const marginPercent = (marginAmount / unitPrice) * 100;
+  return { estimatedCost, marginAmount, marginPercent };
+}
+
 export function SaleLpgForm() {
   const [customers, setCustomers] = useState<Lookup[]>([]);
   const [items, setItems] = useState<Lookup[]>([]);
@@ -76,6 +85,7 @@ export function SaleLpgForm() {
   const [filledStock, setFilledStock] = useState<Record<string, number>>({});
   const [locationId, setLocationId] = useState("");
   const [kgPricing, setKgPricing] = useState<Record<string, { unitPrice: string; pricePerKg: string | null; cylinderWeightKg: string | null; usingKgPricing: boolean } | null>>({});
+  const [gasCostPerKg, setGasCostPerKg] = useState<number | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -83,12 +93,15 @@ export function SaleLpgForm() {
       apiGet<{ items: Lookup[] }>("/api/items"),
       apiGet<{ banks: { id: string; name: string }[] }>("/api/banks"),
       apiGet<{ documentNo: string }>("/api/documents/next-number?kind=sale-issue"),
+      apiGet<{ gasCost: { costPerKg: string } }>("/api/settings/gas-cost"),
     ])
-      .then(([customerData, itemData, bankData, preview]) => {
+      .then(([customerData, itemData, bankData, preview, gasCostData]) => {
         setCustomers(customerData.customers);
         setItems(itemData.items);
         setBanks(bankData.banks);
         setPreviewIssueNo(preview.documentNo);
+        const parsedCost = Number(gasCostData.gasCost.costPerKg);
+        setGasCostPerKg(Number.isFinite(parsedCost) && parsedCost > 0 ? parsedCost : null);
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLookupLoading(false));
@@ -362,6 +375,23 @@ export function SaleLpgForm() {
                             onUnitPriceChange={(price) => updateLine(index, { unitPrice: String(price) })}
                           />
                         ) : null}
+                        {(() => {
+                          const margin = estimatedMargin(
+                            items.find((item) => String(item.id) === line.itemId),
+                            gasCostPerKg,
+                            amount(line.unitPrice),
+                          );
+                          if (!margin) return null;
+                          return (
+                            <div className="mt-1 text-xs text-slate-500">
+                              Est. cost <span className="font-semibold text-slate-700">{money(margin.estimatedCost)}</span>
+                              {" "}&middot; margin{" "}
+                              <span className={margin.marginAmount >= 0 ? "font-semibold text-emerald-600" : "font-semibold text-red-600"}>
+                                {money(margin.marginAmount)} ({margin.marginPercent.toFixed(1)}%)
+                              </span>
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td className="px-2.5 py-2"><input type="number" min="0" value={line.securityDepositAmount} onChange={(e) => updateLine(index, { securityDepositAmount: e.target.value })} className="tbl-input w-20 text-right" /></td>
                       <td className="px-2.5 py-2">

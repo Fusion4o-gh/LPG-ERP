@@ -69,6 +69,7 @@ export function PurchaseFilledCylinderForm() {
   const [vendorBalance, setVendorBalance] = useState<{ payableBalance: number } | null>(null);
   const [locationId, setLocationId] = useState("");
   const [kgPricing, setKgPricing] = useState<Record<string, { unitPrice: string; pricePerKg: string | null; cylinderWeightKg: string | null; usingKgPricing: boolean } | null>>({});
+  const [standardPurchaseCylinderKg, setStandardPurchaseCylinderKg] = useState(11.8);
 
   useEffect(() => {
     Promise.all([
@@ -76,12 +77,15 @@ export function PurchaseFilledCylinderForm() {
       apiGet<{ items: Lookup[] }>("/api/items"),
       apiGet<{ banks: { id: string; name: string }[] }>("/api/banks"),
       apiGet<{ documentNo: string }>("/api/documents/next-number?kind=purchase-receipt"),
+      apiGet<{ company: { standardPurchaseCylinderKg: string } }>("/api/configuration/company-information"),
     ])
-      .then(([vendorData, itemData, bankData, preview]) => {
+      .then(([vendorData, itemData, bankData, preview, companyData]) => {
         setVendors(vendorData.vendors);
         setItems(itemData.items);
         setBanks(bankData.banks);
         setPreviewReceiptNo(preview.documentNo);
+        const parsedKg = Number(companyData.company.standardPurchaseCylinderKg);
+        if (Number.isFinite(parsedKg) && parsedKg > 0) setStandardPurchaseCylinderKg(parsedKg);
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLookupLoading(false));
@@ -127,6 +131,21 @@ export function PurchaseFilledCylinderForm() {
       ),
     [lines],
   );
+
+  // Prefer the 11.8kg price currently being typed (this purchase's actual rate) over the
+  // last persisted standard rate, so cost suggestions reflect today's entry immediately.
+  const effectiveKgPricing = useMemo(() => {
+    const liveCostPerKg = amount(elevenPointEightKgPrice) > 0 ? amount(elevenPointEightKgPrice) / standardPurchaseCylinderKg : null;
+    const result: typeof kgPricing = {};
+    for (const [itemId, suggestion] of Object.entries(kgPricing)) {
+      if (!suggestion) {
+        result[itemId] = suggestion;
+        continue;
+      }
+      result[itemId] = liveCostPerKg != null ? { ...suggestion, pricePerKg: String(liveCostPerKg) } : suggestion;
+    }
+    return result;
+  }, [kgPricing, elevenPointEightKgPrice, standardPurchaseCylinderKg]);
 
   function updateLine(index: number, patch: Partial<PurchaseLine>) {
     setLines((current) => current.map((line, lineIndex) => (lineIndex === index ? { ...line, ...patch } : line)));
@@ -350,10 +369,10 @@ export function PurchaseFilledCylinderForm() {
                       </td>
                       <td className="px-2.5 py-2">
                         <input type="number" min="0" value={line.unitCost} onChange={(e) => updateLine(index, { unitCost: e.target.value })} className="tbl-input w-full min-w-0 text-right" />
-                        {line.itemId && kgPricing[line.itemId] ? (
+                        {line.itemId && effectiveKgPricing[line.itemId] ? (
                           <KgPriceField
-                            pricePerKg={kgPricing[line.itemId]?.pricePerKg ? Number(kgPricing[line.itemId]!.pricePerKg) : null}
-                            cylinderWeightKg={kgPricing[line.itemId]?.cylinderWeightKg ? Number(kgPricing[line.itemId]!.cylinderWeightKg) : null}
+                            pricePerKg={effectiveKgPricing[line.itemId]?.pricePerKg ? Number(effectiveKgPricing[line.itemId]!.pricePerKg) : null}
+                            cylinderWeightKg={effectiveKgPricing[line.itemId]?.cylinderWeightKg ? Number(effectiveKgPricing[line.itemId]!.cylinderWeightKg) : null}
                             quantity={amount(line.quantity)}
                             unitPrice={amount(line.unitCost)}
                             onUnitPriceChange={(price) => updateLine(index, { unitCost: String(price) })}
