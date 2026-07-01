@@ -105,3 +105,26 @@ export async function getWeightedAverageCost(
 
   return totalCost.dividedBy(totalQty).toDecimalPlaces(2, Prisma.Decimal.ROUND_HALF_UP);
 }
+
+export async function getLastUnitCost(
+  tx: Tx,
+  companyId: string,
+  itemId: string,
+  cylinderState: CylinderState,
+  locationId?: string | null,
+): Promise<Prisma.Decimal | null> {
+  const entry = await tx.stockLedgerEntry.findFirst({
+    where: {
+      companyId,
+      itemId,
+      cylinderState,
+      direction: StockDirection.IN,
+      unitCost: { not: null },
+      locationId: locationId ?? null,
+    },
+    orderBy: [{ transactionDate: "desc" }, { createdAt: "desc" }],
+    select: { unitCost: true },
+  });
+
+  return entry?.unitCost ?? null;
+}

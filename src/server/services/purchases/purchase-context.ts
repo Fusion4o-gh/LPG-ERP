@@ -1,7 +1,7 @@
-import { NormalBalance, PermissionAction, type Prisma } from "@prisma/client";
+import { CylinderState, NormalBalance, PermissionAction, type Prisma } from "@prisma/client";
 import { prisma } from "../../../lib/prisma.ts";
 import { enforcePermission } from "../rbac/enforce.ts";
-import { resolveItemCost } from "../pricing/gas-cost.ts";
+import { getLastUnitCost } from "../inventory/stock-ledger.ts";
 
 type Context = { companyId: string; financialYearId: string; userId: string };
 
@@ -37,26 +37,14 @@ export async function getPurchaseFilledContext(context: Context, input: { vendor
       }
     }
 
-    // Resolve suggested cost per item from the standard gas cost/kg rate
+    // Suggest each item's own last-used purchase price (flat, per item, no weight math)
     const itemIds = input.itemIds ?? [];
-    const kgPricing: Record<string, { unitPrice: string; pricePerKg: string | null; cylinderWeightKg: string | null; usingKgPricing: boolean } | null> = {};
+    const lastCost: Record<string, string | null> = {};
     for (const itemId of itemIds) {
-      try {
-        const result = await resolveItemCost(tx, {
-          companyId: context.companyId,
-          itemId,
-        });
-        kgPricing[itemId] = {
-          unitPrice: result.unitCost.toString(),
-          pricePerKg: result.costPerKg.gt(0) ? result.costPerKg.toString() : null,
-          cylinderWeightKg: result.cylinderWeightKg?.toString() ?? null,
-          usingKgPricing: result.costPerKg.gt(0) && result.cylinderWeightKg != null,
-        };
-      } catch {
-        kgPricing[itemId] = null;
-      }
+      const unitCost = await getLastUnitCost(tx, context.companyId, itemId, CylinderState.FILLED);
+      lastCost[itemId] = unitCost ? unitCost.toString() : null;
     }
 
-    return { vendorBalance, kgPricing };
+    return { vendorBalance, lastCost };
   });
 }

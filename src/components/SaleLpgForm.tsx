@@ -49,13 +49,12 @@ function money(value: number) {
   return value.toFixed(2);
 }
 
-function estimatedMargin(item: Lookup | undefined, gasCostPerKg: number | null, unitPrice: number) {
-  const cylinderWeightKg = item?.cylinderWeightKg != null ? Number(item.cylinderWeightKg) : null;
-  if (gasCostPerKg == null || cylinderWeightKg == null || !Number.isFinite(cylinderWeightKg) || unitPrice <= 0) return null;
-  const estimatedCost = gasCostPerKg * cylinderWeightKg;
-  const marginAmount = unitPrice - estimatedCost;
+function estimatedMargin(estimatedCost: string | null | undefined, unitPrice: number) {
+  const cost = estimatedCost != null ? Number(estimatedCost) : null;
+  if (cost == null || !Number.isFinite(cost) || unitPrice <= 0) return null;
+  const marginAmount = unitPrice - cost;
   const marginPercent = (marginAmount / unitPrice) * 100;
-  return { estimatedCost, marginAmount, marginPercent };
+  return { estimatedCost: cost, marginAmount, marginPercent };
 }
 
 export function SaleLpgForm() {
@@ -85,7 +84,7 @@ export function SaleLpgForm() {
   const [filledStock, setFilledStock] = useState<Record<string, number>>({});
   const [locationId, setLocationId] = useState("");
   const [kgPricing, setKgPricing] = useState<Record<string, { unitPrice: string; pricePerKg: string | null; cylinderWeightKg: string | null; usingKgPricing: boolean } | null>>({});
-  const [gasCostPerKg, setGasCostPerKg] = useState<number | null>(null);
+  const [estimatedCost, setEstimatedCost] = useState<Record<string, string | null>>({});
 
   useEffect(() => {
     Promise.all([
@@ -93,15 +92,12 @@ export function SaleLpgForm() {
       apiGet<{ items: Lookup[] }>("/api/items"),
       apiGet<{ banks: { id: string; name: string }[] }>("/api/banks"),
       apiGet<{ documentNo: string }>("/api/documents/next-number?kind=sale-issue"),
-      apiGet<{ gasCost: { costPerKg: string } }>("/api/settings/gas-cost"),
     ])
-      .then(([customerData, itemData, bankData, preview, gasCostData]) => {
+      .then(([customerData, itemData, bankData, preview]) => {
         setCustomers(customerData.customers);
         setItems(itemData.items);
         setBanks(bankData.banks);
         setPreviewIssueNo(preview.documentNo);
-        const parsedCost = Number(gasCostData.gasCost.costPerKg);
-        setGasCostPerKg(Number.isFinite(parsedCost) && parsedCost > 0 ? parsedCost : null);
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLookupLoading(false));
@@ -122,16 +118,19 @@ export function SaleLpgForm() {
       customerBalance: { receivableBalance: number; emptyOwed: number; filledOutstanding: number } | null;
       filledStock: Record<string, number>;
       kgPricing: Record<string, { unitPrice: string; pricePerKg: string | null; cylinderWeightKg: string | null; usingKgPricing: boolean } | null>;
+      estimatedCost: Record<string, string | null>;
     }>(`/api/sales/lpg/context?${params.toString()}`)
       .then((data) => {
         setCustomerBalance(data.customerBalance);
         setFilledStock(data.filledStock);
         setKgPricing(data.kgPricing ?? {});
+        setEstimatedCost(data.estimatedCost ?? {});
       })
       .catch(() => {
         setCustomerBalance(null);
         setFilledStock({});
         setKgPricing({});
+        setEstimatedCost({});
       });
   }, [customerId, lines]);
 
@@ -376,11 +375,7 @@ export function SaleLpgForm() {
                           />
                         ) : null}
                         {(() => {
-                          const margin = estimatedMargin(
-                            items.find((item) => String(item.id) === line.itemId),
-                            gasCostPerKg,
-                            amount(line.unitPrice),
-                          );
+                          const margin = estimatedMargin(estimatedCost[line.itemId], amount(line.unitPrice));
                           if (!margin) return null;
                           return (
                             <div className="mt-1 text-xs text-slate-500">

@@ -6,7 +6,6 @@ import { createBalancedVoucher } from "../accounting/vouchers.ts";
 import { writeAuditLog } from "../audit/audit-log.ts";
 import { assertWritableBusinessDate } from "../inventory/day-closing.ts";
 import { createStockLedgerEntry } from "../inventory/stock-ledger.ts";
-import { setGasCostRate } from "../pricing/gas-cost.ts";
 import { enforcePermission } from "../rbac/enforce.ts";
 
 type PurchaseFilledCylinderInput = {
@@ -98,26 +97,6 @@ export async function purchaseFilledCylinder(input: PurchaseFilledCylinderInput)
     await assertWritableBusinessDate(tx, input);
 
     const vendor = await tx.vendor.findUniqueOrThrow({ where: { id: input.vendorId }, select: { accountId: true } });
-
-    if (input.elevenPointEightKgPrice !== undefined) {
-      const elevenPointEightKgPrice = decimal(input.elevenPointEightKgPrice);
-      if (elevenPointEightKgPrice.gt(0)) {
-        const company = await tx.company.findUniqueOrThrow({
-          where: { id: input.companyId },
-          select: { standardPurchaseCylinderKg: true },
-        });
-        const costPerKg = elevenPointEightKgPrice.dividedBy(company.standardPurchaseCylinderKg);
-        await setGasCostRate(tx, {
-          companyId: input.companyId,
-          costPerKg,
-          sourceType: "PURCHASE",
-          sourceId: input.issueNo,
-          userId: input.userId,
-          effectiveFrom: input.transactionDate,
-        });
-      }
-    }
-
     const stockAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.stock);
     const gstReceivableAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.gstReceivable);
     const lines = normalizeLines(input);

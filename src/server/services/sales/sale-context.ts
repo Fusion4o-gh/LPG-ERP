@@ -1,7 +1,8 @@
-import { PermissionAction, type Prisma } from "@prisma/client";
+import { CylinderState, PermissionAction, type Prisma } from "@prisma/client";
 import { prisma } from "../../../lib/prisma.ts";
 import { enforcePermission } from "../rbac/enforce.ts";
 import { getFilledStockByItem } from "../inventory/stock-availability.ts";
+import { getWeightedAverageCost } from "../inventory/stock-ledger.ts";
 import { resolveItemPrice } from "../pricing/kg-pricing.ts";
 
 type Context = { companyId: string; financialYearId: string; userId: string };
@@ -86,6 +87,13 @@ export async function getSaleLpgContext(context: Context, input: { customerId?: 
       },
     });
 
-    return { customerBalance, filledStock, kgPricing, company };
+    // Estimated cost per item from the existing weighted-average cost engine, for a margin preview
+    const estimatedCost: Record<string, string | null> = {};
+    for (const itemId of itemIds) {
+      const avgCost = await getWeightedAverageCost(tx, context.companyId, itemId, CylinderState.FILLED);
+      estimatedCost[itemId] = avgCost.gt(0) ? avgCost.toString() : null;
+    }
+
+    return { customerBalance, filledStock, kgPricing, company, estimatedCost };
   });
 }

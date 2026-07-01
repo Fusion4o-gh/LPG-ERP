@@ -22,7 +22,6 @@ export type CompanyInformationInput = {
   workStartTime?: string;
   workEndTime?: string;
   workingDays?: Record<string, boolean>;
-  standardPurchaseCylinderKg?: number | string;
 };
 
 const workingDayKeys = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] as const;
@@ -42,12 +41,6 @@ function cleanEmail(value: string | undefined) {
   if (!email) return null;
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("email must be valid.");
   return email;
-}
-
-function positiveDecimal(value: number | string, field: string) {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed) || parsed <= 0) throw new Error(`${field} must be a positive number.`);
-  return parsed;
 }
 
 function cleanWorkingDays(value: CompanyInformationInput["workingDays"]): Prisma.InputJsonValue | undefined {
@@ -77,7 +70,6 @@ const companySelect = {
   redirectOnSamePage: true,
   workStartTime: true,
   workEndTime: true,
-  standardPurchaseCylinderKg: true,
   status: true,
 } satisfies Prisma.CompanySelect;
 
@@ -111,9 +103,6 @@ export async function updateCompanyInformation(context: Context, input: CompanyI
         ...(input.workStartTime === undefined ? {} : { workStartTime: optionalString(input.workStartTime) }),
         ...(input.workEndTime === undefined ? {} : { workEndTime: optionalString(input.workEndTime) }),
         ...(workingDays === undefined ? {} : { workingDays }),
-        ...(input.standardPurchaseCylinderKg === undefined
-          ? {}
-          : { standardPurchaseCylinderKg: positiveDecimal(input.standardPurchaseCylinderKg, "standardPurchaseCylinderKg") }),
       },
       select: companySelect,
     });

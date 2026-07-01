@@ -26,7 +26,6 @@ type CompanyInfo = {
   workStartTime?: string | null;
   workEndTime?: string | null;
   workingDays?: WorkingDays | null;
-  standardPurchaseCylinderKg?: string | number | null;
 };
 
 type FormValues = {
@@ -45,7 +44,6 @@ type FormValues = {
   workStartTime: string;
   workEndTime: string;
   workingDays: WorkingDays;
-  standardPurchaseCylinderKg: string;
 };
 
 const days = [
@@ -77,7 +75,6 @@ function emptyValues(): FormValues {
     workStartTime: "",
     workEndTime: "",
     workingDays: defaultWorkingDays,
-    standardPurchaseCylinderKg: "11.8",
   };
 }
 
@@ -98,7 +95,6 @@ function valuesFromCompany(company: CompanyInfo): FormValues {
     workStartTime: company.workStartTime ?? "",
     workEndTime: company.workEndTime ?? "",
     workingDays: { ...defaultWorkingDays, ...(company.workingDays ?? {}) },
-    standardPurchaseCylinderKg: company.standardPurchaseCylinderKg != null ? String(company.standardPurchaseCylinderKg) : "11.8",
   };
 }
 
@@ -180,8 +176,7 @@ export function CompanyInformationForm() {
 
     setSaving(true);
     try {
-      const payload = { ...values, standardPurchaseCylinderKg: Number(values.standardPurchaseCylinderKg) || undefined };
-      const data = await apiPut<{ company: CompanyInfo }>("/api/configuration/company-information", payload);
+      const data = await apiPut<{ company: CompanyInfo }>("/api/configuration/company-information", values);
       setValues(valuesFromCompany(data.company));
       setSuccess("Company Information updated.");
     } catch (err) {
@@ -273,17 +268,6 @@ export function CompanyInformationForm() {
             </Field>
             <Field label="End Time">
               <input type="time" value={values.workEndTime} onChange={(e) => setField("workEndTime", e.target.value)} className="w-full rounded-md border border-slate-300 px-3 py-2" />
-            </Field>
-            <Field label="Standard Purchase Cylinder Weight (kg)">
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={values.standardPurchaseCylinderKg}
-                onChange={(e) => setField("standardPurchaseCylinderKg", e.target.value)}
-                className="w-full rounded-md border border-slate-300 px-3 py-2"
-              />
-              <span className="mt-1 block text-xs text-slate-400">The bulk purchase weight the &quot;11.8 KG Price&quot; field refers to. Cost for other cylinder sizes is derived proportionally from this.</span>
             </Field>
           </div>
         </FormSection>
