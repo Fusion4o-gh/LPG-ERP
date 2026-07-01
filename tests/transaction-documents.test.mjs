@@ -146,8 +146,8 @@ test("sale print payload includes every LPG invoice line with selected invoice l
       transactionDate: "2026-07-22",
       invoiceLanguage: "Urdu",
       lines: [
-        { itemId: item.id, quantity: 2, unitPrice: 3000, gstPercent: 10, securityDepositAmount: 500 },
-        { itemId: secondItem.id, quantity: 1, unitPrice: 2000, gstPercent: 5, securityDepositAmount: 250 },
+        { itemId: item.id, quantity: 2, unitPrice: 3000, securityDepositAmount: 500 },
+        { itemId: secondItem.id, quantity: 1, unitPrice: 2000, securityDepositAmount: 250 },
       ],
     }),
   );
@@ -162,11 +162,9 @@ test("sale print payload includes every LPG invoice line with selected invoice l
   assert.equal(printResponse.status, 200);
   assert.equal(body.document.invoiceLanguage, "Urdu");
   assert.equal(body.document.lineItems.length, 2);
-  assert.equal(body.document.lineItems[0].exGstAmount, "6000");
-  assert.equal(body.document.lineItems[0].gstAmount, "600");
+  assert.equal(body.document.lineItems[0].amount, "6000");
   assert.equal(body.document.lineItems[0].securityDepositAmount, "500");
-  assert.equal(body.document.lineItems[0].incGstAmount, "6600");
-  assert.equal(body.document.totals.totalDebit, "14450");
+  assert.equal(body.document.totals.totalDebit, "13250");
 });
 
 test("cylinder return print payload includes all return lines and return type", async () => {
@@ -192,7 +190,7 @@ test("cylinder return print payload includes all return lines and return type", 
       transactionDate: "2026-07-22",
       lines: [
         { itemId: item.id, returnType: "Empty", quantity: 1 },
-        { itemId: secondItem.id, returnType: "Filled", quantity: 1, unitPrice: 2000, gstPercent: 5 },
+        { itemId: secondItem.id, returnType: "Filled", quantity: 1, unitPrice: 2000 },
       ],
     }),
   );

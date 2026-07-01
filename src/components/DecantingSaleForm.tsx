@@ -33,7 +33,6 @@ export function DecantingSaleForm() {
   const [sourceQuantity, setSourceQuantity] = useState("1");
   const [decantedQuantity, setDecantedQuantity] = useState("");
   const [unitPrice, setUnitPrice] = useState("");
-  const [gstPercent, setGstPercent] = useState("0");
   const [loading, setLoading] = useState(false);
   const [lookupLoading, setLookupLoading] = useState(true);
   const [error, setError] = useState("");
@@ -50,11 +49,7 @@ export function DecantingSaleForm() {
       .finally(() => setLookupLoading(false));
   }, []);
 
-  const totals = useMemo(() => {
-    const exGstAmount = numberValue(decantedQuantity) * numberValue(unitPrice);
-    const gstAmount = exGstAmount * (numberValue(gstPercent) / 100);
-    return { exGstAmount, gstAmount, incGstAmount: exGstAmount + gstAmount };
-  }, [decantedQuantity, gstPercent, unitPrice]);
+  const totalAmount = useMemo(() => numberValue(decantedQuantity) * numberValue(unitPrice), [decantedQuantity, unitPrice]);
 
   function reset() {
     setCustomerId("");
@@ -64,7 +59,6 @@ export function DecantingSaleForm() {
     setSourceQuantity("1");
     setDecantedQuantity("");
     setUnitPrice("");
-    setGstPercent("0");
     setPrintDocumentNo("");
   }
 
@@ -72,14 +66,12 @@ export function DecantingSaleForm() {
     const parsedSourceQuantity = numberValue(sourceQuantity);
     const parsedDecantedQuantity = numberValue(decantedQuantity);
     const parsedUnitPrice = numberValue(unitPrice);
-    const parsedGstPercent = numberValue(gstPercent);
     if (!transactionDate) throw new Error("Date/time is required.");
     if (!sourceItemId) throw new Error("Source item is required.");
     if (!Number.isInteger(parsedSourceQuantity) || parsedSourceQuantity <= 0) throw new Error("Source quantity must be a positive integer.");
     if (parsedDecantedQuantity <= 0) throw new Error("Decanted quantity must be positive.");
     if (parsedUnitPrice < 0) throw new Error("Unit price cannot be negative.");
     if (parsedUnitPrice > 0 && !customerId) throw new Error("Customer is required when sale amount exists.");
-    if (parsedGstPercent < 0) throw new Error("GST % cannot be negative.");
     return {
       customerId: customerId || undefined,
       transactionDate,
@@ -88,7 +80,6 @@ export function DecantingSaleForm() {
       sourceQuantity: parsedSourceQuantity,
       decantedQuantity: parsedDecantedQuantity,
       unitPrice: parsedUnitPrice,
-      gstPercent: parsedGstPercent,
     };
   }
 
@@ -110,7 +101,6 @@ export function DecantingSaleForm() {
       setSourceQuantity("1");
       setDecantedQuantity("");
       setUnitPrice("");
-      setGstPercent("0");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed.");
     } finally {
@@ -201,23 +191,11 @@ export function DecantingSaleForm() {
                   <label className="form-label" htmlFor="unitPrice">Unit Price</label>
                   <input id="unitPrice" type="number" min="0" value={unitPrice} onChange={(e) => setUnitPrice(e.target.value)} className="form-input text-right" />
                 </div>
-                <div>
-                  <label className="form-label" htmlFor="gstPercent">GST %</label>
-                  <input id="gstPercent" type="number" min="0" value={gstPercent} onChange={(e) => setGstPercent(e.target.value)} className="form-input text-right" />
-                </div>
               </div>
-              <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-lg border border-slate-200 bg-white p-3">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Ex-GST</div>
-                  <div className="mt-1.5 text-lg font-bold text-slate-800 tabular-nums">{money(totals.exGstAmount)}</div>
-                </div>
-                <div className="rounded-lg border border-slate-200 bg-white p-3">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">GST</div>
-                  <div className="mt-1.5 text-lg font-bold text-slate-800 tabular-nums">{money(totals.gstAmount)}</div>
-                </div>
-                <div className="rounded-lg bg-blue-700 p-3">
+              <div className="mt-4">
+                <div className="inline-block rounded-lg bg-blue-700 p-3 min-w-[160px]">
                   <div className="text-xs font-semibold uppercase tracking-wide text-blue-200">Total</div>
-                  <div className="mt-1.5 text-lg font-bold text-white tabular-nums">{money(totals.incGstAmount)}</div>
+                  <div className="mt-1.5 text-lg font-bold text-white tabular-nums">{money(totalAmount)}</div>
                 </div>
               </div>
             </div>
@@ -234,7 +212,7 @@ export function DecantingSaleForm() {
             <table className="min-w-[700px] w-full border-collapse text-sm">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
-                  {["Source Item", "Source Qty OUT", "Decanted Qty", "Unit Price", "GST %", "Total Amount"].map((h, i) => (
+                  {["Source Item", "Source Qty OUT", "Decanted Qty", "Unit Price", "Total Amount"].map((h, i) => (
                     <th key={i} className={`whitespace-nowrap px-2.5 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 ${i > 0 ? "text-right" : "text-left"}`}>{h}</th>
                   ))}
                 </tr>
@@ -245,8 +223,7 @@ export function DecantingSaleForm() {
                   <td className="px-2.5 py-2 text-right tabular-nums text-slate-600">{sourceQuantity || "0"}</td>
                   <td className="px-2.5 py-2 text-right tabular-nums text-slate-600">{decantedQuantity || "0"}</td>
                   <td className="px-2.5 py-2 text-right tabular-nums text-slate-600">{unitPrice || "0"}</td>
-                  <td className="px-2.5 py-2 text-right tabular-nums text-slate-600">{gstPercent || "0"}</td>
-                  <td className="px-2.5 py-2 text-right tabular-nums font-semibold text-slate-800">{money(totals.incGstAmount)}</td>
+                  <td className="px-2.5 py-2 text-right tabular-nums font-semibold text-slate-800">{money(totalAmount)}</td>
                 </tr>
               </tbody>
             </table>

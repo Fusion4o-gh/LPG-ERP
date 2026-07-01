@@ -18,8 +18,6 @@ type EmptySaleInput = {
   itemId?: string;
   quantity?: number;
   unitPrice?: string | number;
-  gstPercent?: string | number;
-  gstAmount?: string | number;
   remarks?: string;
   lines?: EmptySaleLineInput[];
   transactionDate: string | Date;
@@ -35,8 +33,6 @@ type EmptySaleLineInput = {
   itemId: string;
   quantity: number;
   unitPrice: string | number;
-  gstPercent?: string | number;
-  gstAmount?: string | number;
 };
 
 function decimal(value: string | number | Prisma.Decimal | undefined) {
@@ -55,8 +51,6 @@ function normalizeLines(input: EmptySaleInput) {
           itemId: input.itemId ?? "",
           quantity: input.quantity ?? 0,
           unitPrice: input.unitPrice ?? 0,
-          gstPercent: input.gstPercent,
-          gstAmount: input.gstAmount,
         },
       ];
 
@@ -66,11 +60,8 @@ function normalizeLines(input: EmptySaleInput) {
     if (!Number.isInteger(quantity) || quantity <= 0) throw new Error(`lines[${index}].quantity must be a positive integer.`);
     const unitPrice = decimal(line.unitPrice);
     if (unitPrice.lte(0)) throw new Error(`lines[${index}].unitPrice must be a positive number.`);
-    const exGstAmount = unitPrice.times(quantity);
-    const gstPercent = decimal(line.gstPercent);
-    const gstAmount = line.gstAmount === undefined ? exGstAmount.times(gstPercent).div(100) : decimal(line.gstAmount);
-    const incGstAmount = exGstAmount.plus(gstAmount);
-    return { itemId: line.itemId, quantity, unitPrice, gstPercent, gstAmount, exGstAmount, incGstAmount };
+    const amount = unitPrice.times(quantity);
+    return { itemId: line.itemId, quantity, unitPrice, amount };
   });
 }
 
@@ -81,18 +72,15 @@ export async function emptySale(input: EmptySaleInput) {
 
     const customer = await tx.customer.findUniqueOrThrow({ where: { id: input.customerId }, select: { accountId: true, code: true, name: true } });
     const salesAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.sales);
-    const gstPayableAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.gstPayable);
     const lines = normalizeLines(input);
     const itemRows = await tx.item.findMany({
       where: { companyId: input.companyId, id: { in: [...new Set(lines.map((line) => line.itemId))] } },
       select: { id: true, code: true, name: true },
     });
     const itemById = new Map(itemRows.map((item) => [item.id, item]));
-    const totalExGstAmount = lines.reduce((sum, line) => sum.plus(line.exGstAmount), new Prisma.Decimal(0));
-    const totalGstAmount = lines.reduce((sum, line) => sum.plus(line.gstAmount), new Prisma.Decimal(0));
-    const totalIncGstAmount = totalExGstAmount.plus(totalGstAmount);
-    const discountAmount = capDiscount(totalIncGstAmount, input.discount);
-    const netReceivableAmount = totalIncGstAmount.minus(discountAmount);
+    const totalAmount = lines.reduce((sum, line) => sum.plus(line.amount), new Prisma.Decimal(0));
+    const discountAmount = capDiscount(totalAmount, input.discount);
+    const netReceivableAmount = totalAmount.minus(discountAmount);
     let salesDiscountAccountId: string | null = null;
     try {
       salesDiscountAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.salesDiscount);
@@ -145,8 +133,7 @@ export async function emptySale(input: EmptySaleInput) {
       createdById: input.userId,
       lines: [
         { accountId: customer.accountId, debit: netReceivableAmount },
-        { accountId: salesAccountId, credit: totalExGstAmount },
-        ...(totalGstAmount.gt(0) ? [{ accountId: gstPayableAccountId, credit: totalGstAmount }] : []),
+        { accountId: salesAccountId, credit: totalAmount },
         ...(discountAmount.gt(0) && salesDiscountAccountId ? [{ accountId: salesDiscountAccountId, debit: discountAmount }] : []),
         ...cogsLines,
       ],
@@ -179,9 +166,7 @@ export async function emptySale(input: EmptySaleInput) {
         customer: label(customer, input.customerId),
         transactionDate: input.transactionDate,
         remarks: input.remarks,
-        totalExGstAmount: String(totalExGstAmount),
-        totalGstAmount: String(totalGstAmount),
-        totalIncGstAmount: String(totalIncGstAmount),
+        totalAmount: String(totalAmount),
         discountAmount: String(discountAmount),
         netReceivableAmount: String(netReceivableAmount),
         amountReceived: String(input.amountReceived ?? 0),
@@ -193,10 +178,7 @@ export async function emptySale(input: EmptySaleInput) {
           direction: StockDirection.OUT,
           quantity: line.quantity,
           unitPrice: String(line.unitPrice),
-          gstPercent: String(line.gstPercent),
-          gstAmount: String(line.gstAmount),
-          exGstAmount: String(line.exGstAmount),
-          incGstAmount: String(line.incGstAmount),
+          amount: String(line.amount),
         })),
       },
     });
@@ -206,9 +188,7 @@ export async function emptySale(input: EmptySaleInput) {
       stockEntries,
       voucher,
       receiptVoucher,
-      totalExGstAmount,
-      totalGstAmount,
-      totalIncGstAmount,
+      totalAmount,
       discountAmount,
       netReceivableAmount,
       amountReceived,

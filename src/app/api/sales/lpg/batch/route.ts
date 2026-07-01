@@ -18,8 +18,7 @@ export async function POST(request: Request) {
             itemId: stringField(item, "itemId"),
             quantity: positiveIntegerField(item, "quantity"),
             unitPrice: positiveNumberField(item, "unitPrice"),
-            gstPercent: optionalPositiveNumberField(item, "gstPercent"),
-            gstAmount: optionalPositiveNumberField(item, "gstAmount"),
+
             securityDepositAmount: optionalPositiveNumberField(item, "securityDepositAmount"),
           }))
         : undefined;
@@ -46,7 +45,7 @@ export async function POST(request: Request) {
               itemId: stringField(sale, "itemId"),
               quantity: positiveIntegerField(sale, "quantity"),
               unitPrice: positiveNumberField(sale, "unitPrice"),
-              gstAmount: optionalPositiveNumberField(sale, "gstAmount"),
+
               securityDepositAmount: optionalPositiveNumberField(sale, "securityDepositAmount"),
               transactionDate: dateField(sale, "transactionDate"),
             },

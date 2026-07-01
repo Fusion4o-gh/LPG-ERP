@@ -18,8 +18,6 @@ type SaleInput = {
   itemId?: string;
   quantity?: number;
   unitPrice?: string | number;
-  gstAmount?: string | number;
-  gstPercent?: string | number;
   securityDepositAmount?: string | number;
   saleType?: "Direct" | string;
   remarks?: string;
@@ -43,8 +41,6 @@ type SaleLpgLineInput = {
   itemId: string;
   quantity: number;
   unitPrice: string | number;
-  gstPercent?: string | number;
-  gstAmount?: string | number;
   securityDepositAmount?: string | number;
   emptyReturnItemId?: string;
   emptyReturnQuantity?: number;
@@ -92,8 +88,6 @@ function normalizeLines(input: SaleInput) {
           itemId: input.itemId ?? "",
           quantity: input.quantity ?? 0,
           unitPrice: input.unitPrice ?? 0,
-          gstAmount: input.gstAmount,
-          gstPercent: input.gstPercent,
           securityDepositAmount: input.securityDepositAmount,
         },
       ];
@@ -104,23 +98,17 @@ function normalizeLines(input: SaleInput) {
     if (!Number.isInteger(quantity) || quantity <= 0) throw new Error(`lines[${index}].quantity must be a positive integer.`);
     const unitPrice = decimal(line.unitPrice);
     if (unitPrice.lte(0)) throw new Error(`lines[${index}].unitPrice must be a positive number.`);
-    const exGstAmount = unitPrice.times(quantity);
-    const gstPercent = decimal(line.gstPercent);
-    const gstAmount = line.gstAmount === undefined ? exGstAmount.times(gstPercent).div(100) : decimal(line.gstAmount);
+    const amount = unitPrice.times(quantity);
     const securityDepositAmount = decimal(line.securityDepositAmount);
-    const incGstAmount = exGstAmount.plus(gstAmount);
-    const receivableAmount = incGstAmount.plus(securityDepositAmount);
+    const receivableAmount = amount.plus(securityDepositAmount);
     const emptyReturnQuantity = Number(line.emptyReturnQuantity ?? 0);
     if (!Number.isInteger(emptyReturnQuantity) || emptyReturnQuantity < 0) throw new Error(`lines[${index}].emptyReturnQuantity must be a non-negative integer.`);
     return {
       itemId: line.itemId,
       quantity,
       unitPrice,
-      gstPercent,
-      gstAmount,
       securityDepositAmount,
-      exGstAmount,
-      incGstAmount,
+      amount,
       receivableAmount,
       emptyReturnItemId: line.emptyReturnItemId || line.itemId,
       emptyReturnQuantity,
@@ -244,7 +232,6 @@ async function createSaleInTransaction(tx: Prisma.TransactionClient, input: Sale
   });
   const customer = await tx.customer.findUniqueOrThrow({ where: { id: input.customerId }, select: { accountId: true } });
   const salesAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.sales);
-  const gstPayableAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.gstPayable);
   const securityLiabilityAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.securityLiability);
   let discountAccountId: string | null = null;
   try {
@@ -259,10 +246,9 @@ async function createSaleInTransaction(tx: Prisma.TransactionClient, input: Sale
   });
   const itemById = new Map(itemRows.map((item) => [item.id, item]));
 
-  const saleAmount = lines.reduce((sum, line) => sum.plus(line.exGstAmount), new Prisma.Decimal(0));
-  const gstAmount = lines.reduce((sum, line) => sum.plus(line.gstAmount), new Prisma.Decimal(0));
+  const saleAmount = lines.reduce((sum, line) => sum.plus(line.amount), new Prisma.Decimal(0));
   const securityAmount = lines.reduce((sum, line) => sum.plus(line.securityDepositAmount), new Prisma.Decimal(0));
-  const receivableAmount = saleAmount.plus(gstAmount).plus(securityAmount);
+  const receivableAmount = saleAmount.plus(securityAmount);
   const discountRaw = decimal(input.discount);
   const discountAmount = discountRaw.gt(receivableAmount) ? receivableAmount : discountRaw;
   const netReceivableAmount = receivableAmount.minus(discountAmount);
@@ -376,7 +362,6 @@ async function createSaleInTransaction(tx: Prisma.TransactionClient, input: Sale
       { accountId: customer.accountId, debit: netReceivableAmount },
       ...(discountAmount.gt(0) && discountAccountId ? [{ accountId: discountAccountId, debit: discountAmount }] : []),
       { accountId: salesAccountId, credit: salesCredit },
-      ...(gstAmount.gt(0) ? [{ accountId: gstPayableAccountId, credit: gstAmount }] : []),
       ...(securityAmount.gt(0) ? [{ accountId: securityLiabilityAccountId, credit: securityAmount }] : []),
       ...cogsLines,
     ],
@@ -395,8 +380,7 @@ async function createSaleInTransaction(tx: Prisma.TransactionClient, input: Sale
       remarks: input.remarks,
       elevenPointEightKgPrice: String(input.elevenPointEightKgPrice ?? ""),
       invoiceLanguage: input.invoiceLanguage ?? "English",
-      totalExGstAmount: String(saleAmount),
-      totalGstAmount: String(gstAmount),
+      totalAmount: String(saleAmount),
       totalSecurityAmount: String(securityAmount),
       totalReceivableAmount: String(receivableAmount),
       discountAmount: String(discountAmount),
@@ -415,14 +399,11 @@ async function createSaleInTransaction(tx: Prisma.TransactionClient, input: Sale
           direction: StockDirection.OUT,
           quantity: line.quantity,
           unitPrice: String(line.unitPrice),
-          gstPercent: String(line.gstPercent),
-          gstAmount: String(line.gstAmount),
           securityDepositAmount: String(line.securityDepositAmount),
           emptyReturnItemId: line.emptyReturnItemId,
           emptyReturnItem: returnItem ? [returnItem.code, returnItem.name].filter(Boolean).join(" - ") : line.emptyReturnItemId,
           emptyReturnQuantity: line.emptyReturnQuantity,
-          exGstAmount: String(line.exGstAmount),
-          incGstAmount: String(line.incGstAmount),
+          amount: String(line.amount),
         };
       }),
     },
@@ -482,8 +463,7 @@ async function createSaleInTransaction(tx: Prisma.TransactionClient, input: Sale
     voucher,
     receiptVoucher,
     stockEntries,
-    totalExGstAmount: saleAmount,
-    totalGstAmount: gstAmount,
+    totalAmount: saleAmount,
     totalSecurityAmount: securityAmount,
     totalReceivableAmount: receivableAmount,
     discountAmount,

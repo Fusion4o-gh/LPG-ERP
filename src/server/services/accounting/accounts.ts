@@ -10,7 +10,6 @@ export const ACCOUNT_CODES = {
   salesDiscount: "4001001501",
   purchaseDiscount: "4001001502",
   gstReceivable: "2004003001",
-  gstPayable: "1001003001",
   securityLiability: "1001002001",
   // --- Bulk / import / dollar / plant extension ---
   bulkStock: "2003002001",

@@ -69,7 +69,7 @@ test.after(async () => {
   await prisma.$disconnect();
 });
 
-test("empty sale creates one issue number, per-line empty stock OUT, balanced customer receivable voucher, GST, and audit", async () => {
+test("empty sale creates one issue number, per-line empty stock OUT, balanced customer receivable voucher, and audit", async () => {
   const data = await fixture();
   const { company, financialYear, user, item, seedItem, customer } = data;
   const secondItem = await createIsolatedItem(prisma, company.id, seedItem, "ES-ITEM-2");
@@ -86,18 +86,16 @@ test("empty sale creates one issue number, per-line empty stock OUT, balanced cu
     transactionDate: "2026-10-02",
     remarks: "multi-line empty sale",
     lines: [
-      { itemId: item.id, quantity: 2, unitPrice: 1000, gstPercent: 10 },
-      { itemId: secondItem.id, quantity: 3, unitPrice: 500, gstPercent: 5 },
+      { itemId: item.id, quantity: 2, unitPrice: 1000 },
+      { itemId: secondItem.id, quantity: 3, unitPrice: 500 },
     ],
   });
 
   assert.equal(result.issueNo, issueNo);
   assert.equal(result.stockEntries.length, 2);
-  assert.equal(Number(result.totalExGstAmount), 3500);
-  assert.equal(Number(result.totalGstAmount), 275);
-  assert.equal(Number(result.totalIncGstAmount), 3775);
-  assert.equal(Number(result.voucher.totalDebit), 3775);
-  assert.equal(Number(result.voucher.totalCredit), 3775);
+  assert.equal(Number(result.totalAmount), 3500);
+  assert.equal(Number(result.voucher.totalDebit), 3500);
+  assert.equal(Number(result.voucher.totalCredit), 3500);
 
   const stockEntries = await prisma.stockLedgerEntry.findMany({ where: { sourceType: "SALE_LPG", sourceId: issueNo } });
   assert.equal(stockEntries.length, 2);
@@ -108,7 +106,7 @@ test("empty sale creates one issue number, per-line empty stock OUT, balanced cu
   const voucher = await prisma.accountingVoucher.findUniqueOrThrow({ where: { id: result.voucher.id }, include: { lines: true } });
   assert.equal(voucher.sourceType, "EmptySale");
   assert.equal(voucher.sourceId, issueNo);
-  assert.equal(voucher.lines.some((line) => Number(line.credit) === 275), true);
+
 
   const audit = await prisma.auditLog.findFirstOrThrow({ where: { entityType: "EmptySale", entityId: issueNo } });
   assert.equal(audit.after.lines.length, 2);
@@ -128,8 +126,8 @@ test("printable empty sale payload includes all lines", async () => {
       customerId: customer.id,
       transactionDate: "2026-10-03",
       lines: [
-        { itemId: item.id, quantity: 1, unitPrice: 1000, gstPercent: 10 },
-        { itemId: secondItem.id, quantity: 2, unitPrice: 500, gstPercent: 5 },
+        { itemId: item.id, quantity: 1, unitPrice: 1000 },
+        { itemId: secondItem.id, quantity: 2, unitPrice: 500 },
       ],
     }),
   );
@@ -147,7 +145,7 @@ test("printable empty sale payload includes all lines", async () => {
   assert.equal(body.document.partyLabel, "Customer");
   assert.equal(body.document.lineItems.length, 2);
   assert.equal(body.document.lineItems.every((line) => line.cylinderState === "EMPTY" && line.direction === "OUT"), true);
-  assert.equal(body.document.totals.totalDebit, "2150");
+  assert.equal(body.document.totals.totalDebit, "2000");
 });
 
 test("empty sale API accepts legacy-style payload", async () => {
@@ -162,7 +160,6 @@ test("empty sale API accepts legacy-style payload", async () => {
       itemId: item.id,
       quantity: 1,
       unitPrice: 700,
-      gstPercent: 10,
       remarks: "legacy empty sale",
     }),
   );

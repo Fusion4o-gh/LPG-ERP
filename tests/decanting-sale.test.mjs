@@ -69,7 +69,7 @@ test.after(async () => {
   await prisma.$disconnect();
 });
 
-test("decanting sale creates one document number, source stock OUT, balanced voucher, GST, and audit", async () => {
+test("decanting sale creates one document number, source stock OUT, balanced voucher, and audit", async () => {
   const data = await fixture();
   const { company, financialYear, user, item, customer } = data;
   await seedFilledStock(data, 6);
@@ -85,18 +85,15 @@ test("decanting sale creates one document number, source stock OUT, balanced vou
     sourceQuantity: 1,
     decantedQuantity: 12.5,
     unitPrice: 200,
-    gstPercent: 10,
     transactionDate: "2026-11-02T10:30:00",
     remarks: "decanting sale",
   });
 
   assert.equal(result.issueNo, issueNo);
   assert.equal(result.stockEntries.length, 1);
-  assert.equal(Number(result.totalExGstAmount), 2500);
-  assert.equal(Number(result.totalGstAmount), 250);
-  assert.equal(Number(result.totalIncGstAmount), 2750);
-  assert.equal(Number(result.voucher.totalDebit), 2750);
-  assert.equal(Number(result.voucher.totalCredit), 2750);
+  assert.equal(Number(result.totalAmount), 2500);
+  assert.equal(Number(result.voucher.totalDebit), 2500);
+  assert.equal(Number(result.voucher.totalCredit), 2500);
 
   const stockEntry = await prisma.stockLedgerEntry.findFirstOrThrow({ where: { sourceType: "SALE_LPG", sourceId: issueNo } });
   assert.equal(stockEntry.itemId, item.id);
@@ -107,7 +104,7 @@ test("decanting sale creates one document number, source stock OUT, balanced vou
   const voucher = await prisma.accountingVoucher.findUniqueOrThrow({ where: { id: result.voucher.id }, include: { lines: true } });
   assert.equal(voucher.sourceType, "DecantingSale");
   assert.equal(voucher.sourceId, issueNo);
-  assert.equal(voucher.lines.some((line) => Number(line.credit) === 250), true);
+
 
   const audit = await prisma.auditLog.findFirstOrThrow({ where: { entityType: "DecantingSale", entityId: issueNo } });
   assert.equal(audit.after.sourceQuantity, 1);
@@ -128,7 +125,6 @@ test("printable decanting sale payload includes decanting details", async () => 
       sourceQuantity: 1,
       decantedQuantity: 10,
       unitPrice: 150,
-      gstPercent: 5,
       remarks: "print decanting",
     }),
   );
@@ -148,7 +144,7 @@ test("printable decanting sale payload includes decanting details", async () => 
   assert.equal(body.document.lineItems[0].section, "Decanting");
   assert.equal(body.document.lineItems[0].sourceQuantity, 1);
   assert.equal(body.document.lineItems[0].decantedQuantity, "10");
-  assert.equal(body.document.totals.totalDebit, "1575");
+  assert.equal(body.document.totals.totalDebit, "1500");
 });
 
 test("decanting sale API accepts legacy-style payload", async () => {
@@ -164,7 +160,6 @@ test("decanting sale API accepts legacy-style payload", async () => {
       quantity: 1,
       saleQuantity: 8,
       unitPrice: 100,
-      gstPercent: 10,
       remarks: "legacy decanting",
     }),
   );

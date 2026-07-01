@@ -194,8 +194,8 @@ test("sale API accepts legacy multi-line LPG invoice payload and returns one iss
         elevenPointEightKgPrice: 3300,
         invoiceLanguage: "English",
         lines: [
-          { itemId: item.id, quantity: 2, unitPrice: 3000, gstPercent: 10, securityDepositAmount: 500, emptyReturnItemId: item.id, emptyReturnQuantity: 1 },
-          { itemId: secondItem.id, quantity: 1, unitPrice: 2000, gstPercent: 5, securityDepositAmount: 250 },
+          { itemId: item.id, quantity: 2, unitPrice: 3000, securityDepositAmount: 500, emptyReturnItemId: item.id, emptyReturnQuantity: 1 },
+          { itemId: secondItem.id, quantity: 1, unitPrice: 2000, securityDepositAmount: 250 },
         ],
       }),
     }),
@@ -209,7 +209,7 @@ test("sale API accepts legacy multi-line LPG invoice payload and returns one iss
 
   const voucher = await prisma.accountingVoucher.findUniqueOrThrow({ where: { id: body.ids.voucherId } });
   assert.equal(voucher.voucherNo, body.issueNo);
-  assert.equal(Number(voucher.totalDebit), 9450);
+  assert.equal(Number(voucher.totalDebit), 8750);
 });
 
 test("complete day sale API accepts legacy batch rows with up to three item slots and cash receipt amount", async () => {
@@ -324,7 +324,7 @@ test("cylinder return API accepts legacy multi-line empty and filled return payl
         remarks: "API legacy return",
         lines: [
           { itemId: item.id, returnType: "Empty", quantity: 1 },
-          { itemId: secondItem.id, returnType: "Filled", quantity: 1, unitPrice: 2000, gstPercent: 5 },
+          { itemId: secondItem.id, returnType: "Filled", quantity: 1, unitPrice: 2000 },
         ],
       }),
     }),

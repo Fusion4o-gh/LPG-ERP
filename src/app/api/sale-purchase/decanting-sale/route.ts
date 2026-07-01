@@ -40,8 +40,7 @@ export async function POST(request: Request) {
       sourceQuantity: sourceQuantity(body),
       decantedQuantity: decantedQuantity(body),
       unitPrice: optionalPositiveNumberField(body, "unitPrice"),
-      gstPercent: optionalPositiveNumberField(body, "gstPercent"),
-      gstAmount: optionalPositiveNumberField(body, "gstAmount"),
+
       remarks: optionalStringField(body, "remarks"),
       transactionDate: dateOrTransactionDate(body),
       allowClosedDayOverride: booleanField(body, "allowClosedDayOverride"),

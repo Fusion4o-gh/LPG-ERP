@@ -17,7 +17,6 @@ type SaleLine = {
   itemId: string;
   quantity: string;
   unitPrice: string;
-  gstPercent: string;
   securityDepositAmount: string;
   emptyReturnItemId: string;
   emptyReturnQuantity: string;
@@ -27,7 +26,6 @@ const emptyLine: SaleLine = {
   itemId: "",
   quantity: "1",
   unitPrice: "",
-  gstPercent: "0",
   securityDepositAmount: "0",
   emptyReturnItemId: "",
   emptyReturnQuantity: "0",
@@ -43,10 +41,8 @@ function amount(value: string) {
 }
 
 function lineTotals(line: SaleLine) {
-  const exGstAmount = amount(line.quantity) * amount(line.unitPrice);
-  const gstAmount = exGstAmount * (amount(line.gstPercent) / 100);
-  const securityAmount = amount(line.securityDepositAmount);
-  return { exGstAmount, gstAmount, securityAmount, incGstAmount: exGstAmount + gstAmount, receivableAmount: exGstAmount + gstAmount + securityAmount };
+  const amount = Number(line.quantity) * Number(line.unitPrice || 0);
+  return { amount, securityAmount: Number(line.securityDepositAmount || 0), receivableAmount: amount + Number(line.securityDepositAmount || 0) };
 }
 
 function money(value: number) {
@@ -131,14 +127,9 @@ export function SaleLpgForm() {
       lines.reduce(
         (sum, line) => {
           const current = lineTotals(line);
-          return {
-            exGstAmount: sum.exGstAmount + current.exGstAmount,
-            gstAmount: sum.gstAmount + current.gstAmount,
-            securityAmount: sum.securityAmount + current.securityAmount,
-            receivableAmount: sum.receivableAmount + current.receivableAmount,
-          };
+          return { amount: sum.amount + current.amount, securityAmount: sum.securityAmount + current.securityAmount, receivableAmount: sum.receivableAmount + current.receivableAmount };
         },
-        { exGstAmount: 0, gstAmount: 0, securityAmount: 0, receivableAmount: 0 },
+        { amount: 0, securityAmount: 0, receivableAmount: 0 },
       ),
     [lines],
   );
@@ -174,20 +165,17 @@ export function SaleLpgForm() {
     const preparedLines = lines.map((line, index) => {
       const quantity = amount(line.quantity);
       const unitPrice = amount(line.unitPrice);
-      const gstPercent = amount(line.gstPercent);
       const securityDepositAmount = amount(line.securityDepositAmount);
       const emptyReturnQuantity = amount(line.emptyReturnQuantity);
       if (!line.itemId) throw new Error(`Line ${index + 1}: item is required.`);
       if (!Number.isInteger(quantity) || quantity <= 0) throw new Error(`Line ${index + 1}: sale quantity must be a positive integer.`);
       if (unitPrice <= 0) throw new Error(`Line ${index + 1}: unit price must be positive.`);
-      if (gstPercent < 0) throw new Error(`Line ${index + 1}: GST % cannot be negative.`);
       if (securityDepositAmount < 0) throw new Error(`Line ${index + 1}: security amount cannot be negative.`);
       if (!Number.isInteger(emptyReturnQuantity) || emptyReturnQuantity < 0) throw new Error(`Line ${index + 1}: return quantity must be a non-negative integer.`);
       return {
         itemId: line.itemId,
         quantity,
         unitPrice,
-        gstPercent,
         securityDepositAmount,
         emptyReturnItemId: line.emptyReturnItemId || line.itemId,
         emptyReturnQuantity,
@@ -346,8 +334,8 @@ export function SaleLpgForm() {
             <table className="min-w-[1260px] border-collapse text-sm">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
-                  {["Item", "Sale Qty", "Unit Price", "GST %", "Security", "Empty Return Item", "Return Qty", "Filled Stock", "GST Amt", "Ex-GST", "Inc-GST", ""].map((h, i) => (
-                    <th key={i} className={`whitespace-nowrap px-2.5 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 ${i >= 1 && i <= 6 ? "text-right" : i >= 8 && i <= 10 ? "text-right" : "text-left"}`}>{h}</th>
+                  {["Item", "Sale Qty", "Unit Price", "Security", "Empty Return Item", "Return Qty", "Filled Stock", "Amount", ""].map((h, i) => (
+                    <th key={i} className={`whitespace-nowrap px-2.5 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 ${[1, 2, 3, 5, 7].includes(i) ? "text-right" : "text-left"}`}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -375,7 +363,6 @@ export function SaleLpgForm() {
                           />
                         ) : null}
                       </td>
-                      <td className="px-2.5 py-2"><input type="number" min="0" value={line.gstPercent} onChange={(e) => updateLine(index, { gstPercent: e.target.value })} className="tbl-input w-16 text-right" /></td>
                       <td className="px-2.5 py-2"><input type="number" min="0" value={line.securityDepositAmount} onChange={(e) => updateLine(index, { securityDepositAmount: e.target.value })} className="tbl-input w-20 text-right" /></td>
                       <td className="px-2.5 py-2">
                         <select value={line.emptyReturnItemId} onChange={(e) => updateLine(index, { emptyReturnItemId: e.target.value })} disabled={lookupLoading} className="tbl-select w-52">
@@ -387,9 +374,7 @@ export function SaleLpgForm() {
                       <td className="px-2.5 py-2 text-right text-xs font-medium tabular-nums text-slate-600">
                         {line.itemId ? filledStock[line.itemId] ?? 0 : "—"}
                       </td>
-                      <td className="px-2.5 py-2 text-right tabular-nums text-slate-600">{money(current.gstAmount)}</td>
-                      <td className="px-2.5 py-2 text-right tabular-nums text-slate-600">{money(current.exGstAmount)}</td>
-                      <td className="px-2.5 py-2 text-right tabular-nums font-medium text-slate-800">{money(current.incGstAmount)}</td>
+                      <td className="px-2.5 py-2 text-right tabular-nums font-medium text-slate-800">{money(current.amount)}</td>
                       <td className="px-2.5 py-2">
                         <button type="button" onClick={() => removeLine(index)} disabled={lines.length === 1} className="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50 disabled:opacity-40 transition-colors">Remove</button>
                       </td>
@@ -399,14 +384,10 @@ export function SaleLpgForm() {
               </tbody>
             </table>
           </div>
-          <div className="border-t border-slate-100 bg-slate-50/60 px-5 py-4 grid gap-3 sm:grid-cols-4">
+          <div className="border-t border-slate-100 bg-slate-50/60 px-5 py-4 grid gap-3 sm:grid-cols-3">
             <div className="rounded-lg border border-slate-200 bg-white p-3">
-              <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Ex-GST Total</div>
-              <div className="mt-1.5 text-lg font-bold text-slate-800 tabular-nums">{money(totals.exGstAmount)}</div>
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-white p-3">
-              <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">GST Total</div>
-              <div className="mt-1.5 text-lg font-bold text-slate-800 tabular-nums">{money(totals.gstAmount)}</div>
+              <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Sale Total</div>
+              <div className="mt-1.5 text-lg font-bold text-slate-800 tabular-nums">{money(totals.amount)}</div>
             </div>
             <div className="rounded-lg border border-slate-200 bg-white p-3">
               <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Security Total</div>

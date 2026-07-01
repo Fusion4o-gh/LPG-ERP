@@ -219,19 +219,18 @@ test("multi-line LPG sale creates one document with sale stock outs, same-sale e
     invoiceLanguage: "Urdu",
     transactionDate: "2026-07-16",
     lines: [
-      { itemId: item.id, quantity: 2, unitPrice: 3000, gstPercent: 10, securityDepositAmount: 500, emptyReturnItemId: item.id, emptyReturnQuantity: 1 },
-      { itemId: secondItem.id, quantity: 1, unitPrice: 2000, gstPercent: 5, securityDepositAmount: 250 },
+      { itemId: item.id, quantity: 2, unitPrice: 3000, securityDepositAmount: 500, emptyReturnItemId: item.id, emptyReturnQuantity: 1 },
+      { itemId: secondItem.id, quantity: 1, unitPrice: 2000, securityDepositAmount: 250 },
     ],
   });
 
   assert.equal(result.issueNo, issueNo);
   assert.equal(result.stockEntries.length, 3);
-  assert.equal(Number(result.totalExGstAmount), 8000);
-  assert.equal(Number(result.totalGstAmount), 700);
+  assert.equal(Number(result.totalAmount), 8000);
   assert.equal(Number(result.totalSecurityAmount), 750);
-  assert.equal(Number(result.totalReceivableAmount), 9450);
-  assert.equal(Number(result.voucher.totalDebit), 15650);
-  assert.equal(Number(result.voucher.totalCredit), 15650);
+  assert.equal(Number(result.totalReceivableAmount), 8750);
+  assert.equal(Number(result.voucher.totalDebit), 14950);
+  assert.equal(Number(result.voucher.totalCredit), 14950);
 
   const stockEntries = await prisma.stockLedgerEntry.findMany({
     where: { sourceId: issueNo },
@@ -256,8 +255,7 @@ test("multi-line LPG sale creates one document with sale stock outs, same-sale e
   const audit = await prisma.auditLog.findFirstOrThrow({ where: { entityType: "SaleLpg", entityId: issueNo } });
   assert.equal(audit.after.invoiceLanguage, "Urdu");
   assert.equal(audit.after.lines.length, 2);
-  assert.equal(audit.after.lines[0].gstAmount, "600");
-  assert.equal(audit.after.lines[0].incGstAmount, "6600");
+  assert.equal(audit.after.lines[0].amount, "6000");
 });
 
 test("complete day LPG sale batch processes multiple sales in one transaction", async () => {
@@ -506,15 +504,15 @@ test("multi-line cylinder return supports empty and filled returns with one retu
     remarks: "Legacy sale return",
     lines: [
       { itemId: item.id, returnType: "Empty", quantity: 1 },
-      { itemId: secondItem.id, returnType: "Filled", quantity: 1, unitPrice: 2000, gstPercent: 5 },
+      { itemId: secondItem.id, returnType: "Filled", quantity: 1, unitPrice: 2000 },
     ],
   });
 
   assert.equal(result.returnNo, returnNo);
   assert.equal(result.stockEntries.length, 2);
-  assert.equal(Number(result.totalReturnAmount), 2100);
-  assert.equal(Number(result.voucher.totalDebit), 2100);
-  assert.equal(Number(result.voucher.totalCredit), 2100);
+  assert.equal(Number(result.totalAmount), 2000);
+  assert.equal(Number(result.voucher.totalDebit), 2000);
+  assert.equal(Number(result.voucher.totalCredit), 2000);
 
   const stockEntries = await prisma.stockLedgerEntry.findMany({ where: { sourceId: returnNo } });
   assert.equal(stockEntries.filter((entry) => entry.cylinderState === "EMPTY" && entry.direction === "IN").length, 1);

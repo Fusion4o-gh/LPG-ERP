@@ -18,8 +18,6 @@ type DecantingSaleInput = {
   sourceQuantity: number;
   decantedQuantity: string | number;
   unitPrice?: string | number;
-  gstPercent?: string | number;
-  gstAmount?: string | number;
   remarks?: string;
   transactionDate: string | Date;
   allowClosedDayOverride?: boolean;
@@ -42,12 +40,8 @@ function normalizeInput(input: DecantingSaleInput) {
   if (decantedQuantity.lte(0)) throw new Error("decantedQuantity must be a positive number.");
   const unitPrice = decimal(input.unitPrice);
   if (unitPrice.lt(0)) throw new Error("unitPrice cannot be negative.");
-  const exGstAmount = decantedQuantity.times(unitPrice);
-  const gstPercent = decimal(input.gstPercent);
-  if (gstPercent.lt(0)) throw new Error("gstPercent cannot be negative.");
-  const gstAmount = input.gstAmount === undefined ? exGstAmount.times(gstPercent).div(100) : decimal(input.gstAmount);
-  const incGstAmount = exGstAmount.plus(gstAmount);
-  return { decantedQuantity, unitPrice, gstPercent, gstAmount, exGstAmount, incGstAmount };
+  const amount = decantedQuantity.times(unitPrice);
+  return { decantedQuantity, unitPrice, amount };
 }
 
 export async function decantingSale(input: DecantingSaleInput) {
@@ -79,11 +73,10 @@ export async function decantingSale(input: DecantingSaleInput) {
 
     let customer: { accountId: string; code: string | null; name: string } | null = null;
     let voucher = null;
-    if (amounts.incGstAmount.gt(0)) {
+    if (amounts.amount.gt(0)) {
       if (!input.customerId) throw new Error("customerId is required when sale amount exists.");
       customer = await tx.customer.findUniqueOrThrow({ where: { id: input.customerId }, select: { accountId: true, code: true, name: true } });
       const salesAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.sales);
-      const gstPayableAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.gstPayable);
 
       // COGS for decanted filled cylinders
       const cogsAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.cogs);
@@ -107,9 +100,8 @@ export async function decantingSale(input: DecantingSaleInput) {
         sourceId: input.issueNo,
         createdById: input.userId,
         lines: [
-          { accountId: customer.accountId, debit: amounts.incGstAmount },
-          { accountId: salesAccountId, credit: amounts.exGstAmount },
-          ...(amounts.gstAmount.gt(0) ? [{ accountId: gstPayableAccountId, credit: amounts.gstAmount }] : []),
+          { accountId: customer.accountId, debit: amounts.amount },
+          { accountId: salesAccountId, credit: amounts.amount },
           ...cogsLines,
         ],
       });
@@ -131,10 +123,7 @@ export async function decantingSale(input: DecantingSaleInput) {
         sourceQuantity: input.sourceQuantity,
         decantedQuantity: String(amounts.decantedQuantity),
         unitPrice: String(amounts.unitPrice),
-        gstPercent: String(amounts.gstPercent),
-        totalExGstAmount: String(amounts.exGstAmount),
-        totalGstAmount: String(amounts.gstAmount),
-        totalIncGstAmount: String(amounts.incGstAmount),
+        totalAmount: String(amounts.amount),
         lines: [
           {
             section: "Decanting",
@@ -146,10 +135,7 @@ export async function decantingSale(input: DecantingSaleInput) {
             sourceQuantity: input.sourceQuantity,
             decantedQuantity: String(amounts.decantedQuantity),
             unitPrice: String(amounts.unitPrice),
-            gstPercent: String(amounts.gstPercent),
-            gstAmount: String(amounts.gstAmount),
-            exGstAmount: String(amounts.exGstAmount),
-            incGstAmount: String(amounts.incGstAmount),
+            amount: String(amounts.amount),
           },
         ],
       },
@@ -159,9 +145,7 @@ export async function decantingSale(input: DecantingSaleInput) {
       issueNo: input.issueNo,
       stockEntries: [stockEntry],
       voucher,
-      totalExGstAmount: amounts.exGstAmount,
-      totalGstAmount: amounts.gstAmount,
-      totalIncGstAmount: amounts.incGstAmount,
+      totalAmount: amounts.amount,
     };
   });
 }

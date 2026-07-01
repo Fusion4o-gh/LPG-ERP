@@ -15,10 +15,9 @@ type EmptySaleLine = {
   itemId: string;
   quantity: string;
   unitPrice: string;
-  gstPercent: string;
 };
 
-const blankLine: EmptySaleLine = { itemId: "", quantity: "1", unitPrice: "", gstPercent: "0" };
+const blankLine: EmptySaleLine = { itemId: "", quantity: "1", unitPrice: "" };
 
 function optionLabel(row: Lookup) {
   return [row.code, row.name].filter(Boolean).join(" - ");
@@ -30,9 +29,8 @@ function numberValue(value: string) {
 }
 
 function lineTotals(line: EmptySaleLine) {
-  const exGstAmount = numberValue(line.quantity) * numberValue(line.unitPrice);
-  const gstAmount = exGstAmount * (numberValue(line.gstPercent) / 100);
-  return { exGstAmount, gstAmount, incGstAmount: exGstAmount + gstAmount };
+  const amount = numberValue(line.quantity) * numberValue(line.unitPrice);
+  return { amount };
 }
 
 function money(value: number) {
@@ -74,13 +72,9 @@ export function EmptySaleForm() {
       lines.reduce(
         (sum, line) => {
           const current = lineTotals(line);
-          return {
-            exGstAmount: sum.exGstAmount + current.exGstAmount,
-            gstAmount: sum.gstAmount + current.gstAmount,
-            incGstAmount: sum.incGstAmount + current.incGstAmount,
-          };
+          return { amount: sum.amount + current.amount };
         },
-        { exGstAmount: 0, gstAmount: 0, incGstAmount: 0 },
+        { amount: 0 },
       ),
     [lines],
   );
@@ -108,12 +102,10 @@ export function EmptySaleForm() {
     const preparedLines = lines.map((line, index) => {
       const quantity = numberValue(line.quantity);
       const unitPrice = numberValue(line.unitPrice);
-      const gstPercent = numberValue(line.gstPercent);
       if (!line.itemId) throw new Error(`Line ${index + 1}: item is required.`);
       if (!Number.isInteger(quantity) || quantity <= 0) throw new Error(`Line ${index + 1}: quantity must be a positive integer.`);
       if (unitPrice <= 0) throw new Error(`Line ${index + 1}: unit price must be positive.`);
-      if (gstPercent < 0) throw new Error(`Line ${index + 1}: GST % cannot be negative.`);
-      return { itemId: line.itemId, quantity, unitPrice, gstPercent };
+      return { itemId: line.itemId, quantity, unitPrice };
     });
     return {
       customerId,
@@ -210,8 +202,8 @@ export function EmptySaleForm() {
             <table className="min-w-[760px] border-collapse text-sm">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
-                  {["Item", "Quantity", "Unit Price", "GST %", "GST Amt", "Total Amount", ""].map((h, i) => (
-                    <th key={i} className={`whitespace-nowrap px-2.5 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 ${[1, 2, 3, 4, 5].includes(i) ? "text-right" : "text-left"}`}>{h}</th>
+                  {["Item", "Quantity", "Unit Price", "Amount", ""].map((h, i) => (
+                    <th key={i} className={`whitespace-nowrap px-2.5 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 ${[1, 2, 3].includes(i) ? "text-right" : "text-left"}`}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -228,9 +220,7 @@ export function EmptySaleForm() {
                       </td>
                       <td className="px-2.5 py-2"><input type="number" min="1" value={line.quantity} onChange={(e) => updateLine(index, { quantity: e.target.value })} className="tbl-input w-20 text-right" /></td>
                       <td className="px-2.5 py-2"><input type="number" min="0" value={line.unitPrice} onChange={(e) => updateLine(index, { unitPrice: e.target.value })} className="tbl-input w-24 text-right" /></td>
-                      <td className="px-2.5 py-2"><input type="number" min="0" value={line.gstPercent} onChange={(e) => updateLine(index, { gstPercent: e.target.value })} className="tbl-input w-16 text-right" /></td>
-                      <td className="px-2.5 py-2 text-right tabular-nums text-slate-600">{money(current.gstAmount)}</td>
-                      <td className="px-2.5 py-2 text-right tabular-nums font-medium text-slate-800">{money(current.incGstAmount)}</td>
+                      <td className="px-2.5 py-2 text-right tabular-nums font-medium text-slate-800">{money(current.amount)}</td>
                       <td className="px-2.5 py-2">
                         <button type="button" onClick={() => removeLine(index)} disabled={lines.length === 1} className="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50 disabled:opacity-40 transition-colors">Remove</button>
                       </td>
@@ -240,24 +230,16 @@ export function EmptySaleForm() {
               </tbody>
             </table>
           </div>
-          <div className="border-t border-slate-100 bg-slate-50/60 px-5 py-4 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-lg border border-slate-200 bg-white p-3">
-              <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Ex-GST Total</div>
-              <div className="mt-1.5 text-lg font-bold text-slate-800 tabular-nums">{money(totals.exGstAmount)}</div>
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-white p-3">
-              <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">GST Total</div>
-              <div className="mt-1.5 text-lg font-bold text-slate-800 tabular-nums">{money(totals.gstAmount)}</div>
-            </div>
-            <div className="rounded-lg bg-blue-700 p-3">
+          <div className="border-t border-slate-100 bg-slate-50/60 px-5 py-4">
+            <div className="inline-block rounded-lg bg-blue-700 p-3 min-w-[160px]">
               <div className="text-xs font-semibold uppercase tracking-wide text-blue-200">Sale Total</div>
-              <div className="mt-1.5 text-lg font-bold text-white tabular-nums">{money(totals.incGstAmount)}</div>
+              <div className="mt-1.5 text-lg font-bold text-white tabular-nums">{money(totals.amount)}</div>
             </div>
           </div>
         </section>
 
         <SettlementPanel
-          totalBill={totals.incGstAmount}
+          totalBill={totals.amount}
           fields={settlement}
           onChange={(patch) => setSettlement((current) => ({ ...current, ...patch }))}
           banks={banks}

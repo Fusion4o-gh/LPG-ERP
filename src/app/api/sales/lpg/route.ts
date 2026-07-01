@@ -29,8 +29,7 @@ export async function POST(request: Request) {
           itemId: stringField(line, "itemId"),
           quantity: positiveIntegerField(line, "quantity"),
           unitPrice: positiveNumberField(line, "unitPrice"),
-          gstPercent: optionalPositiveNumberField(line, "gstPercent"),
-          gstAmount: optionalPositiveNumberField(line, "gstAmount"),
+
           securityDepositAmount: optionalPositiveNumberField(line, "securityDepositAmount"),
           emptyReturnItemId: optionalStringField(line, "emptyReturnItemId"),
           emptyReturnQuantity: optionalPositiveNumberField(line, "emptyReturnQuantity"),
@@ -45,8 +44,7 @@ export async function POST(request: Request) {
       itemId: lines ? undefined : stringField(body, "itemId"),
       quantity: lines ? undefined : positiveIntegerField(body, "quantity"),
       unitPrice: lines ? undefined : positiveNumberField(body, "unitPrice"),
-      gstAmount: lines ? undefined : optionalPositiveNumberField(body, "gstAmount"),
-      gstPercent: lines ? undefined : optionalPositiveNumberField(body, "gstPercent"),
+
       securityDepositAmount: lines ? undefined : optionalPositiveNumberField(body, "securityDepositAmount"),
       saleType: optionalStringField(body, "saleType") ?? "Direct",
       remarks: optionalStringField(body, "remarks"),

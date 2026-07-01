@@ -16,10 +16,9 @@ type ReturnLine = {
   returnType: "Empty" | "Filled";
   quantity: string;
   unitPrice: string;
-  gstPercent: string;
 };
 
-const emptyLine: ReturnLine = { itemId: "", returnType: "Empty", quantity: "1", unitPrice: "", gstPercent: "0" };
+const emptyLine: ReturnLine = { itemId: "", returnType: "Empty", quantity: "1", unitPrice: "" };
 
 function optionLabel(row: Lookup) {
   return [row.code, row.name].filter(Boolean).join(" - ");
@@ -32,8 +31,7 @@ function amount(value: string) {
 
 function lineTotal(line: ReturnLine) {
   if (line.returnType !== "Filled") return 0;
-  const exGstAmount = amount(line.quantity) * amount(line.unitPrice);
-  return exGstAmount + exGstAmount * (amount(line.gstPercent) / 100);
+  return amount(line.quantity) * amount(line.unitPrice);
 }
 
 function money(value: number) {
@@ -95,12 +93,10 @@ export function CylinderReturnForm() {
     const preparedLines = lines.map((line, index) => {
       const quantity = amount(line.quantity);
       const unitPrice = amount(line.unitPrice);
-      const gstPercent = amount(line.gstPercent);
       if (!line.itemId) throw new Error(`Line ${index + 1}: item is required.`);
       if (!Number.isInteger(quantity) || quantity <= 0) throw new Error(`Line ${index + 1}: return quantity must be a positive integer.`);
       if (line.returnType === "Filled" && unitPrice <= 0) throw new Error(`Line ${index + 1}: unit price is required for filled return.`);
-      if (gstPercent < 0) throw new Error(`Line ${index + 1}: GST % cannot be negative.`);
-      return { itemId: line.itemId, returnType: line.returnType, quantity, unitPrice: line.returnType === "Filled" ? unitPrice : undefined, gstPercent: line.returnType === "Filled" ? gstPercent : undefined };
+      return { itemId: line.itemId, returnType: line.returnType, quantity, unitPrice: line.returnType === "Filled" ? unitPrice : undefined };
     });
     return {
       customerId,
@@ -197,8 +193,8 @@ export function CylinderReturnForm() {
             <table className="min-w-[800px] border-collapse text-sm">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
-                  {["Item", "Return Type", "Return Qty", "Unit Price", "GST %", "Total", ""].map((h, i) => (
-                    <th key={i} className={`whitespace-nowrap px-2.5 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 ${[2, 3, 4, 5].includes(i) ? "text-right" : "text-left"}`}>{h}</th>
+                  {["Item", "Return Type", "Return Qty", "Unit Price", "Total", ""].map((h, i) => (
+                    <th key={i} className={`whitespace-nowrap px-2.5 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 ${[2, 3, 4].includes(i) ? "text-right" : "text-left"}`}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -219,7 +215,6 @@ export function CylinderReturnForm() {
                     </td>
                     <td className="px-2.5 py-2"><input type="number" min="1" value={line.quantity} onChange={(e) => updateLine(index, { quantity: e.target.value })} className="tbl-input w-20 text-right" /></td>
                     <td className="px-2.5 py-2"><input type="number" min="0" value={line.unitPrice} onChange={(e) => updateLine(index, { unitPrice: e.target.value })} disabled={line.returnType === "Empty"} className="tbl-input w-24 text-right" /></td>
-                    <td className="px-2.5 py-2"><input type="number" min="0" value={line.gstPercent} onChange={(e) => updateLine(index, { gstPercent: e.target.value })} disabled={line.returnType === "Empty"} className="tbl-input w-16 text-right" /></td>
                     <td className="px-2.5 py-2 text-right tabular-nums font-medium text-slate-800">{money(lineTotal(line))}</td>
                     <td className="px-2.5 py-2">
                       <button type="button" onClick={() => removeLine(index)} disabled={lines.length === 1} className="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50 disabled:opacity-40 transition-colors">Remove</button>

@@ -32,7 +32,8 @@ export function PrintableTransactionDocument({ documentType, documentNo }: { doc
       .catch((err: Error) => setError(err.message));
   }, [documentNo, documentType]);
 
-  const hasLineAmounts = document?.lineItems.some((line) => line.exGstAmount !== undefined || line.incGstAmount !== undefined) ?? false;
+  const hasLineAmounts = document?.lineItems.some((line) => line.amount !== undefined) ?? false;
+  const hasGstBreakdown = document?.lineItems.some((line) => line.exGstAmount !== undefined) ?? false;
   const hasSections = document?.lineItems.some((line) => line.section !== undefined) ?? false;
 
   return (
@@ -86,9 +87,9 @@ export function PrintableTransactionDocument({ documentType, documentNo }: { doc
                   <th className="border border-slate-200 px-3 py-2">Direction</th>
                   <th className="border border-slate-200 px-3 py-2 text-right">Quantity</th>
                   {hasLineAmounts ? <th className="border border-slate-200 px-3 py-2 text-right">Unit Price</th> : null}
-                  {hasLineAmounts ? <th className="border border-slate-200 px-3 py-2 text-right">GST</th> : null}
-                  {hasLineAmounts ? <th className="border border-slate-200 px-3 py-2 text-right">Ex-GST</th> : null}
-                  {hasLineAmounts ? <th className="border border-slate-200 px-3 py-2 text-right">Inc-GST</th> : null}
+                  {hasGstBreakdown ? <th className="border border-slate-200 px-3 py-2 text-right">GST</th> : null}
+                  {hasGstBreakdown ? <th className="border border-slate-200 px-3 py-2 text-right">Ex-GST</th> : null}
+                  {hasLineAmounts ? <th className="border border-slate-200 px-3 py-2 text-right">{hasGstBreakdown ? "Inc-GST" : "Amount"}</th> : null}
                 </tr>
               </thead>
               <tbody>
@@ -100,9 +101,9 @@ export function PrintableTransactionDocument({ documentType, documentNo }: { doc
                     <td className="border border-slate-200 px-3 py-2">{display(line.direction)}</td>
                     <td className="border border-slate-200 px-3 py-2 text-right">{display(line.quantity)}</td>
                     {hasLineAmounts ? <td className="border border-slate-200 px-3 py-2 text-right">{display(line.unitPrice ?? line.unitCost)}</td> : null}
-                    {hasLineAmounts ? <td className="border border-slate-200 px-3 py-2 text-right">{display(line.gstAmount)}</td> : null}
-                    {hasLineAmounts ? <td className="border border-slate-200 px-3 py-2 text-right">{display(line.exGstAmount)}</td> : null}
-                    {hasLineAmounts ? <td className="border border-slate-200 px-3 py-2 text-right">{display(line.incGstAmount)}</td> : null}
+                    {hasGstBreakdown ? <td className="border border-slate-200 px-3 py-2 text-right">{display(line.gstAmount)}</td> : null}
+                    {hasGstBreakdown ? <td className="border border-slate-200 px-3 py-2 text-right">{display(line.exGstAmount)}</td> : null}
+                    {hasLineAmounts ? <td className="border border-slate-200 px-3 py-2 text-right">{display(line.incGstAmount ?? line.amount)}</td> : null}
                   </tr>
                 ))}
               </tbody>

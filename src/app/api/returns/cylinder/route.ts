@@ -15,8 +15,7 @@ export async function POST(request: Request) {
           returnType: optionalStringField(line, "returnType") ?? "Empty",
           quantity: positiveIntegerField(line, "quantity"),
           unitPrice: optionalPositiveNumberField(line, "unitPrice"),
-          gstPercent: optionalPositiveNumberField(line, "gstPercent"),
-          gstAmount: optionalPositiveNumberField(line, "gstAmount"),
+
         }))
       : undefined;
     const result = await cylinderReturn({
@@ -27,7 +26,7 @@ export async function POST(request: Request) {
       quantity: lines ? undefined : positiveIntegerField(body, "quantity"),
       returnType: lines ? undefined : optionalStringField(body, "returnType"),
       unitPrice: lines ? undefined : optionalPositiveNumberField(body, "unitPrice"),
-      gstPercent: lines ? undefined : optionalPositiveNumberField(body, "gstPercent"),
+
       remarks: optionalStringField(body, "remarks"),
       lines,
       transactionDate: dateField(body, "transactionDate"),

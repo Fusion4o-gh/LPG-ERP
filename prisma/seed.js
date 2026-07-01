@@ -178,7 +178,6 @@ async function main() {
 
   await upsertAccount(company.id, "1001001000", "Trade Creditors and Suppliers", AccountType.LIABILITY, NormalBalance.CREDIT, 2, liabilities.id, true);
   await upsertAccount(company.id, "1001002001", "Cylinder Security Liability", AccountType.LIABILITY, NormalBalance.CREDIT, 3, liabilities.id);
-  await upsertAccount(company.id, "1001003001", "GST Payable", AccountType.LIABILITY, NormalBalance.CREDIT, 3, liabilities.id);
 
   await upsertAccount(company.id, "2003001001", "LPG Stock and Stores", AccountType.ASSET, NormalBalance.DEBIT, 3, assets.id);
   await upsertAccount(company.id, "2003010001", "Cash in Hand", AccountType.ASSET, NormalBalance.DEBIT, 3, assets.id);

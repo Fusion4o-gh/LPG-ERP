@@ -18,8 +18,6 @@ type CylinderReturnInput = {
   quantity?: number;
   returnType?: "Empty" | "Filled" | string;
   unitPrice?: string | number;
-  gstPercent?: string | number;
-  gstAmount?: string | number;
   remarks?: string;
   lines?: CylinderReturnLineInput[];
   transactionDate: string | Date;
@@ -36,8 +34,6 @@ type CylinderReturnLineInput = {
   returnType?: "Empty" | "Filled" | string;
   quantity: number;
   unitPrice?: string | number;
-  gstPercent?: string | number;
-  gstAmount?: string | number;
 };
 
 function decimal(value: string | number | Prisma.Decimal | undefined) {
@@ -57,8 +53,6 @@ function normalizeLines(input: CylinderReturnInput) {
           returnType: input.returnType ?? "Empty",
           quantity: input.quantity ?? 0,
           unitPrice: input.unitPrice,
-          gstPercent: input.gstPercent,
-          gstAmount: input.gstAmount,
         },
       ];
 
@@ -69,11 +63,8 @@ function normalizeLines(input: CylinderReturnInput) {
     const returnType = normalizeReturnType(line.returnType);
     const unitPrice = decimal(line.unitPrice);
     if (returnType === "Filled" && unitPrice.lte(0)) throw new Error(`lines[${index}].unitPrice must be positive for filled returns.`);
-    const exGstAmount = returnType === "Filled" ? unitPrice.times(quantity) : new Prisma.Decimal(0);
-    const gstPercent = decimal(line.gstPercent);
-    const gstAmount = returnType === "Filled" ? (line.gstAmount === undefined ? exGstAmount.times(gstPercent).div(100) : decimal(line.gstAmount)) : new Prisma.Decimal(0);
-    const totalAmount = exGstAmount.plus(gstAmount);
-    return { itemId: line.itemId, returnType, quantity, unitPrice, gstPercent, gstAmount, exGstAmount, totalAmount };
+    const amount = returnType === "Filled" ? unitPrice.times(quantity) : new Prisma.Decimal(0);
+    return { itemId: line.itemId, returnType, quantity, unitPrice, amount };
   });
 }
 
@@ -103,11 +94,9 @@ export async function cylinderReturn(input: CylinderReturnInput) {
     });
     const itemById = new Map(itemRows.map((item) => [item.id, item]));
     const stockEntries = [];
-    const totalExGstAmount = lines.reduce((sum, line) => sum.plus(line.exGstAmount), new Prisma.Decimal(0));
-    const totalGstAmount = lines.reduce((sum, line) => sum.plus(line.gstAmount), new Prisma.Decimal(0));
-    const totalReturnAmount = totalExGstAmount.plus(totalGstAmount);
-    const discountAmount = capDiscount(totalReturnAmount, input.discount);
-    const netReturnAmount = totalReturnAmount.minus(discountAmount);
+    const totalAmount = lines.reduce((sum, line) => sum.plus(line.amount), new Prisma.Decimal(0));
+    const discountAmount = capDiscount(totalAmount, input.discount);
+    const netReturnAmount = totalAmount.minus(discountAmount);
     let salesDiscountAccountId: string | null = null;
     try {
       salesDiscountAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.salesDiscount);
@@ -141,7 +130,6 @@ export async function cylinderReturn(input: CylinderReturnInput) {
     let voucher = null;
     if (netReturnAmount.gt(0)) {
       const salesAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.sales);
-      const gstPayableAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.gstPayable);
       voucher = await createBalancedVoucher(tx, {
         companyId: input.companyId,
         financialYearId: input.financialYearId,
@@ -153,8 +141,7 @@ export async function cylinderReturn(input: CylinderReturnInput) {
         sourceId: input.returnNo,
         createdById: input.userId,
         lines: [
-          { accountId: salesAccountId, debit: totalExGstAmount },
-          ...(totalGstAmount.gt(0) ? [{ accountId: gstPayableAccountId, debit: totalGstAmount }] : []),
+          { accountId: salesAccountId, debit: totalAmount },
           ...(discountAmount.gt(0) && salesDiscountAccountId ? [{ accountId: salesDiscountAccountId, debit: discountAmount }] : []),
           { accountId: customer.accountId, credit: netReturnAmount },
         ],
@@ -188,9 +175,7 @@ export async function cylinderReturn(input: CylinderReturnInput) {
         customerId: input.customerId,
         transactionDate: input.transactionDate,
         remarks: input.remarks,
-        totalExGstAmount: String(totalExGstAmount),
-        totalGstAmount: String(totalGstAmount),
-        totalReturnAmount: String(totalReturnAmount),
+        totalAmount: String(totalAmount),
         discountAmount: String(discountAmount),
         netReturnAmount: String(netReturnAmount),
         amountPaid: String(input.amountPaid ?? 0),
@@ -205,10 +190,7 @@ export async function cylinderReturn(input: CylinderReturnInput) {
             direction: StockDirection.IN,
             quantity: line.quantity,
             unitPrice: String(line.unitPrice),
-            gstPercent: String(line.gstPercent),
-            gstAmount: String(line.gstAmount),
-            exGstAmount: String(line.exGstAmount),
-            totalAmount: String(line.totalAmount),
+            amount: String(line.amount),
           };
         }),
       },
@@ -219,9 +201,7 @@ export async function cylinderReturn(input: CylinderReturnInput) {
       stockEntries,
       voucher,
       refundVoucher,
-      totalExGstAmount,
-      totalGstAmount,
-      totalReturnAmount,
+      totalAmount,
       discountAmount,
       netReturnAmount,
       amountPaid,

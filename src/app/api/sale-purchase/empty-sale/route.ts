@@ -22,8 +22,7 @@ export async function POST(request: Request) {
           itemId: stringField(line, "itemId"),
           quantity: positiveIntegerField(line, "quantity"),
           unitPrice: positiveNumberField(line, "unitPrice"),
-          gstPercent: optionalPositiveNumberField(line, "gstPercent"),
-          gstAmount: optionalPositiveNumberField(line, "gstAmount"),
+
         }))
       : undefined;
     const result = await emptySale({
@@ -33,8 +32,7 @@ export async function POST(request: Request) {
       itemId: lines ? undefined : stringField(body, "itemId"),
       quantity: lines ? undefined : positiveIntegerField(body, "quantity"),
       unitPrice: lines ? undefined : positiveNumberField(body, "unitPrice"),
-      gstPercent: lines ? undefined : optionalPositiveNumberField(body, "gstPercent"),
-      gstAmount: lines ? undefined : optionalPositiveNumberField(body, "gstAmount"),
+
       remarks: optionalStringField(body, "remarks"),
       lines,
       transactionDate: dateOrTransactionDate(body),
