@@ -15,7 +15,8 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const context = await getRequestContext(request);
-    const result = await triggerBackup(context);
+    const body = (await request.json().catch(() => ({}))) as { backupDate?: string };
+    const result = await triggerBackup(context, typeof body.backupDate === "string" ? body.backupDate : undefined);
     return ok({ result });
   } catch (error) {
     return serviceError(error);

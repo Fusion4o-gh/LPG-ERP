@@ -56,8 +56,12 @@ async function checkPermission(userId: string) {
   });
 }
 
-export async function triggerBackup(context: Context): Promise<TriggerBackupResult> {
+export async function triggerBackup(context: Context, backupDate?: string): Promise<TriggerBackupResult> {
   await checkPermission(context.userId);
+
+  if (backupDate !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(backupDate)) {
+    return { success: false, pgDumpAvailable: false, message: "Invalid backup date. Expected YYYY-MM-DD." };
+  }
 
   if (!localBackupsAvailable()) {
     await prisma.$transaction(async (tx) => {
@@ -100,7 +104,7 @@ export async function triggerBackup(context: Context): Promise<TriggerBackupResu
   const dbUrl = process.env.DATABASE_URL ?? "";
   const db = parseDbUrl(dbUrl);
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19) + "Z";
-  const filename = `backup-${timestamp}.dump`;
+  const filename = backupDate ? `backup-${backupDate}-${timestamp}.dump` : `backup-${timestamp}.dump`;
   const filepath = path.join(BACKUP_DIR, filename);
 
   const result = spawnSync(
@@ -118,7 +122,7 @@ export async function triggerBackup(context: Context): Promise<TriggerBackupResu
       action: AuditAction.CREATE,
       entityType: "DatabaseBackup",
       entityId: filename,
-      after: { filename, status: succeeded ? "success" : "failed", exitCode: result.status },
+      after: { filename, backupDate: backupDate ?? null, status: succeeded ? "success" : "failed", exitCode: result.status },
     });
   });
 
