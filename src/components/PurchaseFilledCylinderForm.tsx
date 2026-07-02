@@ -113,6 +113,12 @@ export function PurchaseFilledCylinderForm() {
   }
 
   useEffect(() => {
+    if (!elevenPointEightKgPrice || !draft.itemId || draft.unitCost) return;
+    if (!isStandardCylinder(draft.itemId)) return;
+    setDraft((current) => ({ ...current, unitCost: elevenPointEightKgPrice }));
+  }, [elevenPointEightKgPrice, draft.itemId, draft.unitCost, itemById]);
+
+  useEffect(() => {
     const relevantItemIds = new Set([...lines.map((line) => line.itemId), draft.itemId].filter(Boolean));
     if (!vendorId && relevantItemIds.size === 0) {
       setVendorBalance(null);
@@ -312,7 +318,7 @@ export function PurchaseFilledCylinderForm() {
             <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">GIRN Header</h2>
           </div>
           <div className="p-5">
-            <div className="grid gap-4 lg:grid-cols-5">
+            <div className="grid items-start gap-4 lg:grid-cols-5">
               <div className="lg:col-span-2">
                 <label className="form-label" htmlFor="vendorId">
                   Vendor *
@@ -354,14 +360,12 @@ export function PurchaseFilledCylinderForm() {
                     onClick={applyElevenPointEightKgPrice}
                     disabled={!elevenPointEightKgPrice}
                     className="shrink-0 rounded-lg border border-blue-200 bg-blue-50 px-2.5 text-xs font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-40 transition-colors"
-                    title="Apply this price to all 11.8 KG cylinder lines (added lines and the entry row). Does not touch other cylinder sizes and never overwrites silently."
+                    title="Push this price into all already-added 11.8 KG cylinder lines. New lines pick it up automatically."
                   >
-                    Apply
+                    Apply to Lines
                   </button>
                 </div>
-                <p className="mt-1 text-[11px] leading-snug text-slate-400">
-                  Sets the standard rate for 11.8 KG cylinders. Click Apply to push it into matching lines &mdash; it never overwrites unit prices on its own.
-                </p>
+                <p className="mt-1 text-[11px] leading-snug text-slate-400">Auto-fills new lines; Apply pushes to existing ones.</p>
               </div>
               <div>
                 <label className="form-label" htmlFor="remarks">

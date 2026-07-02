@@ -24,6 +24,23 @@ export function AppShell({
   return (
     <div className="min-h-screen" style={{ background: 'var(--skeu-surface)' }}>
       <ThemeHydrator themeId={shell.themeId} />
+
+      {/* Faint accent tint behind the sidebar — subtle Mica-style depth, not a colorful wash */}
+      <div aria-hidden className="pointer-events-none fixed inset-y-0 left-0 z-0 w-72 overflow-hidden">
+        <div
+          className="absolute -left-16 -top-16 h-72 w-72 rounded-full opacity-30 blur-3xl"
+          style={{ background: 'radial-gradient(circle, #F28C28 0%, transparent 70%)' }}
+        />
+        <div
+          className="absolute -left-12 top-1/2 h-80 w-80 rounded-full opacity-25 blur-3xl"
+          style={{ background: 'radial-gradient(circle, #2563EB 0%, transparent 70%)' }}
+        />
+        <div
+          className="absolute -left-14 bottom-0 h-64 w-64 rounded-full opacity-20 blur-3xl"
+          style={{ background: 'radial-gradient(circle, #10B981 0%, transparent 70%)' }}
+        />
+      </div>
+
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div

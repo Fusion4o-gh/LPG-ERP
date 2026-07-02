@@ -210,14 +210,37 @@ export function Sidebar({
   return (
     <aside
       data-print-hidden
-      className="flex h-screen w-72 max-w-[85vw] shrink-0 flex-col"
-      style={{ background: 'linear-gradient(180deg, #0C2845 0%, #123A5A 40%, #0F3150 100%)', borderRight: '1px solid rgba(0,0,0,0.3)', boxShadow: '3px 0 15px rgba(0,0,0,0.2)' }}
+      className="relative m-3 flex h-[calc(100vh-1.5rem)] w-72 max-w-[85vw] shrink-0 flex-col overflow-hidden rounded-2xl"
+      style={{
+        background: 'linear-gradient(165deg, rgba(16,52,82,0.86) 0%, rgba(10,34,58,0.82) 50%, rgba(13,44,72,0.86) 100%)',
+        backdropFilter: 'blur(16px) saturate(160%)',
+        WebkitBackdropFilter: 'blur(16px) saturate(160%)',
+        border: '1px solid rgba(255,255,255,0.16)',
+        boxShadow: '0 10px 30px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.14)',
+      }}
     >
+      {/* Glass sheen highlight */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-20"
+        style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 100%)' }}
+      />
+      {/* Faint noise texture to simulate real glass grain */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+          opacity: 0.05,
+          mixBlendMode: 'overlay',
+        }}
+      />
       {/* Brand header — no logo */}
-      <div className="px-5 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)' }}>
+      <div className="relative px-5 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)' }}>
         <div className="flex items-center gap-3">
           <div className="flex-1 min-w-0">
-            <div className="truncate text-[15px] font-bold text-white leading-tight tracking-tight" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
+            <div className="truncate text-[15px] font-bold text-white leading-tight tracking-tight" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.35)' }}>
               {shell.companyName}
             </div>
             <div className="text-[11px] mt-0.5 text-flame-200">
@@ -239,32 +262,32 @@ export function Sidebar({
         </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-3">
+      <nav className="relative flex-1 overflow-y-auto px-3 py-3">
         {canViewDashboard ? (
           (() => {
             return (
               <Link
                 href="/dashboard"
-                className={`group relative mb-2 flex items-center gap-3 rounded-lg px-2.5 py-2.5 transition-all ${
+                className={`group relative mb-2 flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 ${
                   dashboardActive
                     ? 'sidebar-link-active'
-                    : 'text-steel-200 hover:text-white sidebar-link-hover'
+                    : 'text-slate-200 sidebar-link-hover'
                 }`}
-                style={dashboardActive ? { boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)' } : {}}
               >
-                <div
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
-                  style={dashboardActive
-                    ? { background: 'linear-gradient(135deg, #F28C28, #D97823)', boxShadow: '2px 2px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2)' }
-                    : { background: 'rgba(255,255,255,0.08)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1)' }}
+                <span
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border transition-all duration-200 ${
+                    dashboardActive
+                      ? "border-flame-400/40 bg-white/14 text-flame-300 shadow-[0_0_14px_rgba(242,140,40,0.45)]"
+                      : "border-white/10 bg-white/[0.06] text-slate-300 group-hover:border-flame-400/30 group-hover:bg-white/10 group-hover:text-flame-300 group-hover:shadow-[0_0_10px_rgba(242,140,40,0.3)]"
+                  }`}
                 >
                   <svg aria-hidden="true" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} viewBox="0 0 24 24">
                     <path d="M4 13h7V4H4v9z" /><path d="M13 20h7V4h-7v16z" /><path d="M4 20h7v-5H4v5z" />
                   </svg>
-                </div>
+                </span>
                 <span className="min-w-0 flex-1">
-                  <span className={`block truncate text-sm font-semibold leading-tight ${dashboardActive ? 'text-white' : 'text-steel-100'}`}>Dashboard</span>
-                  <span className={`block text-[10px] leading-tight ${dashboardActive ? 'text-flame-200' : 'text-steel-400'}`}>Overview</span>
+                  <span className={`block truncate text-sm font-semibold leading-tight ${dashboardActive ? 'text-white' : 'text-slate-100 group-hover:text-white'}`}>Dashboard</span>
+                  <span className={`block text-[10px] leading-tight ${dashboardActive ? 'text-flame-200' : 'text-slate-400'}`}>Overview</span>
                 </span>
               </Link>
             );
@@ -279,22 +302,21 @@ export function Sidebar({
               key={module.id}
               href={href}
               onClick={() => rememberModuleTab(module.id, href)}
-              className={`group relative mb-1.5 flex items-center gap-3 rounded-lg px-2.5 py-2.5 transition-all ${
+              className={`group relative mb-1.5 flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 ${
                 isActive
                   ? 'sidebar-link-active'
-                  : 'text-steel-200 hover:text-white sidebar-link-hover'
+                  : 'text-slate-200 sidebar-link-hover'
               }`}
-              style={isActive ? { boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)' } : {}}
             >
               <SidebarIcon
                 name={module.icon}
                 className={isActive
-                  ? "border-transparent bg-gradient-to-br from-flame-500 to-flame-600 text-white shadow-sm"
-                  : "border-white/10 bg-white/10 text-steel-300"}
+                  ? "border-flame-400/40 bg-white/14 text-flame-300 shadow-[0_0_14px_rgba(242,140,40,0.45)]"
+                  : "border-white/10 bg-white/[0.06] text-slate-300 group-hover:border-flame-400/30 group-hover:bg-white/10 group-hover:text-flame-300 group-hover:shadow-[0_0_10px_rgba(242,140,40,0.3)]"}
               />
               <span className="min-w-0 flex-1">
-                <span className={`block truncate text-sm font-semibold leading-tight ${isActive ? 'text-white' : 'text-steel-100'}`}>{module.label}</span>
-                <span className={`block text-[10px] leading-tight ${isActive ? 'text-flame-200' : 'text-steel-400'}`}>Module</span>
+                <span className={`block truncate text-sm font-semibold leading-tight ${isActive ? 'text-white' : 'text-slate-100 group-hover:text-white'}`}>{module.label}</span>
+                <span className={`block text-[10px] leading-tight ${isActive ? 'text-flame-200' : 'text-slate-400'}`}>Module</span>
               </span>
             </Link>
           );

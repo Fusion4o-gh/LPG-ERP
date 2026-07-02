@@ -36,8 +36,13 @@ export function PrintableTransactionDocument({ documentType, documentNo }: { doc
   const hasGstBreakdown = document?.lineItems.some((line) => line.exGstAmount !== undefined) ?? false;
   const hasSections = document?.lineItems.some((line) => line.section !== undefined) ?? false;
 
+  const isUrdu = document?.invoiceLanguage === "Urdu";
+
   return (
-    <section data-report-print className="mx-auto max-w-4xl space-y-4 bg-white p-5 shadow-sm print:shadow-none">
+    <section
+      data-report-print
+      className={`mx-auto max-w-4xl space-y-4 bg-white p-5 shadow-sm print:shadow-none ${isUrdu ? "gulzar-regular" : ""}`}
+    >
       <div data-print-hidden className="flex justify-end">
         <button type="button" onClick={() => window.print()} className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
           Print

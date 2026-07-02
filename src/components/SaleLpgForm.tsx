@@ -12,6 +12,9 @@ import { SubmitButton } from "./SubmitButton";
 import { SuccessMessage } from "./SuccessMessage";
 import { WarehouseSelector } from "./WarehouseSelector";
 
+const STANDARD_CYLINDER_WEIGHT_KG = 11.8;
+const CYLINDER_WEIGHT_TOLERANCE = 0.05;
+
 type Lookup = Record<string, unknown>;
 type SaleLine = {
   itemId: string;
@@ -30,6 +33,10 @@ const emptyLine: SaleLine = {
   emptyReturnItemId: "",
   emptyReturnQuantity: "0",
 };
+
+function today() {
+  return new Date().toISOString().slice(0, 10);
+}
 
 function optionLabel(row: Lookup) {
   return [row.code, row.name].filter(Boolean).join(" - ");
@@ -74,7 +81,7 @@ export function SaleLpgForm() {
   const [customers, setCustomers] = useState<Lookup[]>([]);
   const [items, setItems] = useState<Lookup[]>([]);
   const [customerId, setCustomerId] = useState("");
-  const [transactionDate, setTransactionDate] = useState("");
+  const [transactionDate, setTransactionDate] = useState(today);
   const [saleType, setSaleType] = useState("Direct");
   const [remarks, setRemarks] = useState("");
   const [elevenPointEightKgPrice, setElevenPointEightKgPrice] = useState("");
@@ -120,6 +127,18 @@ export function SaleLpgForm() {
   }, []);
 
   const itemById = useMemo(() => new Map(items.map((item) => [String(item.id), item])), [items]);
+
+  function isStandardCylinder(itemId: string) {
+    const weight = itemById.get(itemId)?.cylinderWeightKg;
+    if (weight == null) return false;
+    return Math.abs(Number(weight) - STANDARD_CYLINDER_WEIGHT_KG) <= CYLINDER_WEIGHT_TOLERANCE;
+  }
+
+  useEffect(() => {
+    if (!elevenPointEightKgPrice || !draft.itemId || draft.unitPrice) return;
+    if (!isStandardCylinder(draft.itemId)) return;
+    setDraft((current) => ({ ...current, unitPrice: elevenPointEightKgPrice }));
+  }, [elevenPointEightKgPrice, draft.itemId, draft.unitPrice, itemById]);
 
   useEffect(() => {
     const relevantItemIds = new Set([...lines.map((line) => line.itemId), draft.itemId].filter(Boolean));
@@ -205,7 +224,7 @@ export function SaleLpgForm() {
 
   function reset() {
     setCustomerId("");
-    setTransactionDate("");
+    setTransactionDate(today());
     setSaleType("Direct");
     setRemarks("");
     setElevenPointEightKgPrice("");
@@ -319,7 +338,7 @@ export function SaleLpgForm() {
             <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Invoice Header</h2>
           </div>
           <div className="p-5">
-            <div className="grid gap-4 lg:grid-cols-6">
+            <div className="grid items-start gap-4 lg:grid-cols-6">
               <div className="lg:col-span-2">
                 <label className="form-label" htmlFor="customerId">Customer *</label>
                 <select id="customerId" value={customerId} onChange={(e) => setCustomerId(e.target.value)} disabled={lookupLoading} className="form-input">
@@ -345,9 +364,7 @@ export function SaleLpgForm() {
               <div>
                 <label className="form-label" htmlFor="elevenPointEightKgPrice">11.8 KG Price</label>
                 <input id="elevenPointEightKgPrice" type="number" min="0" value={elevenPointEightKgPrice} onChange={(e) => setElevenPointEightKgPrice(e.target.value)} className="form-input" />
-                <p className="mt-1 text-[11px] leading-snug text-slate-400">
-                  Reference rate recorded with the invoice. Per-line pricing is still driven by the customer&apos;s KG pricing or last cost shown below each line.
-                </p>
+                <p className="mt-1 text-[11px] leading-snug text-slate-400">Auto-fills new 11.8 KG lines.</p>
               </div>
               <div>
                 <label className="form-label" htmlFor="invoiceLanguage">Invoice Language</label>

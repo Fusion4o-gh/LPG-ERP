@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+.gulzar-regular {
+  font-family: "Gulzar", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
 :root {
   --gas-blue: #123A5A;
   --gas-blue-dark: #0F3150;
@@ -381,13 +387,21 @@ a, button {
   }
 }
 
-/* ── Sidebar link interactions ── */
+/* ── Sidebar link interactions (glass cards) ── */
+.sidebar-link-hover {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid transparent;
+}
 .sidebar-link-hover:hover {
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.09);
+  border-color: rgba(255,255,255,0.12);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.08);
+  transform: translateY(-1px);
 }
 .sidebar-link-active {
-  background: linear-gradient(90deg, rgba(242,140,40,0.15), transparent);
-  border-left: 3px solid var(--flame-orange);
+  background: rgba(255,255,255,0.13);
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.16);
 }
 
 /* ── Flame glow (for accent elements) ── */
