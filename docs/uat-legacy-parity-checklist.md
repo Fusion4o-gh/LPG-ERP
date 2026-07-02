@@ -174,6 +174,8 @@ Run once on **both** systems with the same test data (or parallel document numbe
 | Payment/receipt history screen | Implicit lists | Use voucher list |
 | Day-close cash reconciliation UI | Partial | Basic close/reopen |
 | Global search (topbar) | — | Placeholder (disabled) |
+| Line entry workflow (Purchase Filled Cylinder, Sale LPG) | Single entry row + Add, then a posted-lines grid | Matches: staging row with Add, added rows show read-only with Edit/Delete |
+| 11.8 KG Price field behavior | Sets the standard filled-cylinder rate | Reference rate; explicit Apply button pushes it only into 11.8kg-item lines, never auto-overwrites a typed unit price |
 
 ---
 

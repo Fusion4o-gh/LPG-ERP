@@ -41,8 +41,9 @@ function amount(value: string) {
 }
 
 function lineTotals(line: SaleLine) {
-  const amount = Number(line.quantity) * Number(line.unitPrice || 0);
-  return { amount, securityAmount: Number(line.securityDepositAmount || 0), receivableAmount: amount + Number(line.securityDepositAmount || 0) };
+  const lineAmount = amount(line.quantity) * amount(line.unitPrice);
+  const securityAmount = amount(line.securityDepositAmount);
+  return { amount: lineAmount, securityAmount, receivableAmount: lineAmount + securityAmount };
 }
 
 function money(value: number) {
@@ -57,6 +58,18 @@ function estimatedMargin(estimatedCost: string | null | undefined, unitPrice: nu
   return { estimatedCost: cost, marginAmount, marginPercent };
 }
 
+function validateLine(line: SaleLine, label: string) {
+  const quantity = amount(line.quantity);
+  const unitPrice = amount(line.unitPrice);
+  const securityDepositAmount = amount(line.securityDepositAmount);
+  const emptyReturnQuantity = amount(line.emptyReturnQuantity);
+  if (!line.itemId) throw new Error(`${label}: item is required.`);
+  if (!Number.isInteger(quantity) || quantity <= 0) throw new Error(`${label}: sale quantity must be a positive integer.`);
+  if (unitPrice <= 0) throw new Error(`${label}: unit price must be positive.`);
+  if (securityDepositAmount < 0) throw new Error(`${label}: security amount cannot be negative.`);
+  if (!Number.isInteger(emptyReturnQuantity) || emptyReturnQuantity < 0) throw new Error(`${label}: return quantity must be a non-negative integer.`);
+}
+
 export function SaleLpgForm() {
   const [customers, setCustomers] = useState<Lookup[]>([]);
   const [items, setItems] = useState<Lookup[]>([]);
@@ -66,7 +79,10 @@ export function SaleLpgForm() {
   const [remarks, setRemarks] = useState("");
   const [elevenPointEightKgPrice, setElevenPointEightKgPrice] = useState("");
   const [invoiceLanguage, setInvoiceLanguage] = useState("English");
-  const [lines, setLines] = useState<SaleLine[]>([{ ...emptyLine }]);
+  const [lines, setLines] = useState<SaleLine[]>([]);
+  const [draft, setDraft] = useState<SaleLine>({ ...emptyLine });
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [draftError, setDraftError] = useState("");
   const [loading, setLoading] = useState(false);
   const [lookupLoading, setLookupLoading] = useState(true);
   const [error, setError] = useState("");
@@ -103,17 +119,18 @@ export function SaleLpgForm() {
       .finally(() => setLookupLoading(false));
   }, []);
 
+  const itemById = useMemo(() => new Map(items.map((item) => [String(item.id), item])), [items]);
+
   useEffect(() => {
-    if (!customerId && lines.every((line) => !line.itemId)) {
+    const relevantItemIds = new Set([...lines.map((line) => line.itemId), draft.itemId].filter(Boolean));
+    if (!customerId && relevantItemIds.size === 0) {
       setCustomerBalance(null);
       setFilledStock({});
       return;
     }
     const params = new URLSearchParams();
     if (customerId) params.set("customerId", customerId);
-    for (const line of lines) {
-      if (line.itemId) params.append("itemId", line.itemId);
-    }
+    for (const itemId of relevantItemIds) params.append("itemId", itemId);
     apiGet<{
       customerBalance: { receivableBalance: number; emptyOwed: number; filledOutstanding: number } | null;
       filledStock: Record<string, number>;
@@ -132,7 +149,7 @@ export function SaleLpgForm() {
         setKgPricing({});
         setEstimatedCost({});
       });
-  }, [customerId, lines]);
+  }, [customerId, lines, draft.itemId]);
 
   const totals = useMemo(
     () =>
@@ -146,12 +163,44 @@ export function SaleLpgForm() {
     [lines],
   );
 
-  function updateLine(index: number, patch: Partial<SaleLine>) {
-    setLines((current) => current.map((line, lineIndex) => (lineIndex === index ? { ...line, ...patch } : line)));
+  function updateDraft(patch: Partial<SaleLine>) {
+    setDraft((current) => ({ ...current, ...patch }));
+  }
+
+  function addOrUpdateLine() {
+    setDraftError("");
+    try {
+      const label = editingIndex === null ? "New line" : `Line ${editingIndex + 1}`;
+      validateLine(draft, label);
+    } catch (err) {
+      setDraftError(err instanceof Error ? err.message : "Invalid line.");
+      return;
+    }
+    const preparedDraft = { ...draft, emptyReturnItemId: draft.emptyReturnItemId || draft.itemId };
+    if (editingIndex === null) {
+      setLines((current) => [...current, preparedDraft]);
+    } else {
+      setLines((current) => current.map((line, index) => (index === editingIndex ? preparedDraft : line)));
+      setEditingIndex(null);
+    }
+    setDraft({ ...emptyLine });
+  }
+
+  function editLine(index: number) {
+    setDraft(lines[index]);
+    setEditingIndex(index);
+    setDraftError("");
+  }
+
+  function cancelEdit() {
+    setDraft({ ...emptyLine });
+    setEditingIndex(null);
+    setDraftError("");
   }
 
   function removeLine(index: number) {
-    setLines((current) => (current.length === 1 ? current : current.filter((_, lineIndex) => lineIndex !== index)));
+    setLines((current) => current.filter((_, lineIndex) => lineIndex !== index));
+    if (editingIndex === index) cancelEdit();
   }
 
   function reset() {
@@ -161,7 +210,10 @@ export function SaleLpgForm() {
     setRemarks("");
     setElevenPointEightKgPrice("");
     setInvoiceLanguage("English");
-    setLines([{ ...emptyLine }]);
+    setLines([]);
+    setDraft({ ...emptyLine });
+    setEditingIndex(null);
+    setDraftError("");
     setPrintDocumentNo("");
     setSettlement(emptySettlement());
     setGasReturn({ returnGasKg: "", rate: "" });
@@ -174,23 +226,16 @@ export function SaleLpgForm() {
   function payload() {
     if (!customerId) throw new Error("Customer is required.");
     if (!transactionDate) throw new Error("Date is required.");
+    if (lines.length === 0) throw new Error("Add at least one sale line.");
     const preparedLines = lines.map((line, index) => {
-      const quantity = amount(line.quantity);
-      const unitPrice = amount(line.unitPrice);
-      const securityDepositAmount = amount(line.securityDepositAmount);
-      const emptyReturnQuantity = amount(line.emptyReturnQuantity);
-      if (!line.itemId) throw new Error(`Line ${index + 1}: item is required.`);
-      if (!Number.isInteger(quantity) || quantity <= 0) throw new Error(`Line ${index + 1}: sale quantity must be a positive integer.`);
-      if (unitPrice <= 0) throw new Error(`Line ${index + 1}: unit price must be positive.`);
-      if (securityDepositAmount < 0) throw new Error(`Line ${index + 1}: security amount cannot be negative.`);
-      if (!Number.isInteger(emptyReturnQuantity) || emptyReturnQuantity < 0) throw new Error(`Line ${index + 1}: return quantity must be a non-negative integer.`);
+      validateLine(line, `Line ${index + 1}`);
       return {
         itemId: line.itemId,
-        quantity,
-        unitPrice,
-        securityDepositAmount,
+        quantity: amount(line.quantity),
+        unitPrice: amount(line.unitPrice),
+        securityDepositAmount: amount(line.securityDepositAmount),
         emptyReturnItemId: line.emptyReturnItemId || line.itemId,
-        emptyReturnQuantity,
+        emptyReturnQuantity: amount(line.emptyReturnQuantity),
       };
     });
     return {
@@ -224,15 +269,7 @@ export function SaleLpgForm() {
       const issueNo = String(result.issueNo ?? "saved");
       setSuccess(`Saved ${issueNo}.`);
       if (result.ids && issueNo !== "saved") setPrintDocumentNo(issueNo);
-      setCustomerId("");
-      setTransactionDate("");
-      setSaleType("Direct");
-      setRemarks("");
-      setElevenPointEightKgPrice("");
-      setInvoiceLanguage("English");
-      setLines([{ ...emptyLine }]);
-      setSettlement(emptySettlement());
-      setGasReturn({ returnGasKg: "", rate: "" });
+      reset();
       apiGet<{ documentNo: string }>("/api/documents/next-number?kind=sale-issue")
         .then((preview) => setPreviewIssueNo(preview.documentNo))
         .catch(() => undefined);
@@ -243,11 +280,14 @@ export function SaleLpgForm() {
     }
   }
 
+  const draftTotals = lineTotals(draft);
+  const draftMargin = estimatedMargin(estimatedCost[draft.itemId], amount(draft.unitPrice));
+
   return (
     <>
       <PageHeader
         title="Sale LPG"
-        description="Create a legacy-style multi-line LPG invoice with settlement, live customer balance, and stock preview."
+        description="Create a legacy-style LPG invoice: fill one entry line, click Add, and repeat for each item before posting."
         actions={
           previewIssueNo ? (
             <span className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800">
@@ -305,6 +345,9 @@ export function SaleLpgForm() {
               <div>
                 <label className="form-label" htmlFor="elevenPointEightKgPrice">11.8 KG Price</label>
                 <input id="elevenPointEightKgPrice" type="number" min="0" value={elevenPointEightKgPrice} onChange={(e) => setElevenPointEightKgPrice(e.target.value)} className="form-input" />
+                <p className="mt-1 text-[11px] leading-snug text-slate-400">
+                  Reference rate recorded with the invoice. Per-line pricing is still driven by the customer&apos;s KG pricing or last cost shown below each line.
+                </p>
               </div>
               <div>
                 <label className="form-label" htmlFor="invoiceLanguage">Invoice Language</label>
@@ -333,79 +376,138 @@ export function SaleLpgForm() {
           </div>
         </section>
 
+        {/* Entry Line */}
+        <section className="card rounded-xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center gap-2">
+            <div className="h-3.5 w-0.5 rounded-full bg-blue-500/60 shrink-0" />
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+              {editingIndex === null ? "New Sale Line" : `Editing Line ${editingIndex + 1}`}
+            </h2>
+          </div>
+          <div className="p-5 space-y-3">
+            <ApiError message={draftError} />
+            <div className="grid gap-3 lg:grid-cols-7 lg:items-end">
+              <div className="lg:col-span-2">
+                <label className="form-label">Item</label>
+                <select
+                  value={draft.itemId}
+                  onChange={(e) => updateDraft({ itemId: e.target.value, emptyReturnItemId: draft.emptyReturnItemId || e.target.value })}
+                  disabled={lookupLoading}
+                  className="form-input"
+                >
+                  <option value="">Select Item</option>
+                  {items.map((item) => <option key={String(item.id)} value={String(item.id)}>{optionLabel(item)}</option>)}
+                </select>
+                <div className="mt-1 text-[11px] text-slate-400">
+                  Filled stock: <span className="font-semibold text-slate-600">{draft.itemId ? filledStock[draft.itemId] ?? 0 : "—"}</span>
+                </div>
+              </div>
+              <div>
+                <label className="form-label">Sale Qty</label>
+                <input type="number" min="1" value={draft.quantity} onChange={(e) => updateDraft({ quantity: e.target.value })} className="form-input text-right" />
+              </div>
+              <div>
+                <label className="form-label">Unit Price</label>
+                <input type="number" min="0" value={draft.unitPrice} onChange={(e) => updateDraft({ unitPrice: e.target.value })} className="form-input text-right" />
+                {draft.itemId && kgPricing[draft.itemId] ? (
+                  <KgPriceField
+                    pricePerKg={kgPricing[draft.itemId]?.pricePerKg ? Number(kgPricing[draft.itemId]!.pricePerKg) : null}
+                    cylinderWeightKg={kgPricing[draft.itemId]?.cylinderWeightKg ? Number(kgPricing[draft.itemId]!.cylinderWeightKg) : null}
+                    quantity={amount(draft.quantity)}
+                    unitPrice={amount(draft.unitPrice)}
+                    onUnitPriceChange={(price) => updateDraft({ unitPrice: String(price) })}
+                  />
+                ) : null}
+                {draftMargin ? (
+                  <div className="mt-1 text-xs text-slate-500">
+                    Est. cost <span className="font-semibold text-slate-700">{money(draftMargin.estimatedCost)}</span>
+                    {" "}&middot; margin{" "}
+                    <span className={draftMargin.marginAmount >= 0 ? "font-semibold text-emerald-600" : "font-semibold text-red-600"}>
+                      {money(draftMargin.marginAmount)} ({draftMargin.marginPercent.toFixed(1)}%)
+                    </span>
+                  </div>
+                ) : null}
+              </div>
+              <div>
+                <label className="form-label">Security</label>
+                <input type="number" min="0" value={draft.securityDepositAmount} onChange={(e) => updateDraft({ securityDepositAmount: e.target.value })} className="form-input text-right" />
+              </div>
+              <div>
+                <label className="form-label">Empty Return Item</label>
+                <select value={draft.emptyReturnItemId} onChange={(e) => updateDraft({ emptyReturnItemId: e.target.value })} disabled={lookupLoading} className="form-input">
+                  <option value="">Same as sale item</option>
+                  {items.map((item) => <option key={String(item.id)} value={String(item.id)}>{optionLabel(item)}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="form-label">Return Qty</label>
+                <input type="number" min="0" value={draft.emptyReturnQuantity} onChange={(e) => updateDraft({ emptyReturnQuantity: e.target.value })} className="form-input text-right" />
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex flex-wrap gap-4 text-xs text-slate-500">
+                <span>Amount: <span className="font-semibold text-slate-700">{money(draftTotals.amount)}</span></span>
+                <span>Security: <span className="font-semibold text-slate-700">{money(draftTotals.securityAmount)}</span></span>
+                <span>Receivable: <span className="font-semibold text-slate-700">{money(draftTotals.receivableAmount)}</span></span>
+              </div>
+              <div className="ml-auto flex gap-1.5">
+                <button type="button" onClick={addOrUpdateLine} className="btn-primary-sm">
+                  {editingIndex === null ? "+ Add" : "Update"}
+                </button>
+                {editingIndex !== null ? (
+                  <button type="button" onClick={cancelEdit} className="btn-outline">
+                    Cancel
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Sale Lines */}
         <section className="card rounded-xl overflow-hidden">
-          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <div className="h-3.5 w-0.5 rounded-full bg-blue-500/60 shrink-0" />
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Sale Lines</h2>
-            </div>
-            <button type="button" onClick={() => setLines((c) => [...c, { ...emptyLine }])} className="btn-primary-sm">+ Add Row</button>
+          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center gap-2">
+            <div className="h-3.5 w-0.5 rounded-full bg-blue-500/60 shrink-0" />
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Sale Lines ({lines.length})</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-[1260px] border-collapse text-sm">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
-                  {["Item", "Sale Qty", "Unit Price", "Security", "Empty Return Item", "Return Qty", "Filled Stock", "Amount", ""].map((h, i) => (
-                    <th key={i} className={`whitespace-nowrap px-2.5 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 ${[1, 2, 3, 5, 7].includes(i) ? "text-right" : "text-left"}`}>{h}</th>
+                  {["Item", "Sale Qty", "Unit Price", "Security", "Empty Return Item", "Return Qty", "Amount", ""].map((h, i) => (
+                    <th key={i} className={`whitespace-nowrap px-2.5 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 ${[1, 2, 3, 5, 6].includes(i) ? "text-right" : "text-left"}`}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {lines.map((line, index) => {
-                  const current = lineTotals(line);
-                  return (
-                    <tr key={index} className="hover:bg-blue-50/30 transition-colors">
-                      <td className="px-2.5 py-2">
-                        <select value={line.itemId} onChange={(e) => updateLine(index, { itemId: e.target.value, emptyReturnItemId: line.emptyReturnItemId || e.target.value })} disabled={lookupLoading} className="tbl-select w-52">
-                          <option value="">Select Item</option>
-                          {items.map((item) => <option key={String(item.id)} value={String(item.id)}>{optionLabel(item)}</option>)}
-                        </select>
-                      </td>
-                      <td className="px-2.5 py-2"><input type="number" min="1" value={line.quantity} onChange={(e) => updateLine(index, { quantity: e.target.value })} className="tbl-input w-20 text-right" /></td>
-                      <td className="px-2.5 py-2">
-                        <input type="number" min="0" value={line.unitPrice} onChange={(e) => updateLine(index, { unitPrice: e.target.value })} className="tbl-input w-24 text-right" />
-                        {line.itemId && kgPricing[line.itemId] ? (
-                          <KgPriceField
-                            pricePerKg={kgPricing[line.itemId]?.pricePerKg ? Number(kgPricing[line.itemId]!.pricePerKg) : null}
-                            cylinderWeightKg={kgPricing[line.itemId]?.cylinderWeightKg ? Number(kgPricing[line.itemId]!.cylinderWeightKg) : null}
-                            quantity={amount(line.quantity)}
-                            unitPrice={amount(line.unitPrice)}
-                            onUnitPriceChange={(price) => updateLine(index, { unitPrice: String(price) })}
-                          />
-                        ) : null}
-                        {(() => {
-                          const margin = estimatedMargin(estimatedCost[line.itemId], amount(line.unitPrice));
-                          if (!margin) return null;
-                          return (
-                            <div className="mt-1 text-xs text-slate-500">
-                              Est. cost <span className="font-semibold text-slate-700">{money(margin.estimatedCost)}</span>
-                              {" "}&middot; margin{" "}
-                              <span className={margin.marginAmount >= 0 ? "font-semibold text-emerald-600" : "font-semibold text-red-600"}>
-                                {money(margin.marginAmount)} ({margin.marginPercent.toFixed(1)}%)
-                              </span>
-                            </div>
-                          );
-                        })()}
-                      </td>
-                      <td className="px-2.5 py-2"><input type="number" min="0" value={line.securityDepositAmount} onChange={(e) => updateLine(index, { securityDepositAmount: e.target.value })} className="tbl-input w-20 text-right" /></td>
-                      <td className="px-2.5 py-2">
-                        <select value={line.emptyReturnItemId} onChange={(e) => updateLine(index, { emptyReturnItemId: e.target.value })} disabled={lookupLoading} className="tbl-select w-52">
-                          <option value="">Same as sale item</option>
-                          {items.map((item) => <option key={String(item.id)} value={String(item.id)}>{optionLabel(item)}</option>)}
-                        </select>
-                      </td>
-                      <td className="px-2.5 py-2"><input type="number" min="0" value={line.emptyReturnQuantity} onChange={(e) => updateLine(index, { emptyReturnQuantity: e.target.value })} className="tbl-input w-20 text-right" /></td>
-                      <td className="px-2.5 py-2 text-right text-xs font-medium tabular-nums text-slate-600">
-                        {line.itemId ? filledStock[line.itemId] ?? 0 : "—"}
-                      </td>
-                      <td className="px-2.5 py-2 text-right tabular-nums font-medium text-slate-800">{money(current.amount)}</td>
-                      <td className="px-2.5 py-2">
-                        <button type="button" onClick={() => removeLine(index)} disabled={lines.length === 1} className="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50 disabled:opacity-40 transition-colors">Remove</button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {lines.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="px-4 py-6 text-center text-sm text-slate-400">
+                      No lines added yet. Fill the entry line above and click Add.
+                    </td>
+                  </tr>
+                ) : (
+                  lines.map((line, index) => {
+                    const current = lineTotals(line);
+                    const item = itemById.get(line.itemId);
+                    const returnItem = itemById.get(line.emptyReturnItemId);
+                    return (
+                      <tr key={index} className={`transition-colors ${editingIndex === index ? "bg-blue-50/60" : "hover:bg-blue-50/30"}`}>
+                        <td className="px-2.5 py-2">{item ? optionLabel(item) : line.itemId}</td>
+                        <td className="px-2.5 py-2 text-right tabular-nums">{line.quantity}</td>
+                        <td className="px-2.5 py-2 text-right tabular-nums">{money(amount(line.unitPrice))}</td>
+                        <td className="px-2.5 py-2 text-right tabular-nums">{money(amount(line.securityDepositAmount))}</td>
+                        <td className="px-2.5 py-2">{returnItem ? optionLabel(returnItem) : (item ? optionLabel(item) : "—")}</td>
+                        <td className="px-2.5 py-2 text-right tabular-nums">{line.emptyReturnQuantity}</td>
+                        <td className="px-2.5 py-2 text-right tabular-nums font-medium text-slate-800">{money(current.amount)}</td>
+                        <td className="px-2.5 py-2 whitespace-nowrap">
+                          <button type="button" onClick={() => editLine(index)} className="rounded px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 transition-colors">Edit</button>
+                          <button type="button" onClick={() => removeLine(index)} className="ml-1 rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50 transition-colors">Delete</button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
@@ -419,7 +521,7 @@ export function SaleLpgForm() {
               <div className="mt-1.5 text-lg font-bold text-slate-800 tabular-nums">{money(totals.securityAmount)}</div>
             </div>
             <div className="rounded-lg bg-blue-700 p-3">
-              <div className="text-xs font-semibold uppercase tracking-wide text-blue-200">Receivable Total</div>
+              <div className="text-xs font-semibold uppercase tracking-wide text-blue-200">Total Bill (Receivable)</div>
               <div className="mt-1.5 text-lg font-bold text-white tabular-nums">{money(totals.receivableAmount)}</div>
             </div>
           </div>
@@ -436,7 +538,7 @@ export function SaleLpgForm() {
         />
 
         <div className="flex flex-wrap gap-2">
-          <SubmitButton loading={loading}>Post Sale</SubmitButton>
+          <SubmitButton loading={loading} disabled={lines.length === 0}>Post Sale</SubmitButton>
           <button type="button" onClick={reset} className="btn-outline">Reset Form</button>
         </div>
       </form>

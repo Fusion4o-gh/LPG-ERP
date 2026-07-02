@@ -21,6 +21,9 @@ type PurchaseLine = {
   emptyReturnQuantity: string;
 };
 
+const STANDARD_CYLINDER_WEIGHT_KG = 11.8;
+const CYLINDER_WEIGHT_TOLERANCE = 0.05;
+
 const emptyLine: PurchaseLine = {
   itemId: "",
   cylinderState: "FILLED",
@@ -49,6 +52,18 @@ function money(value: number) {
   return value.toFixed(2);
 }
 
+function validateLine(line: PurchaseLine, label: string) {
+  const quantity = amount(line.quantity);
+  const unitCost = amount(line.unitCost);
+  const gstPercent = amount(line.gstPercent);
+  const emptyReturnQuantity = amount(line.emptyReturnQuantity);
+  if (!line.itemId) throw new Error(`${label}: item is required.`);
+  if (!Number.isInteger(quantity) || quantity <= 0) throw new Error(`${label}: received quantity must be a positive integer.`);
+  if (unitCost <= 0) throw new Error(`${label}: unit price must be positive.`);
+  if (gstPercent < 0) throw new Error(`${label}: GST % cannot be negative.`);
+  if (!Number.isInteger(emptyReturnQuantity) || emptyReturnQuantity < 0) throw new Error(`${label}: empty return quantity must be a non-negative integer.`);
+}
+
 export function PurchaseFilledCylinderForm() {
   const [vendors, setVendors] = useState<Lookup[]>([]);
   const [items, setItems] = useState<Lookup[]>([]);
@@ -56,7 +71,10 @@ export function PurchaseFilledCylinderForm() {
   const [transactionDate, setTransactionDate] = useState("");
   const [remarks, setRemarks] = useState("");
   const [elevenPointEightKgPrice, setElevenPointEightKgPrice] = useState("");
-  const [lines, setLines] = useState<PurchaseLine[]>([{ ...emptyLine }]);
+  const [lines, setLines] = useState<PurchaseLine[]>([]);
+  const [draft, setDraft] = useState<PurchaseLine>({ ...emptyLine });
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [draftError, setDraftError] = useState("");
   const [loading, setLoading] = useState(false);
   const [lookupLoading, setLookupLoading] = useState(true);
   const [error, setError] = useState("");
@@ -86,17 +104,24 @@ export function PurchaseFilledCylinderForm() {
       .finally(() => setLookupLoading(false));
   }, []);
 
+  const itemById = useMemo(() => new Map(items.map((item) => [String(item.id), item])), [items]);
+
+  function isStandardCylinder(itemId: string) {
+    const weight = itemById.get(itemId)?.cylinderWeightKg;
+    if (weight == null) return false;
+    return Math.abs(Number(weight) - STANDARD_CYLINDER_WEIGHT_KG) <= CYLINDER_WEIGHT_TOLERANCE;
+  }
+
   useEffect(() => {
-    if (!vendorId && lines.every((line) => !line.itemId)) {
+    const relevantItemIds = new Set([...lines.map((line) => line.itemId), draft.itemId].filter(Boolean));
+    if (!vendorId && relevantItemIds.size === 0) {
       setVendorBalance(null);
       setLastCost({});
       return;
     }
     const params = new URLSearchParams();
     if (vendorId) params.set("vendorId", vendorId);
-    for (const line of lines) {
-      if (line.itemId) params.append("itemId", line.itemId);
-    }
+    for (const itemId of relevantItemIds) params.append("itemId", itemId);
     apiGet<{
       vendorBalance: { payableBalance: number } | null;
       lastCost: Record<string, string | null>;
@@ -109,7 +134,7 @@ export function PurchaseFilledCylinderForm() {
         setVendorBalance(null);
         setLastCost({});
       });
-  }, [vendorId, lines]);
+  }, [vendorId, lines, draft.itemId]);
 
   const totals = useMemo(
     () =>
@@ -127,12 +152,52 @@ export function PurchaseFilledCylinderForm() {
     [lines],
   );
 
-  function updateLine(index: number, patch: Partial<PurchaseLine>) {
-    setLines((current) => current.map((line, lineIndex) => (lineIndex === index ? { ...line, ...patch } : line)));
+  function updateDraft(patch: Partial<PurchaseLine>) {
+    setDraft((current) => ({ ...current, ...patch }));
+  }
+
+  function addOrUpdateLine() {
+    setDraftError("");
+    try {
+      const label = editingIndex === null ? "New line" : `Line ${editingIndex + 1}`;
+      validateLine(draft, label);
+    } catch (err) {
+      setDraftError(err instanceof Error ? err.message : "Invalid line.");
+      return;
+    }
+    if (editingIndex === null) {
+      setLines((current) => [...current, draft]);
+    } else {
+      setLines((current) => current.map((line, index) => (index === editingIndex ? draft : line)));
+      setEditingIndex(null);
+    }
+    setDraft({ ...emptyLine });
+  }
+
+  function editLine(index: number) {
+    setDraft(lines[index]);
+    setEditingIndex(index);
+    setDraftError("");
+  }
+
+  function cancelEdit() {
+    setDraft({ ...emptyLine });
+    setEditingIndex(null);
+    setDraftError("");
   }
 
   function removeLine(index: number) {
-    setLines((current) => (current.length === 1 ? current : current.filter((_, lineIndex) => lineIndex !== index)));
+    setLines((current) => current.filter((_, lineIndex) => lineIndex !== index));
+    if (editingIndex === index) cancelEdit();
+  }
+
+  function applyElevenPointEightKgPrice() {
+    const price = elevenPointEightKgPrice;
+    if (!price) return;
+    setLines((current) => current.map((line) => (isStandardCylinder(line.itemId) ? { ...line, unitCost: price } : line)));
+    if (draft.itemId && isStandardCylinder(draft.itemId)) {
+      setDraft((current) => ({ ...current, unitCost: price }));
+    }
   }
 
   function reset() {
@@ -140,7 +205,10 @@ export function PurchaseFilledCylinderForm() {
     setTransactionDate("");
     setRemarks("");
     setElevenPointEightKgPrice("");
-    setLines([{ ...emptyLine }]);
+    setLines([]);
+    setDraft({ ...emptyLine });
+    setEditingIndex(null);
+    setDraftError("");
     setPrintDocumentNo("");
     setSettlement(emptySettlement());
     setVendorBalance(null);
@@ -151,17 +219,17 @@ export function PurchaseFilledCylinderForm() {
   function payload() {
     if (!vendorId) throw new Error("Vendor is required.");
     if (!transactionDate) throw new Error("Date is required.");
+    if (lines.length === 0) throw new Error("Add at least one purchase line.");
     const preparedLines = lines.map((line, index) => {
-      const quantity = amount(line.quantity);
-      const unitCost = amount(line.unitCost);
-      const gstPercent = amount(line.gstPercent);
-      const emptyReturnQuantity = amount(line.emptyReturnQuantity);
-      if (!line.itemId) throw new Error(`Line ${index + 1}: item is required.`);
-      if (!Number.isInteger(quantity) || quantity <= 0) throw new Error(`Line ${index + 1}: received quantity must be a positive integer.`);
-      if (unitCost <= 0) throw new Error(`Line ${index + 1}: unit price must be positive.`);
-      if (gstPercent < 0) throw new Error(`Line ${index + 1}: GST % cannot be negative.`);
-      if (!Number.isInteger(emptyReturnQuantity) || emptyReturnQuantity < 0) throw new Error(`Line ${index + 1}: empty return quantity must be a non-negative integer.`);
-      return { itemId: line.itemId, cylinderState: line.cylinderState, quantity, unitCost, gstPercent, emptyReturnQuantity };
+      validateLine(line, `Line ${index + 1}`);
+      return {
+        itemId: line.itemId,
+        cylinderState: line.cylinderState,
+        quantity: amount(line.quantity),
+        unitCost: amount(line.unitCost),
+        gstPercent: amount(line.gstPercent),
+        emptyReturnQuantity: amount(line.emptyReturnQuantity),
+      };
     });
     return {
       vendorId,
@@ -201,11 +269,14 @@ export function PurchaseFilledCylinderForm() {
     }
   }
 
+  const draftTotals = lineTotals(draft);
+  const draftStandardCylinder = draft.itemId ? isStandardCylinder(draft.itemId) : false;
+
   return (
     <>
       <PageHeader
         title="Purchase Filled Cylinder"
-        description="Create a legacy-style multi-line GIRN with settlement, vendor balance, and payable vouchers."
+        description="Create a legacy-style GIRN: fill one entry row, click Add, and repeat for each item before posting."
         actions={
           previewReceiptNo ? (
             <span className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800">
@@ -269,7 +340,28 @@ export function PurchaseFilledCylinderForm() {
                 <label className="form-label" htmlFor="elevenPointEightKgPrice">
                   11.8 KG Price
                 </label>
-                <input id="elevenPointEightKgPrice" type="number" min="0" value={elevenPointEightKgPrice} onChange={(e) => setElevenPointEightKgPrice(e.target.value)} className="form-input" />
+                <div className="flex gap-1.5">
+                  <input
+                    id="elevenPointEightKgPrice"
+                    type="number"
+                    min="0"
+                    value={elevenPointEightKgPrice}
+                    onChange={(e) => setElevenPointEightKgPrice(e.target.value)}
+                    className="form-input"
+                  />
+                  <button
+                    type="button"
+                    onClick={applyElevenPointEightKgPrice}
+                    disabled={!elevenPointEightKgPrice}
+                    className="shrink-0 rounded-lg border border-blue-200 bg-blue-50 px-2.5 text-xs font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-40 transition-colors"
+                    title="Apply this price to all 11.8 KG cylinder lines (added lines and the entry row). Does not touch other cylinder sizes and never overwrites silently."
+                  >
+                    Apply
+                  </button>
+                </div>
+                <p className="mt-1 text-[11px] leading-snug text-slate-400">
+                  Sets the standard rate for 11.8 KG cylinders. Click Apply to push it into matching lines &mdash; it never overwrites unit prices on its own.
+                </p>
               </div>
               <div>
                 <label className="form-label" htmlFor="remarks">
@@ -289,33 +381,107 @@ export function PurchaseFilledCylinderForm() {
           </div>
         </section>
 
-        <section className="card rounded-xl">
-          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <div className="h-3.5 w-0.5 rounded-full bg-blue-500/60 shrink-0" />
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Purchase Lines</h2>
+        <section className="card rounded-xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center gap-2">
+            <div className="h-3.5 w-0.5 rounded-full bg-blue-500/60 shrink-0" />
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+              {editingIndex === null ? "New Purchase Line" : `Editing Line ${editingIndex + 1}`}
+            </h2>
+          </div>
+          <div className="p-5 space-y-3">
+            <ApiError message={draftError} />
+            <div className="grid gap-3 lg:grid-cols-8 lg:items-end">
+              <div className="lg:col-span-2">
+                <label className="form-label">Item</label>
+                <select value={draft.itemId} onChange={(e) => updateDraft({ itemId: e.target.value })} disabled={lookupLoading} className="form-input">
+                  <option value="">Select Item</option>
+                  {items.map((item) => (
+                    <option key={String(item.id)} value={String(item.id)}>
+                      {optionLabel(item)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="form-label">Type</label>
+                <select value={draft.cylinderState} onChange={(e) => updateDraft({ cylinderState: e.target.value as PurchaseLine["cylinderState"] })} className="form-input">
+                  <option value="FILLED">Filled</option>
+                  <option value="EMPTY">Empty</option>
+                </select>
+              </div>
+              <div>
+                <label className="form-label">Received Qty</label>
+                <input type="number" min="1" value={draft.quantity} onChange={(e) => updateDraft({ quantity: e.target.value })} className="form-input text-right" />
+              </div>
+              <div>
+                <label className="form-label">Unit Price</label>
+                <input type="number" min="0" value={draft.unitCost} onChange={(e) => updateDraft({ unitCost: e.target.value })} className="form-input text-right" />
+                {draft.itemId && lastCost[draft.itemId] ? (
+                  <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                    <span className="text-slate-500">
+                      Last price: <span className="font-semibold text-blue-700">{Number(lastCost[draft.itemId]).toFixed(2)}</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => updateDraft({ unitCost: lastCost[draft.itemId] as string })}
+                      className="rounded bg-blue-100 px-2 py-0.5 text-blue-700 font-medium hover:bg-blue-200 transition-colors"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                ) : null}
+                {draftStandardCylinder ? <div className="mt-1 text-[11px] text-slate-400">Standard 11.8 KG item</div> : null}
+              </div>
+              <div>
+                <label className="form-label">GST %</label>
+                <input type="number" min="0" value={draft.gstPercent} onChange={(e) => updateDraft({ gstPercent: e.target.value })} className="form-input text-right" />
+              </div>
+              <div>
+                <label className="form-label">Empty Return</label>
+                <input type="number" min="0" value={draft.emptyReturnQuantity} onChange={(e) => updateDraft({ emptyReturnQuantity: e.target.value })} className="form-input text-right" />
+              </div>
+              <div className="flex gap-1.5">
+                <button type="button" onClick={addOrUpdateLine} className="btn-primary-sm w-full">
+                  {editingIndex === null ? "+ Add" : "Update"}
+                </button>
+                {editingIndex !== null ? (
+                  <button type="button" onClick={cancelEdit} className="btn-outline shrink-0">
+                    Cancel
+                  </button>
+                ) : null}
+              </div>
             </div>
-            <button type="button" onClick={() => setLines((c) => [...c, { ...emptyLine }])} className="btn-primary-sm">
-              + Add Row
-            </button>
+            <div className="flex flex-wrap gap-4 text-xs text-slate-500">
+              <span>GST Amt: <span className="font-semibold text-slate-700">{money(draftTotals.gstAmount)}</span></span>
+              <span>Ex-GST: <span className="font-semibold text-slate-700">{money(draftTotals.exGstAmount)}</span></span>
+              <span>Inc-GST: <span className="font-semibold text-slate-700">{money(draftTotals.incGstAmount)}</span></span>
+            </div>
+          </div>
+        </section>
+
+        <section className="card rounded-xl">
+          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center gap-2">
+            <div className="h-3.5 w-0.5 rounded-full bg-blue-500/60 shrink-0" />
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Purchase Lines ({lines.length})</h2>
           </div>
           <div className="w-full overflow-x-auto md:overflow-x-visible">
             <table className="w-full table-fixed border-collapse text-sm">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
                   {[
-                    { label: "Item", className: "w-[30%] text-left" },
-                    { label: "Type", className: "w-[9%] text-left" },
+                    { label: "Item", className: "w-[26%] text-left" },
+                    { label: "Type", className: "w-[8%] text-left" },
                     { label: "Received Qty", className: "w-[8%] text-right" },
                     { label: "Unit Price", className: "w-[9%] text-right" },
                     { label: "GST %", className: "w-[7%] text-right" },
                     { label: "Empty Return", className: "w-[9%] text-right" },
                     { label: "GST Amt", className: "w-[8%] text-right" },
                     { label: "Ex-GST", className: "w-[8%] text-right" },
-                    { label: "Inc-GST", className: "w-[10%] text-right" },
+                    { label: "Inc-GST", className: "w-[9%] text-right" },
+                    { label: "", className: "w-[8%] text-right" },
                   ].map((col) => (
                     <th
-                      key={col.label}
+                      key={col.label || "actions"}
                       className={`whitespace-nowrap px-2.5 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 ${col.className}`}
                     >
                       {col.label}
@@ -324,68 +490,39 @@ export function PurchaseFilledCylinderForm() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {lines.map((line, index) => {
-                  const current = lineTotals(line);
-                  return (
-                    <tr key={index} className="bg-white hover:bg-blue-50/30 transition-colors">
-                      <td className="px-2.5 py-2">
-                        <select value={line.itemId} onChange={(e) => updateLine(index, { itemId: e.target.value })} disabled={lookupLoading} className="tbl-select w-full min-w-0">
-                          <option value="">Select Item</option>
-                          {items.map((item) => (
-                            <option key={String(item.id)} value={String(item.id)}>
-                              {optionLabel(item)}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-2.5 py-2">
-                        <select value={line.cylinderState} onChange={(e) => updateLine(index, { cylinderState: e.target.value as PurchaseLine["cylinderState"] })} className="tbl-select w-full min-w-0">
-                          <option value="FILLED">Filled</option>
-                          <option value="EMPTY">Empty</option>
-                        </select>
-                      </td>
-                      <td className="px-2.5 py-2">
-                        <input type="number" min="1" value={line.quantity} onChange={(e) => updateLine(index, { quantity: e.target.value })} className="tbl-input w-full min-w-0 text-right" />
-                      </td>
-                      <td className="px-2.5 py-2">
-                        <input type="number" min="0" value={line.unitCost} onChange={(e) => updateLine(index, { unitCost: e.target.value })} className="tbl-input w-full min-w-0 text-right" />
-                        {line.itemId && lastCost[line.itemId] ? (
-                          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-                            <span className="text-slate-500">
-                              Last price: <span className="font-semibold text-blue-700">{Number(lastCost[line.itemId]).toFixed(2)}</span>
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => updateLine(index, { unitCost: lastCost[line.itemId] as string })}
-                              className="rounded bg-blue-100 px-2 py-0.5 text-blue-700 font-medium hover:bg-blue-200 transition-colors"
-                            >
-                              Apply
-                            </button>
-                          </div>
-                        ) : null}
-                      </td>
-                      <td className="px-2.5 py-2">
-                        <input type="number" min="0" value={line.gstPercent} onChange={(e) => updateLine(index, { gstPercent: e.target.value })} className="tbl-input w-full min-w-0 text-right" />
-                      </td>
-                      <td className="px-2.5 py-2">
-                        <input type="number" min="0" value={line.emptyReturnQuantity} onChange={(e) => updateLine(index, { emptyReturnQuantity: e.target.value })} className="tbl-input w-full min-w-0 text-right" />
-                      </td>
-                      <td className="px-2.5 py-2 text-right tabular-nums text-slate-600">{money(current.gstAmount)}</td>
-                      <td className="px-2.5 py-2 text-right tabular-nums text-slate-600">{money(current.exGstAmount)}</td>
-                      <td className="whitespace-nowrap px-2 py-2 text-right">
-                        <span className="tabular-nums font-medium text-slate-800">{money(current.incGstAmount)}</span>
-                        <button
-                          type="button"
-                          onClick={() => removeLine(index)}
-                          disabled={lines.length === 1}
-                          className="ml-3 inline-flex rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50 disabled:opacity-40 transition-colors"
-                        >
-                          Remove
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {lines.length === 0 ? (
+                  <tr>
+                    <td colSpan={10} className="px-4 py-6 text-center text-sm text-slate-400">
+                      No lines added yet. Fill the entry row above and click Add.
+                    </td>
+                  </tr>
+                ) : (
+                  lines.map((line, index) => {
+                    const current = lineTotals(line);
+                    const item = itemById.get(line.itemId);
+                    return (
+                      <tr key={index} className={`bg-white transition-colors ${editingIndex === index ? "bg-blue-50/60" : "hover:bg-blue-50/30"}`}>
+                        <td className="px-2.5 py-2">{item ? optionLabel(item) : line.itemId}</td>
+                        <td className="px-2.5 py-2">{line.cylinderState === "FILLED" ? "Filled" : "Empty"}</td>
+                        <td className="px-2.5 py-2 text-right tabular-nums">{line.quantity}</td>
+                        <td className="px-2.5 py-2 text-right tabular-nums">{money(amount(line.unitCost))}</td>
+                        <td className="px-2.5 py-2 text-right tabular-nums">{line.gstPercent}</td>
+                        <td className="px-2.5 py-2 text-right tabular-nums">{line.emptyReturnQuantity}</td>
+                        <td className="px-2.5 py-2 text-right tabular-nums text-slate-600">{money(current.gstAmount)}</td>
+                        <td className="px-2.5 py-2 text-right tabular-nums text-slate-600">{money(current.exGstAmount)}</td>
+                        <td className="px-2.5 py-2 text-right tabular-nums font-medium text-slate-800">{money(current.incGstAmount)}</td>
+                        <td className="whitespace-nowrap px-2 py-2 text-right">
+                          <button type="button" onClick={() => editLine(index)} className="rounded px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 transition-colors">
+                            Edit
+                          </button>
+                          <button type="button" onClick={() => removeLine(index)} className="ml-1 rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50 transition-colors">
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
@@ -399,7 +536,7 @@ export function PurchaseFilledCylinderForm() {
               <div className="mt-1.5 text-lg font-bold text-slate-800 tabular-nums">{money(totals.gstAmount)}</div>
             </div>
             <div className="rounded-lg bg-blue-700 p-3">
-              <div className="text-xs font-semibold uppercase tracking-wide text-blue-200">Inc-GST Total</div>
+              <div className="text-xs font-semibold uppercase tracking-wide text-blue-200">Total Bill (Inc-GST)</div>
               <div className="mt-1.5 text-lg font-bold text-white tabular-nums">{money(totals.incGstAmount)}</div>
             </div>
           </div>
@@ -414,7 +551,7 @@ export function PurchaseFilledCylinderForm() {
         />
 
         <div className="flex flex-wrap gap-2">
-          <SubmitButton loading={loading}>Post Purchase</SubmitButton>
+          <SubmitButton loading={loading} disabled={lines.length === 0}>Post Purchase</SubmitButton>
           <button type="button" onClick={reset} className="btn-outline">
             Reset Form
           </button>

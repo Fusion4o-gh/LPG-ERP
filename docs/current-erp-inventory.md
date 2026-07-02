@@ -244,7 +244,7 @@ Legacy/client reports remaining not implemented as full-parity screens:
 |---|---|
 | Sidebar layout | `AppShell` renders a fixed-width left sidebar on desktop (`md:w-72`) and main content area. Sidebar uses legacy-style multi-section groups (Configuration, Sale/Purchase, Returns, Payment/Receipt, Reports, Database) with RBAC filtering per link. |
 | Dashboard layout | Live API-backed KPI tile grid, bank position table, current stock table, sale stats widget, and quick-links grid. Calls `GET /api/dashboard` on load. |
-| Form patterns | `OperationForm` provides page header, API error, success message, lookup selects, text/number/date/checkbox inputs, reset, submit, and optional printable link after save. Multi-line forms (Purchase Filled Cylinder, Sale LPG, Cylinder Return, etc.) use internal line arrays with add/remove controls. `MasterDataManager` provides side-by-side form plus table for CRUD-like master data. |
+| Form patterns | `OperationForm` provides page header, API error, success message, lookup selects, text/number/date/checkbox inputs, reset, submit, and optional printable link after save. `PurchaseFilledCylinderForm` and `SaleLpgForm` use a legacy-style single staging/entry row (item, qty, price, GST/return fields) with an Add button; confirmed rows land in a read-only table below with per-row Edit (reloads the row into the entry row) and Delete. Other multi-line forms (Cylinder Return, etc.) still use internal line arrays with add/remove controls directly on editable rows. `MasterDataManager` provides side-by-side form plus table for CRUD-like master data. |
 | Table patterns | `DataTable` is a simple horizontal-scroll table with loading and empty states. Numeric-like columns are right-aligned by label heuristics. No pagination, sort, column search, or density controls. |
 | Print layout pattern | Printable transactions and reports use `data-print-hidden`, `data-print-only`, `window.print()`, and regular HTML tables. Transaction print pages load generic voucher and stock data from `/api/transaction-documents/...`. |
 | Report pattern | `ReportTableClient` is a shared client component with date/account/entity filter dropdowns, Apply Filters, CSV download, and Print actions. Used by all 19 report screens. Supports `showBankFilter` for bank-restricted selectors (bank book). |
@@ -259,8 +259,8 @@ Legacy/client reports remaining not implemented as full-parity screens:
 
 ### Partial workflows
 
-- Purchase Filled Cylinder multi-line GIRN: global 11.8kg price field exists but per-line pricing still required for different cylinder sizes.
-- Sale LPG: customer outstanding inline display and stock availability inline check are missing; sale type/invoice language selection is absent.
+- Purchase Filled Cylinder multi-line GIRN: the header "11.8 KG Price" field is a reference rate with an explicit Apply action that pushes it only into entry-row/added lines whose item's `cylinderWeightKg` matches 11.8 (within 0.05kg tolerance) &mdash; it never overwrites a unit price automatically. Other cylinder sizes still rely on per-line last-cost suggestions.
+- Sale LPG: customer outstanding balance and filled-stock preview are shown live on the entry row; sale type/invoice language selection exist, but the "11.8 KG Price" field remains a reference value only &mdash; per-line pricing is still driven by KG pricing/last-cost suggestions, not by this field.
 - Complete Day Sale: shared date and remarks per batch are supported; automatic cash receipt posting for Cash rows depends on service implementation.
 - Cylinder Return: approval workflow for valued returns is missing.
 - Payments/receipts list/history: no searchable history view for past cash/bank receipts and payments (voucher list at `/accounting/vouchers` is the only fallback).
