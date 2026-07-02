@@ -6,6 +6,7 @@ import { useMemo } from "react";
 import { breadcrumbsForPath } from "@/lib/navigation/modules";
 import { canAccess } from "@/lib/permissions";
 import type { AppShellContext } from "@/server/auth/app-shell-context";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { FinancialYearSwitcher } from "./FinancialYearSwitcher";
 
 function formatToday() {
@@ -18,6 +19,7 @@ function formatToday() {
 
 export function Topbar({ shell, permissions }: { shell: AppShellContext; permissions: string[] }) {
   const pathname = usePathname();
+  const { t } = useLanguage();
   const crumbs = useMemo(() => breadcrumbsForPath(pathname, permissions), [pathname, permissions]);
 
   return (
@@ -33,10 +35,10 @@ export function Topbar({ shell, permissions }: { shell: AppShellContext; permiss
             <span key={`${crumb.href}-${index}`} className="flex min-w-0 items-center gap-1.5">
               {index > 0 ? <span className="text-steel-300">/</span> : null}
               {isLast ? (
-                <span className="truncate font-bold text-gas-700">{crumb.label}</span>
+                <span className="truncate font-bold text-gas-700">{t(crumb.label)}</span>
               ) : (
                 <Link href={crumb.href} className="accent-link truncate transition-colors font-medium">
-                  {crumb.label}
+                  {t(crumb.label)}
                 </Link>
               )}
             </span>
@@ -63,7 +65,7 @@ export function Topbar({ shell, permissions }: { shell: AppShellContext; permiss
           <input
             type="search"
             disabled
-            placeholder="Search customers, vouchers…"
+            placeholder={t("Search customers, vouchers…")}
             className="h-8 w-64 rounded-lg px-3 pl-9 text-sm text-steel-600 placeholder:text-steel-400"
             style={{ background: 'var(--skeu-input)', boxShadow: 'var(--skeu-shadow-inset-sm), 0 0 0 1px rgba(0,0,0,0.04)' }}
             aria-label="Global search (coming soon)"
@@ -82,7 +84,7 @@ export function Topbar({ shell, permissions }: { shell: AppShellContext; permiss
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 7h16" /><path d="M7 4h10l2 3v13H5V7l2-3z" /><path d="M9 11h6" /><path d="M9 15h4" />
               </svg>
-              Sales
+              {t("Sales")}
             </Link>
           );
         })()}

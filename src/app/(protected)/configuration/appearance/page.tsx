@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { ApiError } from "@/components/ApiError";
+import { LanguageToggle } from "@/components/LanguageToggle";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { apiPut } from "@/lib/api-client";
 import { applyTheme, getStoredTheme, THEMES, type ThemeId } from "@/lib/theme";
 
@@ -48,6 +50,7 @@ export default function AppearancePage() {
   const [active, setActive] = useState<ThemeId | null>(null);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     setActive(getStoredTheme());
@@ -70,9 +73,21 @@ export default function AppearancePage() {
   return (
     <>
       <PageHeader
-        title="Appearance"
-        description="Choose an accent color for the interface. All themes use the deep gas blue sidebar with skeuomorphic raised surfaces."
+        title={t("Appearance")}
+        description={t(
+          "Choose an accent color for the interface. All themes use the deep gas blue sidebar with skeuomorphic raised surfaces."
+        )}
       />
+
+      <div className="card mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl p-4">
+        <div>
+          <p className="text-sm font-bold text-gas-800">{t("Language")}</p>
+          <p className="mt-0.5 text-xs leading-snug text-steel-500">
+            {t("Choose the interface language. Urdu translates menus, navigation, and labels across the app.")}
+          </p>
+        </div>
+        <LanguageToggle />
+      </div>
 
       <ApiError message={error} />
 
@@ -111,7 +126,7 @@ export default function AppearancePage() {
       </div>
 
       <p className="mt-5 text-xs text-steel-400">
-        Accent color only affects module tab bars and accent highlights. The sidebar and main surfaces remain consistent.
+        {t("Accent color only affects module tab bars and accent highlights. The sidebar and main surfaces remain consistent.")}
       </p>
     </>
   );

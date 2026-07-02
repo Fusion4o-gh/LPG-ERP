@@ -10,6 +10,7 @@ import {
   type NavTab,
   type NavTabGroup,
 } from "@/lib/navigation/modules";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 
 const activeTabStyle: React.CSSProperties = {
   background: 'linear-gradient(135deg, #123A5A, #1B4A6F)',
@@ -36,6 +37,7 @@ function TabRow({
   variant?: "primary" | "secondary";
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const container = scrollRef.current;
@@ -67,7 +69,7 @@ function TabRow({
             style={isActive ? activeTabStyle : undefined}
             className={`${base} ${isActive ? "text-white" : inactiveTabClass}`}
           >
-            {tab.label}
+            {t(tab.label)}
           </Link>
         );
       })}
@@ -90,6 +92,7 @@ function GroupTabs({
     groups.find((group) => group.tabs.some((tab) => pathname === tab.href || pathname.startsWith(`${tab.href}/`))) ??
     groups.find((group) => group.id === activeGroupId) ??
     groups[0];
+  const { t } = useLanguage();
 
   return (
     <div className="space-y-2">
@@ -107,7 +110,7 @@ function GroupTabs({
                 isActive ? "text-white" : "text-steel-600 hover:bg-white/60 hover:text-gas-700"
               }`}
             >
-              {group.label}
+              {t(group.label)}
             </Link>
           );
         })}

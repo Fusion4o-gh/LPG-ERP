@@ -8,6 +8,11 @@
   font-style: normal;
 }
 
+/* Urdu interface language: switch the whole app body to the Gulzar Nastaliq font */
+html[data-lang="ur"] body {
+  font-family: "Gulzar", serif;
+}
+
 :root {
   --gas-blue: #123A5A;
   --gas-blue-dark: #0F3150;

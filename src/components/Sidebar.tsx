@@ -6,6 +6,7 @@ import { useMemo, type ReactNode } from "react";
 import { canAccess } from "@/lib/permissions";
 import { filterModules, moduleSidebarHref, rememberModuleTab, resolveModule } from "@/lib/navigation/modules";
 import type { AppShellContext } from "@/server/auth/app-shell-context";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { LogoutButton } from "./LogoutButton";
 
 /**
@@ -202,6 +203,7 @@ export function Sidebar({
   onClose?: () => void;
 }) {
   const pathname = usePathname();
+  const { t } = useLanguage();
   const visibleModules = useMemo(() => filterModules(permissions), [permissions]);
   const activeModule = useMemo(() => resolveModule(pathname, visibleModules)?.module.id, [pathname, visibleModules]);
   const canViewDashboard = canAccess(permissions, "dashboard", "VIEW");
@@ -286,8 +288,8 @@ export function Sidebar({
                   </svg>
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className={`block truncate text-sm font-semibold leading-tight ${dashboardActive ? 'text-white' : 'text-slate-100 group-hover:text-white'}`}>Dashboard</span>
-                  <span className={`block text-[10px] leading-tight ${dashboardActive ? 'text-flame-200' : 'text-slate-400'}`}>Overview</span>
+                  <span className={`block truncate text-sm font-semibold leading-tight ${dashboardActive ? 'text-white' : 'text-slate-100 group-hover:text-white'}`}>{t("Dashboard")}</span>
+                  <span className={`block text-[10px] leading-tight ${dashboardActive ? 'text-flame-200' : 'text-slate-400'}`}>{t("Overview")}</span>
                 </span>
               </Link>
             );
@@ -315,8 +317,8 @@ export function Sidebar({
                   : "border-white/10 bg-white/[0.06] text-slate-300 group-hover:border-flame-400/30 group-hover:bg-white/10 group-hover:text-flame-300 group-hover:shadow-[0_0_10px_rgba(242,140,40,0.3)]"}
               />
               <span className="min-w-0 flex-1">
-                <span className={`block truncate text-sm font-semibold leading-tight ${isActive ? 'text-white' : 'text-slate-100 group-hover:text-white'}`}>{module.label}</span>
-                <span className={`block text-[10px] leading-tight ${isActive ? 'text-flame-200' : 'text-slate-400'}`}>Module</span>
+                <span className={`block truncate text-sm font-semibold leading-tight ${isActive ? 'text-white' : 'text-slate-100 group-hover:text-white'}`}>{t(module.label)}</span>
+                <span className={`block text-[10px] leading-tight ${isActive ? 'text-flame-200' : 'text-slate-400'}`}>{t("Module")}</span>
               </span>
             </Link>
           );
