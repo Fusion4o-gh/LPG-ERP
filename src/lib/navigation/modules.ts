@@ -97,6 +97,7 @@ const paymentTabs: NavTab[] = [
   { label: "Chart of Account", href: "/accounting/chart-of-accounts", module: "chart-of-accounts" },
   { label: "Journal Vouchers", href: "/payments/journal-vouchers", module: "journal-vouchers" },
   { label: "Bank Payments / Receipt", href: "/payments/bank-payments-receipts", module: "bank-payments" },
+  { label: "Voucher List", href: "/accounting/vouchers", module: "journal-vouchers" },
 ];
 
 const reportsSales: NavTab[] = [
@@ -254,7 +255,7 @@ export const NAV_MODULES: NavModule[] = [
     label: "Payment / Receipt",
     icon: "money",
     defaultHref: "/payments/cash-payment",
-    matchPrefixes: ["/payments", "/accounting/chart-of-accounts"],
+    matchPrefixes: ["/payments", "/accounting/chart-of-accounts", "/accounting/vouchers"],
     tabs: paymentTabs,
   },
   // NOTE: Import, Plant/Bulk, and Dollar modules (and their report groups) are

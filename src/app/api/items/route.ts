@@ -11,10 +11,27 @@ export async function GET(request: Request) {
     const items = await prisma.item.findMany({
       where: { companyId: context.companyId, status: includeAll ? undefined : "ACTIVE" },
       orderBy: { code: "asc" },
-      select: { id: true, code: true, name: true, cylinderWeightKg: true, defaultSecurity: true, status: true },
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        categoryId: true,
+        brandId: true,
+        category: { select: { id: true, name: true } },
+        brand: { select: { id: true, name: true } },
+        cylinderWeightKg: true,
+        defaultSecurity: true,
+        status: true,
+      },
       take: 100,
     });
-    return ok({ items });
+    return ok({
+      items: items.map((item) => ({
+        ...item,
+        categoryName: item.category?.name ?? "",
+        brandName: item.brand?.name ?? "",
+      })),
+    });
   } catch (error) {
     return serviceError(error);
   }
@@ -27,6 +44,8 @@ export async function POST(request: Request) {
     const item = await createItem(context, {
       code: stringField(body, "code"),
       name: stringField(body, "name"),
+      categoryId: optionalStringField(body, "categoryId"),
+      brandId: optionalStringField(body, "brandId"),
       cylinderWeightKg: optionalPositiveNumberField(body, "cylinderWeightKg"),
       defaultSecurity: body.defaultSecurity === undefined ? undefined : positiveNumberField(body, "defaultSecurity"),
       status: optionalStringField(body, "status") as never,

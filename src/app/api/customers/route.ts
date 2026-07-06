@@ -3,14 +3,20 @@ import { getRequestContext } from "../../../server/api/request-context.ts";
 import { fail, ok, serviceError } from "../../../server/api/responses.ts";
 import { customerBody, customerListSelect, mapMasterRow } from "../../../server/api/master-body.ts";
 import { createCustomer } from "../../../server/services/master-data/master-data.ts";
+import { customerAreaFilter } from "../../../server/services/user-management/area-access.ts";
 import { readJson } from "../../../server/api/validation.ts";
 
 export async function GET(request: Request) {
   try {
     const context = await getRequestContext(request);
     const includeAll = new URL(request.url).searchParams.get("all") === "1";
+    const areaFilter = includeAll ? undefined : await prisma.$transaction((tx) => customerAreaFilter(tx, context.userId));
     const customers = await prisma.customer.findMany({
-      where: { companyId: context.companyId, status: includeAll ? undefined : "ACTIVE" },
+      where: {
+        companyId: context.companyId,
+        status: includeAll ? undefined : "ACTIVE",
+        ...(areaFilter ?? {}),
+      },
       orderBy: { name: "asc" },
       select: customerListSelect,
       take: 500,

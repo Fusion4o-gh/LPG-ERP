@@ -97,7 +97,6 @@ test("report pages with table formatters keep callbacks inside the client bounda
   const reportPages = [
     "src/app/(protected)/reports/balance-sheet/page.tsx",
     "src/app/(protected)/reports/cash-book/page.tsx",
-    "src/app/(protected)/reports/customer-cylinder-balances/page.tsx",
     "src/app/(protected)/reports/customer-ledger/page.tsx",
     "src/app/(protected)/reports/stock-summary/page.tsx",
     "src/app/(protected)/reports/trial-balance/page.tsx",
@@ -109,6 +108,10 @@ test("report pages with table formatters keep callbacks inside the client bounda
     assert.match(page, /^"use client";/, `${route} should be a client component`);
     assert.match(page, /render: \(row\)/, `${route} should define table formatters`);
   }
+
+  const accessCylinders = await file("src/app/(protected)/reports/customer-cylinder-balances/AccessCylindersReportClient.tsx");
+  assert.match(accessCylinders, /^"use client";/);
+  assert.match(accessCylinders, /render: \(row\)/);
 });
 
 test("report pages include shared print action and print metadata", async () => {
@@ -140,6 +143,8 @@ test("report pages include shared print action and print metadata", async () => 
       assert.match(page, /DailyActivityReportClient/);
     } else if (route.endsWith("profit-loss/page.tsx")) {
       assert.match(page, /ProfitLossReportClient/);
+    } else if (route.endsWith("customer-cylinder-balances/page.tsx")) {
+      assert.match(page, /AccessCylindersReportClient/);
     } else {
       assert.match(page, /ReportTableClient/);
     }

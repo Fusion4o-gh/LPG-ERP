@@ -1,0 +1,27 @@
+---
+description: LPG-ERP project context — stack, commands, and non-obvious quirks
+alwaysApply: true
+---
+
+# LPG-ERP
+
+LPG (cylinder gas) distribution ERP. Next.js App Router + Prisma + PostgreSQL, rebuilt to parity with a legacy system (see `docs/parity-roadmap.md` and `docs/uat-legacy-parity-checklist.md`).
+
+## Stack
+- Next.js (App Router, TypeScript) in `src/app`; shared UI in `src/components`; domain/server logic in `src/server` and `src/lib`.
+- Prisma schema: `prisma/schema.prisma` (~53 models: Company, FinancialYear, Account, Role/Permission, Brand/Category, cylinder ops, ledgers).
+- Tailwind CSS; framer-motion for animation.
+- Local dev DB is **embedded-postgres** (logs: `embedded-postgres.*.log`) — no external DB service needed.
+
+## Commands
+- Dev: `npm run dev`
+- Tests: `npm test` (node built-in test runner; runs `scripts/prepare-test-db.mjs` first — never skip it, tests need the prepared DB). Single file: `node scripts/prepare-test-db.mjs && node --import ./tests/helpers/test-env.mjs --test tests/<file>.test.mjs`
+- Migrations: `npm run prisma:migrate` (dev), seed: `npm run prisma:seed`
+- Build: `npm run build` — runs `prisma migrate deploy` and patches Next via `scripts/patch-exfat-readlink.js` (drive is exFAT; do not remove this patch).
+
+## Conventions & cautions
+- After changing `prisma/schema.prisma`, run `prisma generate` (postinstall does this too) and create a migration; never edit applied migrations in `prisma/migrations/`.
+- Tests in `tests/*.test.mjs` are integration-style against the prepared DB; mirror an existing test file's setup when adding one.
+- Accounting/ledger correctness is critical — `tests/accounting-integrity.test.mjs` must pass after any change touching transactions, ledgers, or stock movements.
+- Design/architecture decisions live in `docs/architecture-decisions.md`; read it before structural changes.
+- `graphify-out*/`, `backups/`, `*.log` are artifacts — do not read or edit them for context.

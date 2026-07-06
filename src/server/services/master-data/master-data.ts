@@ -32,6 +32,8 @@ type MasterInput = {
   status?: Status;
   cylinderWeightKg?: number;
   defaultSecurity?: number;
+  categoryId?: string;
+  brandId?: string;
   parentId?: string;
   accountType?: string;
   normalBalance?: string;
@@ -120,6 +122,22 @@ async function findCategory(tx: Tx, companyId: string) {
   const category = await tx.category.findFirst({ where: { companyId, status: "ACTIVE" }, orderBy: { name: "asc" } });
   if (!category) throw new Error("At least one item category is required.");
   return category;
+}
+
+async function resolveCategoryId(tx: Tx, companyId: string, categoryId?: string) {
+  if (categoryId) {
+    const category = await tx.category.findFirst({ where: { id: categoryId, companyId, status: RecordStatus.ACTIVE } });
+    if (!category) throw new Error("categoryId is invalid.");
+    return category.id;
+  }
+  return (await findCategory(tx, companyId)).id;
+}
+
+async function resolveBrandId(tx: Tx, companyId: string, brandId?: string) {
+  if (!brandId) return null;
+  const brand = await tx.brand.findFirst({ where: { id: brandId, companyId, status: RecordStatus.ACTIVE } });
+  if (!brand) throw new Error("brandId is invalid.");
+  return brand.id;
 }
 
 export async function createCustomer(context: Context, input: MasterInput) {
@@ -256,13 +274,15 @@ export async function createItem(context: Context, input: MasterInput) {
     await enforcePermission(tx, context.userId, "items", PermissionAction.CREATE);
     const itemCode = code(input.code);
     await ensureUnique(tx, "item", context.companyId, "code", itemCode);
-    const category = await findCategory(tx, context.companyId);
+    const categoryId = await resolveCategoryId(tx, context.companyId, input.categoryId);
+    const brandId = await resolveBrandId(tx, context.companyId, input.brandId);
     const item = await tx.item.create({
       data: {
         companyId: context.companyId,
         code: itemCode,
         name: name(input.name),
-        categoryId: category.id,
+        categoryId,
+        brandId,
         cylinderWeightKg: input.cylinderWeightKg,
         defaultSecurity: input.defaultSecurity ?? 0,
         status: cleanStatus(input.status),
@@ -279,9 +299,19 @@ export async function updateItem(context: Context, id: string, input: MasterInpu
     const before = await tx.item.findFirstOrThrow({ where: { id, companyId: context.companyId } });
     const itemCode = code(input.code);
     await ensureUnique(tx, "item", context.companyId, "code", itemCode, id);
+    const categoryId = await resolveCategoryId(tx, context.companyId, input.categoryId ?? before.categoryId);
+    const brandId = input.brandId !== undefined ? await resolveBrandId(tx, context.companyId, input.brandId) : before.brandId;
     const item = await tx.item.update({
       where: { id },
-      data: { code: itemCode, name: name(input.name), cylinderWeightKg: input.cylinderWeightKg, defaultSecurity: input.defaultSecurity ?? 0, status: cleanStatus(input.status) },
+      data: {
+        code: itemCode,
+        name: name(input.name),
+        categoryId,
+        brandId,
+        cylinderWeightKg: input.cylinderWeightKg,
+        defaultSecurity: input.defaultSecurity ?? 0,
+        status: cleanStatus(input.status),
+      },
     });
     await writeAuditLog(tx, { companyId: context.companyId, userId: context.userId, action: AuditAction.UPDATE, entityType: "Item", entityId: id, before, after: item });
     return item;

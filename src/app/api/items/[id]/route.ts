@@ -11,6 +11,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     const item = await updateItem(context, id, {
       code: stringField(body, "code"),
       name: stringField(body, "name"),
+      categoryId: optionalStringField(body, "categoryId"),
+      brandId: optionalStringField(body, "brandId"),
       cylinderWeightKg: optionalPositiveNumberField(body, "cylinderWeightKg"),
       defaultSecurity: optionalPositiveNumberField(body, "defaultSecurity"),
       status: optionalStringField(body, "status") as never,
