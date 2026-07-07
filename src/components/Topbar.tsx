@@ -52,18 +52,35 @@ export function Topbar({ shell, permissions }: { shell: AppShellContext; permiss
 
         {(() => {
           const canSales = canAccess(permissions, "sale-lpg", "VIEW");
-          if (!canSales) return null;
+          const canPurchases = canAccess(permissions, "purchase-filled-cylinders", "VIEW");
+          if (!canSales && !canPurchases) return null;
           return (
-            <Link
-              href="/sales"
-              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-white shadow-sm transition-all hover:brightness-110 active:scale-95"
-              style={{ background: 'var(--flame-gradient)', boxShadow: 'var(--skeu-shadow-btn)' }}
-            >
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 7h16" /><path d="M7 4h10l2 3v13H5V7l2-3z" /><path d="M9 11h6" /><path d="M9 15h4" />
-              </svg>
-              {t("Sales")}
-            </Link>
+            <div className="flex items-center gap-2">
+              {canSales ? (
+                <Link
+                  href="/sales"
+                  className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-white shadow-sm transition-all hover:brightness-110 active:scale-95"
+                  style={{ background: "var(--flame-gradient)", boxShadow: "var(--skeu-shadow-btn)" }}
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 7h16" /><path d="M7 4h10l2 3v13H5V7l2-3z" /><path d="M9 11h6" /><path d="M9 15h4" />
+                  </svg>
+                  {t("Sales")}
+                </Link>
+              ) : null}
+              {canPurchases ? (
+                <Link
+                  href="/purchases"
+                  className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-white shadow-sm transition-all hover:brightness-110 active:scale-95"
+                  style={{ background: "linear-gradient(180deg, #4f46e5, #4338ca)", boxShadow: "var(--skeu-shadow-btn)" }}
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 7h16" /><path d="M7 4h10l2 3v13H5V7l2-3z" /><path d="M9 11l2 2 4-4" /><path d="M9 17h6" />
+                  </svg>
+                  {t("Purchases")}
+                </Link>
+              ) : null}
+            </div>
           );
         })()}
 

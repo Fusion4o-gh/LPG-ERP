@@ -29,10 +29,17 @@ test("resolveModule maps sale operations routes to sales module", () => {
   assert.equal(resolved?.activeTab?.label, "Sale LPG");
 });
 
-test("resolveModule maps purchase operations routes to stock module", () => {
-  const resolved = navigation.resolveModule("/operations/purchase-filled-cylinder");
-  assert.equal(resolved?.module.id, "stock");
+test("resolveModule maps purchase routes to purchases module", () => {
+  const resolved = navigation.resolveModule("/purchases/filled-cylinder");
+  assert.equal(resolved?.module.id, "purchases");
   assert.equal(resolved?.activeTab?.label, "Purchase Filled Cylinder");
+});
+
+test("resolveModule maps stock routes without purchase screens", () => {
+  const resolved = navigation.resolveModule("/sale-purchase/cylinder-conversion");
+  assert.equal(resolved?.module.id, "stock");
+  assert.equal(resolved?.activeTab?.label, "Cylinder Conversion");
+  assert.equal(navigation.resolveModule("/operations/purchase-filled-cylinder"), null);
 });
 
 test("resolveModule hides tab bar context on dashboard and print routes", () => {

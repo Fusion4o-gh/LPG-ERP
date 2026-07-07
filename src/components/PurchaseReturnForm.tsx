@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api-client";
+import { purchaseRoutes } from "@/lib/purchase-routes";
 import { ApiError } from "./ApiError";
 import { PageHeader } from "./PageHeader";
 import { SubmitButton } from "./SubmitButton";
@@ -158,7 +159,6 @@ export function PurchaseReturnForm({ kind }: { kind: ReturnKind }) {
   }
 
   const title = kind === "Cylinder" ? "Purchase Return Cylinder" : "Purchase Return Other";
-  const printType = kind === "Cylinder" ? "purchase-return-cylinder" : "purchase-return-other";
 
   return (
     <>
@@ -173,7 +173,7 @@ export function PurchaseReturnForm({ kind }: { kind: ReturnKind }) {
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
             <span className="text-slate-600">Return number: <span className="font-semibold text-slate-900">{printDocumentNo}</span></span>
-            <Link href={`/returns/${printType}/print/${encodeURIComponent(printDocumentNo)}`} className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
+            <Link href={kind === "Cylinder" ? purchaseRoutes.returnCylinder.print(printDocumentNo) : purchaseRoutes.returnOther.print(printDocumentNo)} className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
               Open Print View
             </Link>
           </div>

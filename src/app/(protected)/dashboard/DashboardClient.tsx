@@ -5,6 +5,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { apiGet } from "@/lib/api-client";
 import { ApiError } from "@/components/ApiError";
+import { purchaseRoutes } from "@/lib/purchase-routes";
 
 type KpiData = {
   todayCash: number;
@@ -55,7 +56,7 @@ type DashboardData = {
 const QUICK_LINKS = [
   { label: "Single Sale", href: "/operations/sale-lpg/add" },
   { label: "Complete Day Sale", href: "/operations/complete-day-sale" },
-  { label: "Purchase", href: "/operations/purchase-filled-cylinder" },
+  { label: "Purchase", href: purchaseRoutes.hub },
   { label: "Payment", href: "/payments/cash-payment" },
   { label: "Receipt", href: "/payments/cash-receipt" },
   { label: "Cylinder Return", href: "/operations/cylinder-return" },

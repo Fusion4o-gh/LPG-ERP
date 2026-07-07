@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { apiGet } from "@/lib/api-client";
+import { purchaseRoutes } from "@/lib/purchase-routes";
 import { ApiError } from "./ApiError";
 import { PageHeader } from "./PageHeader";
 
@@ -102,7 +103,7 @@ export function PurchaseFilledCylinderList() {
         title="Manage Purchase Filled"
         description="Search posted GIRN receipts and start new filled-cylinder purchases."
         actions={
-          <Link href="/operations/purchase-filled-cylinder/add" className="btn-primary-sm">
+          <Link href={purchaseRoutes.filled.add} className="btn-primary-sm">
             + Add New
           </Link>
         }
@@ -192,7 +193,7 @@ export function PurchaseFilledCylinderList() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1.5">
                         <Link
-                          href={`/operations/purchase-filled-cylinder/print/${encodeURIComponent(row.receiptNo)}`}
+                          href={purchaseRoutes.filled.print(row.receiptNo)}
                           className="inline-flex h-8 items-center justify-center rounded border border-blue-200 bg-blue-50 px-2 text-xs font-semibold text-blue-700 hover:bg-blue-100"
                         >
                           Print

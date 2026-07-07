@@ -35,6 +35,12 @@ const MODULE_THEME: Record<string, ModuleTheme> = {
     bar: "bg-emerald-500",
     row: "bg-emerald-50 text-emerald-800",
   },
+  purchases: {
+    idle: "border-indigo-100 bg-indigo-50 text-indigo-600",
+    active: "border-transparent bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-sm",
+    bar: "bg-indigo-500",
+    row: "bg-indigo-50 text-indigo-800",
+  },
   stock: {
     idle: "border-sky-100 bg-sky-50 text-sky-600",
     active: "border-transparent bg-gradient-to-br from-sky-500 to-teal-500 text-white shadow-sm",
@@ -117,6 +123,14 @@ function SidebarIcon({ name, className }: { name: string; className: string }) {
         <path d="M7 4h10l2 3v13H5V7l2-3z" />
         <path d="M9 11h6" />
         <path d="M9 15h4" />
+      </>
+    ),
+    purchases: (
+      <>
+        <path d="M4 7h16" />
+        <path d="M7 4h10l2 3v13H5V7l2-3z" />
+        <path d="M9 11l2 2 4-4" />
+        <path d="M9 17h6" />
       </>
     ),
     returns: (

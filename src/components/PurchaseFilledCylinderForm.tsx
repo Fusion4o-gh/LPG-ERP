@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api-client";
 import { emptySettlement, purchaseSettlementPayload } from "@/lib/settlement";
+import { purchaseRoutes } from "@/lib/purchase-routes";
 import { useCompanyFormSettings, usePostSaveNavigation } from "@/lib/use-company-form-settings";
 import { ApiError } from "./ApiError";
 import { KgPriceField } from "./KgPriceField";
@@ -68,7 +69,7 @@ function validateLine(line: PurchaseLine, label: string) {
 
 export function PurchaseFilledCylinderForm() {
   const { showDefaultDate, redirectOnSamePage, defaultTransactionDate, loaded: companySettingsLoaded } = useCompanyFormSettings();
-  const { afterSave } = usePostSaveNavigation(redirectOnSamePage, "/operations/purchase-filled-cylinder");
+  const { afterSave } = usePostSaveNavigation(redirectOnSamePage, purchaseRoutes.filled.list);
   const [vendors, setVendors] = useState<Lookup[]>([]);
   const [items, setItems] = useState<Lookup[]>([]);
   const [vendorId, setVendorId] = useState("");
@@ -331,7 +332,7 @@ export function PurchaseFilledCylinderForm() {
               Receipt number: <span className="font-semibold text-slate-900">{printDocumentNo}</span>
             </span>
             <Link
-              href={`/operations/purchase-filled-cylinder/print/${encodeURIComponent(printDocumentNo)}`}
+              href={purchaseRoutes.filled.print(printDocumentNo)}
               className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
             >
               Open Print View

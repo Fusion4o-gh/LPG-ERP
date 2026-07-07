@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { purchaseRoutes } from "@/lib/purchase-routes";
 import { ManageDocumentList, formatDate, formatMoney } from "./ManageDocumentList";
 
 function documentActions({
@@ -57,7 +58,7 @@ export function PurchaseEmptyCylinderList() {
     <ManageDocumentList<PurchaseRow>
       title="Manage Purchase Empty"
       description="Search posted empty-cylinder purchases and create new receipts."
-      addHref="/sale-purchase/purchase-empty-cylinder/add"
+      addHref={purchaseRoutes.empty.add}
       apiPath="/api/purchases/empty-cylinder"
       rowsKey="purchases"
       resultsLabel="Purchase Empty"
@@ -73,7 +74,7 @@ export function PurchaseEmptyCylinderList() {
         documentActions({
           documentNo: row.receiptNo,
           voucherId: row.voucherId,
-          printHref: "/sale-purchase/purchase-empty-cylinder/print",
+          printHref: `${purchaseRoutes.empty.list}/print`,
           reversalKind: "purchase-empty",
         })
       }
@@ -86,7 +87,7 @@ export function PurchaseOtherList() {
     <ManageDocumentList<PurchaseRow>
       title="Manage Purchase Other"
       description="Search posted other purchases and create new receipts."
-      addHref="/sale-purchase/purchase-other/add"
+      addHref={purchaseRoutes.other.add}
       apiPath="/api/purchases/other"
       rowsKey="purchases"
       resultsLabel="Purchase Other"
@@ -102,7 +103,7 @@ export function PurchaseOtherList() {
         documentActions({
           documentNo: row.receiptNo,
           voucherId: row.voucherId,
-          printHref: "/sale-purchase/purchase-other/print",
+          printHref: `${purchaseRoutes.other.list}/print`,
           reversalKind: "purchase-other",
         })
       }

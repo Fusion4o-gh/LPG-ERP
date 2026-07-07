@@ -1,5 +1,6 @@
 import { PermissionAction } from "@prisma/client";
 import { prisma } from "../../lib/prisma.ts";
+import { purchaseRoutes } from "../../../lib/purchase-routes.ts";
 import { enforcePermission } from "../rbac/enforce.ts";
 
 type Context = { companyId: string; financialYearId: string; userId: string };
@@ -95,7 +96,7 @@ export async function globalSearch(context: Context, query: string, limit = 20):
           type: "Purchase",
           label: `Receipt #${purchase.sourceId}`,
           subtitle: "Purchase filled cylinder",
-          href: `/operations/purchase-filled-cylinder/print/${encodeURIComponent(purchase.sourceId)}`,
+          href: purchaseRoutes.filled.print(purchase.sourceId),
         });
       }
     }

@@ -74,10 +74,15 @@ const salesTabs: NavTab[] = [
   { label: "Empty Sale", href: "/sale-purchase/empty-sale", module: "empty-sales" },
 ];
 
+const purchasesTabs: NavTab[] = [
+  { label: "Purchase Filled Cylinder", href: "/purchases/filled-cylinder", module: "purchase-filled-cylinders" },
+  { label: "Purchase Empty Cylinder", href: "/purchases/empty-cylinder", module: "purchase-filled-cylinders" },
+  { label: "Purchase Other", href: "/purchases/other", module: "purchase-filled-cylinders" },
+  { label: "Purchase Return Cylinder", href: "/purchases/return-cylinder", module: "purchase-filled-cylinders" },
+  { label: "Purchase Return Other", href: "/purchases/return-other", module: "purchase-filled-cylinders" },
+];
+
 const stockTabs: NavTab[] = [
-  { label: "Purchase Filled Cylinder", href: "/operations/purchase-filled-cylinder", module: "purchase-filled-cylinders" },
-  { label: "Purchase Empty Cylinder", href: "/sale-purchase/purchase-empty-cylinder", module: "purchase-filled-cylinders" },
-  { label: "Purchase Other", href: "/sale-purchase/purchase-other", module: "purchase-filled-cylinders" },
   { label: "Cylinder Conversion", href: "/sale-purchase/cylinder-conversion", module: "cylinder-conversions" },
   { label: "Stock Locations", href: "/configuration/stock-locations", module: "stock-locations" },
   { label: "Warehouse Transfer", href: "/operations/warehouse-transfer", module: "stock-ledger" },
@@ -86,8 +91,6 @@ const stockTabs: NavTab[] = [
 
 const returnsTabs: NavTab[] = [
   { label: "Cylinder Return", href: "/operations/cylinder-return", module: "cylinder-returns" },
-  { label: "Purchase Return Cylinder", href: "/returns/purchase-return-cylinder", module: "purchase-filled-cylinders" },
-  { label: "Purchase Return Other", href: "/returns/purchase-return-other", module: "purchase-filled-cylinders" },
 ];
 
 const paymentTabs: NavTab[] = [
@@ -227,14 +230,19 @@ export const NAV_MODULES: NavModule[] = [
     tabs: salesTabs,
   },
   {
+    id: "purchases",
+    label: "Purchases",
+    icon: "purchases",
+    defaultHref: "/purchases",
+    matchPrefixes: ["/purchases"],
+    tabs: purchasesTabs,
+  },
+  {
     id: "stock",
     label: "Stock",
     icon: "warehouse",
-    defaultHref: "/operations/purchase-filled-cylinder",
+    defaultHref: "/sale-purchase/cylinder-conversion",
     matchPrefixes: [
-      "/operations/purchase-filled-cylinder",
-      "/sale-purchase/purchase-empty-cylinder",
-      "/sale-purchase/purchase-other",
       "/sale-purchase/cylinder-conversion",
       "/configuration/stock-locations",
       "/operations/warehouse-transfer",
@@ -247,7 +255,7 @@ export const NAV_MODULES: NavModule[] = [
     label: "Returns",
     icon: "returns",
     defaultHref: "/operations/cylinder-return",
-    matchPrefixes: ["/operations/cylinder-return", "/returns"],
+    matchPrefixes: ["/operations/cylinder-return"],
     tabs: returnsTabs,
   },
   {

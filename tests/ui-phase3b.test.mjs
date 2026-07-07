@@ -33,8 +33,12 @@ test("Phase 3B reusable UI components exist", async () => {
 
 test("Phase 3B operational pages are wired to existing APIs", async () => {
   const routes = [
-    "src/app/(protected)/operations/purchase-filled-cylinder/page.tsx",
-    "src/app/(protected)/operations/purchase-filled-cylinder/add/page.tsx",
+    "src/app/(protected)/purchases/filled-cylinder/page.tsx",
+    "src/app/(protected)/purchases/filled-cylinder/add/page.tsx",
+    "src/app/(protected)/purchases/empty-cylinder/page.tsx",
+    "src/app/(protected)/purchases/empty-cylinder/add/page.tsx",
+    "src/app/(protected)/purchases/other/page.tsx",
+    "src/app/(protected)/purchases/other/add/page.tsx",
     "src/app/(protected)/operations/sale-lpg/page.tsx",
     "src/app/(protected)/operations/sale-lpg/add/page.tsx",
     "src/app/(protected)/operations/complete-day-sale/page.tsx",
@@ -48,10 +52,6 @@ test("Phase 3B operational pages are wired to existing APIs", async () => {
     "src/app/(protected)/payments/bank-payment/page.tsx",
     "src/app/(protected)/payments/security-receipt/page.tsx",
     "src/app/(protected)/payments/security-receipt/add/page.tsx",
-    "src/app/(protected)/sale-purchase/purchase-empty-cylinder/page.tsx",
-    "src/app/(protected)/sale-purchase/purchase-empty-cylinder/add/page.tsx",
-    "src/app/(protected)/sale-purchase/purchase-other/page.tsx",
-    "src/app/(protected)/sale-purchase/purchase-other/add/page.tsx",
     "src/app/(protected)/sale-purchase/empty-sale/page.tsx",
     "src/app/(protected)/sale-purchase/empty-sale/add/page.tsx",
     "src/app/(protected)/sale-purchase/decanting-sale/page.tsx",
@@ -60,13 +60,13 @@ test("Phase 3B operational pages are wired to existing APIs", async () => {
 
   const listMatchers = [
     ["sale-lpg/page.tsx", /SaleLpgList/],
-    ["purchase-filled-cylinder/page.tsx", /PurchaseFilledCylinderList/],
+    ["purchases/filled-cylinder/page.tsx", /PurchaseFilledCylinderList/],
     ["cylinder-return/page.tsx", /CylinderReturnList/],
     ["security-receipt/page.tsx", /SecurityReceiptList/],
     ["cash-receipt/page.tsx", /PaymentVoucherList/],
     ["cash-payment/page.tsx", /PaymentVoucherList/],
-    ["purchase-empty-cylinder/page.tsx", /PurchaseEmptyCylinderList/],
-    ["purchase-other/page.tsx", /PurchaseOtherList/],
+    ["purchases/empty-cylinder/page.tsx", /PurchaseEmptyCylinderList/],
+    ["purchases/other/page.tsx", /PurchaseOtherList/],
     ["empty-sale/page.tsx", /EmptySaleList/],
     ["decanting-sale/page.tsx", /DecantingSaleList/],
   ];

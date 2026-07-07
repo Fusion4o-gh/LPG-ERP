@@ -10,6 +10,7 @@ export const UR: Record<string, string> = {
   Module: "ماڈیول",
   Configuration: "ترتیب",
   Sales: "فروخت",
+  Purchases: "خریداری",
   Stock: "اسٹاک",
   Returns: "واپسی",
   "Payment / Receipt": "ادائیگی / رسید",
@@ -84,18 +85,20 @@ export const UR: Record<string, string> = {
   "Decanting Sale": "ڈی کینٹنگ فروخت",
   "Empty Sale": "خالی سلنڈر فروخت",
 
-  // Stock tabs
+  // Purchases tabs
   "Purchase Filled Cylinder": "بھرا سلنڈر خریداری",
   "Purchase Empty Cylinder": "خالی سلنڈر خریداری",
   "Purchase Other": "دیگر خریداری",
+  "Purchase Return Cylinder": "سلنڈر خریداری واپسی",
+  "Purchase Return Other": "دیگر خریداری واپسی",
+
+  // Stock tabs
   "Cylinder Conversion": "سلنڈر تبدیلی",
   "Warehouse Transfer": "گودام منتقلی",
   "Physical Count": "فزیکل گنتی",
 
   // Returns tabs
   "Cylinder Return": "سلنڈر واپسی",
-  "Purchase Return Cylinder": "سلنڈر خریداری واپسی",
-  "Purchase Return Other": "دیگر خریداری واپسی",
 
   // Payment / Receipt tabs
   "Cash Payment": "نقد ادائیگی",
