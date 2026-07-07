@@ -143,4 +143,37 @@ export const UR: Record<string, string> = {
   Purchases: "خریداری",
   Ledgers: "لیجرز",
   Financial: "مالیاتی",
+
+  // Printable invoice labels
+  "LPG Management System": "ایل پی جی مینجمنٹ سسٹم",
+  "Document Number": "دستاویز نمبر",
+  Date: "تاریخ",
+  Generated: "تیار شدہ",
+  "Invoice Language": "انوائس زبان",
+  Vendor: "وینڈر",
+  Customer: "کسٹمر",
+  Account: "اکاؤنٹ",
+  Section: "حصہ",
+  Item: "آئٹم",
+  State: "حالت",
+  Direction: "سمت",
+  Quantity: "مقدار",
+  "Unit Price": "یونٹ قیمت",
+  GST: "جی ایس ٹی",
+  "Ex-GST": "جی ایس ٹی کے بغیر",
+  "Inc-GST": "جی ایس ٹی سمیت",
+  Amount: "رقم",
+  Description: "تفصیل",
+  Debit: "ڈیبٹ",
+  Credit: "کریڈٹ",
+  "Total Debit": "کل ڈیبٹ",
+  "Total Credit": "کل کریڈٹ",
+  "No voucher lines.": "کوئی واؤچر لائن نہیں۔",
+  Print: "پرنٹ",
+  "Loading printable document...": "قابلِ پرنٹ دستاویز لوڈ ہو رہی ہے...",
 };
+
+export function translatePrintLabel(label: string, invoiceLanguage?: string) {
+  if (invoiceLanguage !== "Urdu") return label;
+  return UR[label] ?? label;
+}

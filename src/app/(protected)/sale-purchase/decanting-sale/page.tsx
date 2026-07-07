@@ -1,5 +1,5 @@
-import { DecantingSaleForm } from "@/components/DecantingSaleForm";
+import { DecantingSaleList } from "@/components/OperationalDocumentLists";
 
 export default function DecantingSalePage() {
-  return <DecantingSaleForm />;
+  return <DecantingSaleList />;
 }

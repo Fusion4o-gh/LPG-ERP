@@ -1,6 +1,7 @@
 import { prisma } from "../../../../lib/prisma.ts";
 import { verifyPassword } from "../../../../server/auth/password.ts";
 import { createSession, sessionCookieValue } from "../../../../server/auth/session.ts";
+import { clearRateLimit, clientIpFromRequest, isRateLimited } from "../../../../server/auth/rate-limit.ts";
 import { fail, ok, serviceError } from "../../../../server/api/responses.ts";
 import { readJson, stringField } from "../../../../server/api/validation.ts";
 import { DEFAULT_THEME, isThemeId, themeCookieValue } from "../../../../lib/theme.ts";
@@ -11,6 +12,12 @@ export async function POST(request: Request) {
     const loginId = stringField(body, "loginId");
     const password = stringField(body, "password");
     const financialYearId = typeof body.financialYearId === "string" && body.financialYearId ? body.financialYearId : undefined;
+
+    const rateLimitKey = `login:${clientIpFromRequest(request)}:${loginId}`;
+    if (isRateLimited(rateLimitKey)) {
+      return fail("Too many login attempts. Try again later.", 429, "RATE_LIMITED");
+    }
+
     const user = await prisma.user.findFirst({
       where: { loginId, status: "ACTIVE" },
       select: { id: true, name: true, loginId: true, companyId: true, financialYearId: true, passwordHash: true, uiTheme: true },
@@ -28,6 +35,7 @@ export async function POST(request: Request) {
       await prisma.user.update({ where: { id: user.id }, data: { financialYearId } });
     }
 
+    clearRateLimit(rateLimitKey);
     const session = await createSession(user.id);
     const theme = isThemeId(user.uiTheme) ? user.uiTheme : DEFAULT_THEME;
     const headers = new Headers();

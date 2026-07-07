@@ -19,7 +19,7 @@ export default async function SalesPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 max-w-xl">
         <Link
-          href="/operations/sale-lpg"
+          href="/operations/sale-lpg/add"
           className="card surface-press flex items-start gap-4 rounded-xl p-5 transition-all hover:brightness-95"
         >
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-xl font-bold text-white" style={{ background: 'var(--flame-gradient)', boxShadow: 'var(--skeu-shadow-sm)' }}>

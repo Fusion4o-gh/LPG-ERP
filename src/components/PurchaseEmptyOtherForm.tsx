@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api-client";
-import { emptySettlement } from "@/lib/settlement";
+import { emptySettlement, purchaseSettlementPayload } from "@/lib/settlement";
 import { ApiError } from "./ApiError";
 import { PageHeader } from "./PageHeader";
 import { SettlementPanel } from "./SettlementPanel";
@@ -147,12 +147,7 @@ export function PurchaseEmptyOtherForm({ kind }: { kind: PurchaseKind }) {
       transactionDate,
       remarks,
       lines: preparedLines,
-      discount: numberValue(settlement.discount),
-      amountPaid: numberValue(settlement.amountReceived),
-      payMode: settlement.receiveMode,
-      bankId: settlement.bankId || undefined,
-      chequeNo: settlement.chequeNo || undefined,
-      chequeDate: settlement.chequeDate || undefined,
+      ...purchaseSettlementPayload(settlement),
     };
   }
 

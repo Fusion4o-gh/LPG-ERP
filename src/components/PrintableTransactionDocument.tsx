@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { apiGet } from "@/lib/api-client";
+import { translatePrintLabel } from "@/lib/i18n/dictionary";
 import { ApiError } from "./ApiError";
 
 type PrintableDocument = {
@@ -37,46 +38,48 @@ export function PrintableTransactionDocument({ documentType, documentNo }: { doc
   const hasSections = document?.lineItems.some((line) => line.section !== undefined) ?? false;
 
   const isUrdu = document?.invoiceLanguage === "Urdu";
+  const label = (text: string) => translatePrintLabel(text, document?.invoiceLanguage);
 
   return (
     <section
       data-report-print
       className={`mx-auto max-w-4xl space-y-4 bg-white p-5 shadow-sm print:shadow-none ${isUrdu ? "gulzar-regular" : ""}`}
+      dir={isUrdu ? "rtl" : "ltr"}
     >
       <div data-print-hidden className="flex justify-end">
         <button type="button" onClick={() => window.print()} className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
-          Print
+          {label("Print")}
         </button>
       </div>
       <ApiError message={error} />
-      {!document && !error ? <div className="text-sm text-slate-600">Loading printable document...</div> : null}
+      {!document && !error ? <div className="text-sm text-slate-600">{label("Loading printable document...")}</div> : null}
       {document ? (
         <>
           <header className="border-b border-slate-200 pb-4">
-            <div className="text-2xl font-semibold text-slate-950">{document.heading}</div>
+            <div className="text-2xl font-semibold text-slate-950">{label(document.heading)}</div>
             <div className="mt-1 text-lg font-medium text-slate-800">{document.type}</div>
           </header>
 
           <dl className="grid gap-3 text-sm md:grid-cols-2">
             <div>
-              <dt className="font-semibold text-slate-600">Document Number</dt>
+              <dt className="font-semibold text-slate-600">{label("Document Number")}</dt>
               <dd className="text-slate-950">{document.number}</dd>
             </div>
             <div>
-              <dt className="font-semibold text-slate-600">Date</dt>
+              <dt className="font-semibold text-slate-600">{label("Date")}</dt>
               <dd className="text-slate-950">{document.date}</dd>
             </div>
             <div>
-              <dt className="font-semibold text-slate-600">{document.partyLabel}</dt>
+              <dt className="font-semibold text-slate-600">{label(document.partyLabel)}</dt>
               <dd className="text-slate-950">{document.partyName || "N/A"}</dd>
             </div>
             <div>
-              <dt className="font-semibold text-slate-600">Generated</dt>
+              <dt className="font-semibold text-slate-600">{label("Generated")}</dt>
               <dd className="text-slate-950">{new Date(document.generatedAt).toLocaleString()}</dd>
             </div>
             {document.invoiceLanguage ? (
               <div>
-                <dt className="font-semibold text-slate-600">Invoice Language</dt>
+                <dt className="font-semibold text-slate-600">{label("Invoice Language")}</dt>
                 <dd className="text-slate-950">{document.invoiceLanguage}</dd>
               </div>
             ) : null}
@@ -86,15 +89,17 @@ export function PrintableTransactionDocument({ documentType, documentNo }: { doc
             <table className="w-full border-collapse text-sm">
               <thead className="bg-slate-100 text-left">
                 <tr>
-                  {hasSections ? <th className="border border-slate-200 px-3 py-2">Section</th> : null}
-                  <th className="border border-slate-200 px-3 py-2">Item</th>
-                  <th className="border border-slate-200 px-3 py-2">State</th>
-                  <th className="border border-slate-200 px-3 py-2">Direction</th>
-                  <th className="border border-slate-200 px-3 py-2 text-right">Quantity</th>
-                  {hasLineAmounts ? <th className="border border-slate-200 px-3 py-2 text-right">Unit Price</th> : null}
-                  {hasGstBreakdown ? <th className="border border-slate-200 px-3 py-2 text-right">GST</th> : null}
-                  {hasGstBreakdown ? <th className="border border-slate-200 px-3 py-2 text-right">Ex-GST</th> : null}
-                  {hasLineAmounts ? <th className="border border-slate-200 px-3 py-2 text-right">{hasGstBreakdown ? "Inc-GST" : "Amount"}</th> : null}
+                  {hasSections ? <th className="border border-slate-200 px-3 py-2">{label("Section")}</th> : null}
+                  <th className="border border-slate-200 px-3 py-2">{label("Item")}</th>
+                  <th className="border border-slate-200 px-3 py-2">{label("State")}</th>
+                  <th className="border border-slate-200 px-3 py-2">{label("Direction")}</th>
+                  <th className="border border-slate-200 px-3 py-2 text-right">{label("Quantity")}</th>
+                  {hasLineAmounts ? <th className="border border-slate-200 px-3 py-2 text-right">{label("Unit Price")}</th> : null}
+                  {hasGstBreakdown ? <th className="border border-slate-200 px-3 py-2 text-right">{label("GST")}</th> : null}
+                  {hasGstBreakdown ? <th className="border border-slate-200 px-3 py-2 text-right">{label("Ex-GST")}</th> : null}
+                  {hasLineAmounts ? (
+                    <th className="border border-slate-200 px-3 py-2 text-right">{hasGstBreakdown ? label("Inc-GST") : label("Amount")}</th>
+                  ) : null}
                 </tr>
               </thead>
               <tbody>
@@ -118,10 +123,10 @@ export function PrintableTransactionDocument({ documentType, documentNo }: { doc
           <table className="w-full border-collapse text-sm">
             <thead className="bg-slate-100 text-left">
               <tr>
-                <th className="border border-slate-200 px-3 py-2">Account</th>
-                <th className="border border-slate-200 px-3 py-2">Description</th>
-                <th className="border border-slate-200 px-3 py-2 text-right">Debit</th>
-                <th className="border border-slate-200 px-3 py-2 text-right">Credit</th>
+                <th className="border border-slate-200 px-3 py-2">{label("Account")}</th>
+                <th className="border border-slate-200 px-3 py-2">{label("Description")}</th>
+                <th className="border border-slate-200 px-3 py-2 text-right">{label("Debit")}</th>
+                <th className="border border-slate-200 px-3 py-2 text-right">{label("Credit")}</th>
               </tr>
             </thead>
             <tbody>
@@ -137,7 +142,7 @@ export function PrintableTransactionDocument({ documentType, documentNo }: { doc
               ) : (
                 <tr>
                   <td className="border border-slate-200 px-3 py-3 text-slate-500" colSpan={4}>
-                    No voucher lines.
+                    {label("No voucher lines.")}
                   </td>
                 </tr>
               )}
@@ -146,22 +151,20 @@ export function PrintableTransactionDocument({ documentType, documentNo }: { doc
 
           <div className="grid gap-2 border-t border-slate-200 pt-3 text-sm md:grid-cols-3">
             <div>
-              <span className="font-semibold text-slate-600">Quantity: </span>
+              <span className="font-semibold text-slate-600">{label("Quantity")}: </span>
               {display(document.totals.quantity)}
             </div>
             <div>
-              <span className="font-semibold text-slate-600">Total Debit: </span>
+              <span className="font-semibold text-slate-600">{label("Total Debit")}: </span>
               {display(document.totals.totalDebit)}
             </div>
             <div>
-              <span className="font-semibold text-slate-600">Total Credit: </span>
+              <span className="font-semibold text-slate-600">{label("Total Credit")}: </span>
               {display(document.totals.totalCredit)}
             </div>
           </div>
 
-          <footer className="border-t border-slate-200 pt-3 text-center text-[11px] text-slate-500">
-            LPG Management System
-          </footer>
+          <footer className="border-t border-slate-200 pt-3 text-center text-[11px] text-slate-500">{label("LPG Management System")}</footer>
         </>
       ) : null}
     </section>

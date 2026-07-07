@@ -34,19 +34,54 @@ test("Phase 3B reusable UI components exist", async () => {
 test("Phase 3B operational pages are wired to existing APIs", async () => {
   const routes = [
     "src/app/(protected)/operations/purchase-filled-cylinder/page.tsx",
+    "src/app/(protected)/operations/purchase-filled-cylinder/add/page.tsx",
     "src/app/(protected)/operations/sale-lpg/page.tsx",
+    "src/app/(protected)/operations/sale-lpg/add/page.tsx",
     "src/app/(protected)/operations/complete-day-sale/page.tsx",
     "src/app/(protected)/operations/cylinder-return/page.tsx",
+    "src/app/(protected)/operations/cylinder-return/add/page.tsx",
     "src/app/(protected)/payments/cash-receipt/page.tsx",
+    "src/app/(protected)/payments/cash-receipt/add/page.tsx",
     "src/app/(protected)/payments/cash-payment/page.tsx",
+    "src/app/(protected)/payments/cash-payment/add/page.tsx",
     "src/app/(protected)/payments/bank-receipt/page.tsx",
     "src/app/(protected)/payments/bank-payment/page.tsx",
     "src/app/(protected)/payments/security-receipt/page.tsx",
+    "src/app/(protected)/payments/security-receipt/add/page.tsx",
+    "src/app/(protected)/sale-purchase/purchase-empty-cylinder/page.tsx",
+    "src/app/(protected)/sale-purchase/purchase-empty-cylinder/add/page.tsx",
+    "src/app/(protected)/sale-purchase/purchase-other/page.tsx",
+    "src/app/(protected)/sale-purchase/purchase-other/add/page.tsx",
+    "src/app/(protected)/sale-purchase/empty-sale/page.tsx",
+    "src/app/(protected)/sale-purchase/empty-sale/add/page.tsx",
+    "src/app/(protected)/sale-purchase/decanting-sale/page.tsx",
+    "src/app/(protected)/sale-purchase/decanting-sale/add/page.tsx",
+  ];
+
+  const listMatchers = [
+    ["sale-lpg/page.tsx", /SaleLpgList/],
+    ["purchase-filled-cylinder/page.tsx", /PurchaseFilledCylinderList/],
+    ["cylinder-return/page.tsx", /CylinderReturnList/],
+    ["security-receipt/page.tsx", /SecurityReceiptList/],
+    ["cash-receipt/page.tsx", /PaymentVoucherList/],
+    ["cash-payment/page.tsx", /PaymentVoucherList/],
+    ["purchase-empty-cylinder/page.tsx", /PurchaseEmptyCylinderList/],
+    ["purchase-other/page.tsx", /PurchaseOtherList/],
+    ["empty-sale/page.tsx", /EmptySaleList/],
+    ["decanting-sale/page.tsx", /DecantingSaleList/],
   ];
 
   for (const route of routes) {
     await exists(route);
-    assert.match(await file(route), /OperationForm|BatchSaleForm|PurchaseFilledCylinderForm|SaleLpgForm|CylinderReturnForm|SecurityReceiptForm/);
+    const page = await file(route);
+    const listMatch = listMatchers.find(([suffix]) => route.endsWith(suffix));
+    if (listMatch) {
+      assert.match(page, listMatch[1]);
+    } else if (route.endsWith("/add/page.tsx")) {
+      assert.match(page, /Form|MultiLinePaymentForm/);
+    } else {
+      assert.match(page, /OperationForm|BatchSaleForm|MultiLinePaymentForm/);
+    }
   }
 });
 
@@ -63,18 +98,19 @@ test("dashboard and navigation use LPG operational terminology", async () => {
 test("Fusion4o branding assets and shell copy are present", async () => {
   const rootLayout = await file("src/app/layout.tsx");
   const loginPage = await file("src/app/(auth)/login/page.tsx");
+  const loginForm = await file("src/components/LoginForm.tsx");
   const sidebar = await file("src/components/Sidebar.tsx");
   const globals = await file("src/app/globals.css");
 
   await exists("public/fusion4o-logo.png");
   assert.match(rootLayout, /LPG Management System/);
   assert.match(rootLayout, /Operational LPG distribution, inventory, accounts, and reporting system/);
-  assert.match(loginPage, /Operational control for LPG distribution businesses/);
-  assert.match(loginPage, /Real-time stock tracking/);
-  assert.match(loginPage + sidebar, /LPG Management System/);
-  assert.match(globals, /--fusion-cyan/);
-  assert.match(globals, /--fusion-blue/);
-  assert.match(globals, /\.fusion-gradient/);
+  assert.match(loginForm, /Sign in to your account/);
+  assert.match(loginPage, /Powered by fusion4o/);
+  assert.match(loginPage + sidebar, /LPG Management System|LPG Management/);
+  assert.match(globals, /--gas-blue/);
+  assert.match(globals, /--flame-orange/);
+  assert.match(globals, /\.accent-tile/);
 });
 
 test("customer cylinder balance page keeps table formatters inside the client boundary", async () => {

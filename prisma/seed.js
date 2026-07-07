@@ -3,6 +3,11 @@ const { scryptSync, randomBytes } = require("node:crypto");
 
 const prisma = new PrismaClient();
 
+const SEED_ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? "4784Shani";
+if (!process.env.SEED_ADMIN_PASSWORD && process.env.NODE_ENV === "production") {
+  console.warn("WARNING: seeding with the default admin password. Set SEED_ADMIN_PASSWORD and change the admin password immediately.");
+}
+
 const modules = [
   "dashboard",
   "company",
@@ -154,14 +159,14 @@ async function main() {
 
   const admin = await prisma.user.upsert({
     where: { companyId_loginId: { companyId: company.id, loginId: "admin" } },
-    update: { financialYearId: financialYear.id, passwordHash: hashPassword("4784Shani") },
+    update: { financialYearId: financialYear.id, passwordHash: hashPassword(SEED_ADMIN_PASSWORD) },
     create: {
       companyId: company.id,
       financialYearId: financialYear.id,
       name: "Administrator",
       loginId: "admin",
       email: "admin@lpg-management.local",
-      passwordHash: hashPassword("4784Shani"),
+      passwordHash: hashPassword(SEED_ADMIN_PASSWORD),
     },
   });
 

@@ -8,6 +8,7 @@ import { canAccess } from "@/lib/permissions";
 import type { AppShellContext } from "@/server/auth/app-shell-context";
 import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { FinancialYearSwitcher } from "./FinancialYearSwitcher";
+import { GlobalSearch } from "./GlobalSearch";
 
 function formatToday() {
   return new Date().toLocaleDateString("en-PK", {
@@ -47,30 +48,7 @@ export function Topbar({ shell, permissions }: { shell: AppShellContext; permiss
       </nav>
 
       <div className="ml-auto flex items-center gap-3">
-        <div className="relative hidden lg:block">
-          <svg
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-steel-400"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-            aria-hidden
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"
-            />
-          </svg>
-          <input
-            type="search"
-            disabled
-            placeholder={t("Search customers, vouchers…")}
-            className="h-8 w-64 rounded-lg px-3 pl-9 text-sm text-steel-600 placeholder:text-steel-400"
-            style={{ background: 'var(--skeu-input)', boxShadow: 'var(--skeu-shadow-inset-sm), 0 0 0 1px rgba(0,0,0,0.04)' }}
-            aria-label="Global search (coming soon)"
-          />
-        </div>
+        <GlobalSearch />
 
         {(() => {
           const canSales = canAccess(permissions, "sale-lpg", "VIEW");

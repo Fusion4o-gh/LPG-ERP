@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api-client";
 import { emptySettlement } from "@/lib/settlement";
+import { useCompanyFormSettings, usePostSaveNavigation } from "@/lib/use-company-form-settings";
 import { ApiError } from "./ApiError";
 import { KgPriceField } from "./KgPriceField";
 import { PageHeader } from "./PageHeader";
@@ -78,10 +79,12 @@ function validateLine(line: SaleLine, label: string) {
 }
 
 export function SaleLpgForm() {
+  const { showDefaultDate, redirectOnSamePage, defaultTransactionDate, loaded: companySettingsLoaded } = useCompanyFormSettings();
+  const { afterSave } = usePostSaveNavigation(redirectOnSamePage, "/operations/sale-lpg");
   const [customers, setCustomers] = useState<Lookup[]>([]);
   const [items, setItems] = useState<Lookup[]>([]);
   const [customerId, setCustomerId] = useState("");
-  const [transactionDate, setTransactionDate] = useState(today);
+  const [transactionDate, setTransactionDate] = useState("");
   const [saleType, setSaleType] = useState("Direct");
   const [remarks, setRemarks] = useState("");
   const [elevenPointEightKgPrice, setElevenPointEightKgPrice] = useState("");
@@ -108,6 +111,7 @@ export function SaleLpgForm() {
   const [locationId, setLocationId] = useState("");
   const [kgPricing, setKgPricing] = useState<Record<string, { unitPrice: string; pricePerKg: string | null; cylinderWeightKg: string | null; usingKgPricing: boolean } | null>>({});
   const [estimatedCost, setEstimatedCost] = useState<Record<string, string | null>>({});
+  const [centralizedPricing, setCentralizedPricing] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -126,6 +130,12 @@ export function SaleLpgForm() {
       .finally(() => setLookupLoading(false));
   }, []);
 
+  useEffect(() => {
+    if (companySettingsLoaded && showDefaultDate && !transactionDate) {
+      setTransactionDate(defaultTransactionDate);
+    }
+  }, [companySettingsLoaded, showDefaultDate, defaultTransactionDate, transactionDate]);
+
   const itemById = useMemo(() => new Map(items.map((item) => [String(item.id), item])), [items]);
 
   function isStandardCylinder(itemId: string) {
@@ -135,10 +145,18 @@ export function SaleLpgForm() {
   }
 
   useEffect(() => {
+    if (centralizedPricing && draft.itemId && kgPricing[draft.itemId]) return;
     if (!elevenPointEightKgPrice || !draft.itemId || draft.unitPrice) return;
     if (!isStandardCylinder(draft.itemId)) return;
     setDraft((current) => ({ ...current, unitPrice: elevenPointEightKgPrice }));
-  }, [elevenPointEightKgPrice, draft.itemId, draft.unitPrice, itemById]);
+  }, [centralizedPricing, elevenPointEightKgPrice, draft.itemId, draft.unitPrice, itemById, kgPricing]);
+
+  useEffect(() => {
+    if (!centralizedPricing || !draft.itemId) return;
+    const pricing = kgPricing[draft.itemId];
+    if (!pricing) return;
+    setDraft((current) => ({ ...current, unitPrice: pricing.unitPrice }));
+  }, [centralizedPricing, draft.itemId, kgPricing]);
 
   useEffect(() => {
     const relevantItemIds = new Set([...lines.map((line) => line.itemId), draft.itemId].filter(Boolean));
@@ -155,18 +173,21 @@ export function SaleLpgForm() {
       filledStock: Record<string, number>;
       kgPricing: Record<string, { unitPrice: string; pricePerKg: string | null; cylinderWeightKg: string | null; usingKgPricing: boolean } | null>;
       estimatedCost: Record<string, string | null>;
+      company?: { centralizedPricing?: boolean };
     }>(`/api/sales/lpg/context?${params.toString()}`)
       .then((data) => {
         setCustomerBalance(data.customerBalance);
         setFilledStock(data.filledStock);
         setKgPricing(data.kgPricing ?? {});
         setEstimatedCost(data.estimatedCost ?? {});
+        setCentralizedPricing(data.company?.centralizedPricing === true);
       })
       .catch(() => {
         setCustomerBalance(null);
         setFilledStock({});
         setKgPricing({});
         setEstimatedCost({});
+        setCentralizedPricing(false);
       });
   }, [customerId, lines, draft.itemId]);
 
@@ -222,9 +243,22 @@ export function SaleLpgForm() {
     if (editingIndex === index) cancelEdit();
   }
 
+  function applyElevenPointEightKgPrice() {
+    const price = elevenPointEightKgPrice;
+    if (!price) return;
+    setLines((current) => current.map((line) => (isStandardCylinder(line.itemId) ? { ...line, unitPrice: price } : line)));
+    if (draft.itemId && isStandardCylinder(draft.itemId)) {
+      setDraft((current) => ({ ...current, unitPrice: price }));
+    }
+  }
+
+  function isCentralizedPriceLocked(itemId: string) {
+    return centralizedPricing && Boolean(kgPricing[itemId]);
+  }
+
   function reset() {
     setCustomerId("");
-    setTransactionDate(today());
+    setTransactionDate(showDefaultDate ? defaultTransactionDate : "");
     setSaleType("Direct");
     setRemarks("");
     setElevenPointEightKgPrice("");
@@ -240,6 +274,7 @@ export function SaleLpgForm() {
     setFilledStock({});
     setLocationId("");
     setKgPricing({});
+    setCentralizedPricing(false);
   }
 
   function payload() {
@@ -288,7 +323,7 @@ export function SaleLpgForm() {
       const issueNo = String(result.issueNo ?? "saved");
       setSuccess(`Saved ${issueNo}.`);
       if (result.ids && issueNo !== "saved") setPrintDocumentNo(issueNo);
-      reset();
+      afterSave(reset);
       apiGet<{ documentNo: string }>("/api/documents/next-number?kind=sale-issue")
         .then((preview) => setPreviewIssueNo(preview.documentNo))
         .catch(() => undefined);
@@ -363,8 +398,29 @@ export function SaleLpgForm() {
               </div>
               <div>
                 <label className="form-label" htmlFor="elevenPointEightKgPrice">11.8 KG Price</label>
-                <input id="elevenPointEightKgPrice" type="number" min="0" value={elevenPointEightKgPrice} onChange={(e) => setElevenPointEightKgPrice(e.target.value)} className="form-input" />
-                <p className="mt-1 text-[11px] leading-snug text-slate-400">Auto-fills new 11.8 KG lines.</p>
+                <div className="flex gap-1.5">
+                  <input
+                    id="elevenPointEightKgPrice"
+                    type="number"
+                    min="0"
+                    value={elevenPointEightKgPrice}
+                    onChange={(e) => setElevenPointEightKgPrice(e.target.value)}
+                    className="form-input"
+                    disabled={centralizedPricing}
+                  />
+                  <button
+                    type="button"
+                    onClick={applyElevenPointEightKgPrice}
+                    disabled={!elevenPointEightKgPrice || centralizedPricing}
+                    className="shrink-0 rounded-lg border border-blue-200 bg-blue-50 px-2.5 text-xs font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-40 transition-colors"
+                    title="Push this price into all already-added 11.8 KG cylinder lines."
+                  >
+                    Apply to Lines
+                  </button>
+                </div>
+                <p className="mt-1 text-[11px] leading-snug text-slate-400">
+                  {centralizedPricing ? "Centralized pricing uses master Define Prices." : "Auto-fills new lines; Apply pushes to existing ones."}
+                </p>
               </div>
               <div>
                 <label className="form-label" htmlFor="invoiceLanguage">Invoice Language</label>
@@ -425,13 +481,21 @@ export function SaleLpgForm() {
               </div>
               <div>
                 <label className="form-label">Unit Price</label>
-                <input type="number" min="0" value={draft.unitPrice} onChange={(e) => updateDraft({ unitPrice: e.target.value })} className="form-input text-right" />
+                <input
+                  type="number"
+                  min="0"
+                  value={draft.unitPrice}
+                  onChange={(e) => updateDraft({ unitPrice: e.target.value })}
+                  readOnly={isCentralizedPriceLocked(draft.itemId)}
+                  className="form-input text-right"
+                />
                 {draft.itemId && kgPricing[draft.itemId] ? (
                   <KgPriceField
                     pricePerKg={kgPricing[draft.itemId]?.pricePerKg ? Number(kgPricing[draft.itemId]!.pricePerKg) : null}
                     cylinderWeightKg={kgPricing[draft.itemId]?.cylinderWeightKg ? Number(kgPricing[draft.itemId]!.cylinderWeightKg) : null}
                     quantity={amount(draft.quantity)}
                     unitPrice={amount(draft.unitPrice)}
+                    readOnly={isCentralizedPriceLocked(draft.itemId)}
                     onUnitPriceChange={(price) => updateDraft({ unitPrice: String(price) })}
                   />
                 ) : null}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api-client";
 import { emptySettlement } from "@/lib/settlement";
+import { useCompanyFormSettings, usePostSaveNavigation } from "@/lib/use-company-form-settings";
 import { ApiError } from "./ApiError";
 import { PageHeader } from "./PageHeader";
 import { SettlementPanel } from "./SettlementPanel";
@@ -39,6 +40,8 @@ function money(value: number) {
 }
 
 export function CylinderReturnForm() {
+  const { showDefaultDate, redirectOnSamePage, defaultTransactionDate, loaded: companySettingsLoaded } = useCompanyFormSettings();
+  const { afterSave } = usePostSaveNavigation(redirectOnSamePage, "/operations/cylinder-return");
   const [customers, setCustomers] = useState<Lookup[]>([]);
   const [items, setItems] = useState<Lookup[]>([]);
   const [customerId, setCustomerId] = useState("");
@@ -68,6 +71,12 @@ export function CylinderReturnForm() {
       .finally(() => setLookupLoading(false));
   }, []);
 
+  useEffect(() => {
+    if (companySettingsLoaded && showDefaultDate && !transactionDate) {
+      setTransactionDate(defaultTransactionDate);
+    }
+  }, [companySettingsLoaded, showDefaultDate, defaultTransactionDate, transactionDate]);
+
   const total = useMemo(() => lines.reduce((sum, line) => sum + lineTotal(line), 0), [lines]);
 
   function updateLine(index: number, patch: Partial<ReturnLine>) {
@@ -80,7 +89,7 @@ export function CylinderReturnForm() {
 
   function reset() {
     setCustomerId("");
-    setTransactionDate("");
+    setTransactionDate(showDefaultDate ? defaultTransactionDate : "");
     setRemarks("");
     setLines([{ ...emptyLine }]);
     setPrintDocumentNo("");
@@ -123,10 +132,7 @@ export function CylinderReturnForm() {
       const returnNo = String(result.returnNo ?? "saved");
       setSuccess(`Saved ${returnNo}.`);
       if (result.ids && returnNo !== "saved") setPrintDocumentNo(returnNo);
-      setCustomerId("");
-      setTransactionDate("");
-      setRemarks("");
-      setLines([{ ...emptyLine }]);
+      afterSave(reset);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed.");
     } finally {

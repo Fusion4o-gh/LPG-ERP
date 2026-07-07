@@ -1,5 +1,5 @@
-import { CylinderReturnForm } from "@/components/CylinderReturnForm";
+import { CylinderReturnList } from "@/components/OperationalDocumentLists";
 
 export default function CylinderReturnPage() {
-  return <CylinderReturnForm />;
+  return <CylinderReturnList />;
 }

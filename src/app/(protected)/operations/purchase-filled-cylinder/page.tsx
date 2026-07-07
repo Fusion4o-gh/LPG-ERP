@@ -1,5 +1,5 @@
-import { PurchaseFilledCylinderForm } from "@/components/PurchaseFilledCylinderForm";
+import { PurchaseFilledCylinderList } from "@/components/PurchaseFilledCylinderList";
 
 export default function PurchaseFilledCylinderPage() {
-  return <PurchaseFilledCylinderForm />;
+  return <PurchaseFilledCylinderList />;
 }

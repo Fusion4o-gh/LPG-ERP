@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api-client";
+import { useCompanyFormSettings, usePostSaveNavigation } from "@/lib/use-company-form-settings";
 import { ApiError } from "./ApiError";
 import { PageHeader } from "./PageHeader";
 import { SubmitButton } from "./SubmitButton";
@@ -52,6 +53,8 @@ function money(value: number) {
 }
 
 export function BatchSaleForm() {
+  const { showDefaultDate, redirectOnSamePage, defaultTransactionDate, loaded: companySettingsLoaded } = useCompanyFormSettings();
+  const { afterSave } = usePostSaveNavigation(redirectOnSamePage, "/operations/complete-day-sale");
   const [customers, setCustomers] = useState<Lookup[]>([]);
   const [items, setItems] = useState<Lookup[]>([]);
   const [banks, setBanks] = useState<{ id: string; name: string }[]>([]);
@@ -77,6 +80,12 @@ export function BatchSaleForm() {
       .catch((err: Error) => setError(err.message))
       .finally(() => setLookupLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (companySettingsLoaded && showDefaultDate && !transactionDate) {
+      setTransactionDate(defaultTransactionDate);
+    }
+  }, [companySettingsLoaded, showDefaultDate, defaultTransactionDate, transactionDate]);
 
   const batchTotal = useMemo(() => rows.reduce((sum, row) => sum + rowTotal(row), 0), [rows]);
 
@@ -134,6 +143,14 @@ export function BatchSaleForm() {
     return { transactionDate, remarks, rows: preparedRows };
   }
 
+  function resetForm() {
+    setRows([newRow()]);
+    setTransactionDate(showDefaultDate ? defaultTransactionDate : "");
+    setRemarks("");
+    setError("");
+    setSuccess("");
+  }
+
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     setLoading(true);
@@ -142,9 +159,7 @@ export function BatchSaleForm() {
     try {
       const result = await apiPost<{ batchNo: string; issueNos: string[] }>("/api/sales/lpg/batch", payload());
       setSuccess(`Saved ${result.batchNo}. Issues: ${result.issueNos.join(", ")}.`);
-      setRows([newRow()]);
-      setTransactionDate("");
-      setRemarks("");
+      afterSave(resetForm);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed.");
     } finally {
@@ -284,7 +299,7 @@ export function BatchSaleForm() {
 
         <div className="flex flex-wrap gap-2">
           <SubmitButton loading={loading}>Post Complete Day Sale</SubmitButton>
-          <button type="button" onClick={() => { setRows([newRow()]); setTransactionDate(""); setRemarks(""); setError(""); setSuccess(""); }} className="btn-outline">Reset Form</button>
+          <button type="button" onClick={resetForm} className="btn-outline">Reset Form</button>
         </div>
       </form>
     </>

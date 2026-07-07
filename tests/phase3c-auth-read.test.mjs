@@ -81,7 +81,10 @@ test("voucher list and detail APIs return balanced voucher data", async () => {
       financialYearId: financialYear.id,
       voucherNo: `READ-${Date.now()}-${Math.random().toString(16).slice(2)}`,
       voucherType: VoucherType.JV,
-      voucherDate: new Date("2027-06-01"),
+      // Far-future date so this voucher sorts first in the list endpoint
+      // (voucherDate desc, createdAt desc, take 300) even when the shared
+      // test database has accumulated thousands of vouchers from other tests.
+      voucherDate: new Date("2099-12-31"),
       totalDebit: 10,
       totalCredit: 10,
       sourceType: "test-read",

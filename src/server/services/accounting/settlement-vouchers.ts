@@ -14,9 +14,16 @@ export type SettlementPaymentInput = {
   allowClosedDayOverride?: boolean;
   partyAccountId: string;
   amount: Prisma.Decimal | string | number;
+  bankAmount?: Prisma.Decimal | string | number;
+  cashAmount?: Prisma.Decimal | string | number;
   payMode?: string;
   bankId?: string;
   chequeNo?: string;
+};
+
+export type VendorSettlementResult = {
+  bankPaymentVoucher: Awaited<ReturnType<typeof createBalancedVoucher>> | null;
+  cashPaymentVoucher: Awaited<ReturnType<typeof createBalancedVoucher>> | null;
 };
 
 function decimal(value: string | number | Prisma.Decimal | undefined) {
@@ -26,6 +33,30 @@ function decimal(value: string | number | Prisma.Decimal | undefined) {
 export function capDiscount(total: Prisma.Decimal, discount: Prisma.Decimal | string | number | undefined) {
   const discountRaw = decimal(discount);
   return discountRaw.gt(total) ? total : discountRaw;
+}
+
+export async function postVendorSettlement(tx: Prisma.TransactionClient, input: SettlementPaymentInput): Promise<VendorSettlementResult> {
+  const bankAmount = decimal(input.bankAmount);
+  const cashAmount = decimal(input.cashAmount);
+  if (bankAmount.gt(0) || cashAmount.gt(0)) {
+    if (bankAmount.gt(0) && !input.bankId) throw new Error("bankId is required when bank amount is greater than zero.");
+    let bankPaymentVoucher = null;
+    let cashPaymentVoucher = null;
+    if (bankAmount.gt(0)) {
+      bankPaymentVoucher = await postVendorPayment(tx, { ...input, amount: bankAmount, payMode: "Bank" });
+    }
+    if (cashAmount.gt(0)) {
+      cashPaymentVoucher = await postVendorPayment(tx, { ...input, amount: cashAmount, payMode: "Cash" });
+    }
+    return { bankPaymentVoucher, cashPaymentVoucher };
+  }
+
+  const single = await postVendorPayment(tx, input);
+  const payMode = String(input.payMode ?? "Credit").toLowerCase();
+  return {
+    bankPaymentVoucher: payMode === "bank" ? single : null,
+    cashPaymentVoucher: payMode === "cash" ? single : null,
+  };
 }
 
 export async function postVendorPayment(tx: Prisma.TransactionClient, input: SettlementPaymentInput) {

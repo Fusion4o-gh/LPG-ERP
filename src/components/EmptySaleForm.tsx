@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api-client";
 import { emptySettlement } from "@/lib/settlement";
+import { useCompanyFormSettings, usePostSaveNavigation } from "@/lib/use-company-form-settings";
 import { ApiError } from "./ApiError";
 import { PageHeader } from "./PageHeader";
 import { SettlementPanel } from "./SettlementPanel";
@@ -38,17 +39,21 @@ function money(value: number) {
 }
 
 export function EmptySaleForm() {
+  const { showDefaultDate, redirectOnSamePage, defaultTransactionDate, loaded: companySettingsLoaded } = useCompanyFormSettings();
+  const { afterSave } = usePostSaveNavigation(redirectOnSamePage, "/sale-purchase/empty-sale");
   const [customers, setCustomers] = useState<Lookup[]>([]);
   const [items, setItems] = useState<Lookup[]>([]);
   const [customerId, setCustomerId] = useState("");
   const [transactionDate, setTransactionDate] = useState("");
   const [remarks, setRemarks] = useState("");
+  const [invoiceLanguage, setInvoiceLanguage] = useState("English");
   const [lines, setLines] = useState<EmptySaleLine[]>([{ ...blankLine }]);
   const [loading, setLoading] = useState(false);
   const [lookupLoading, setLookupLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [printDocumentNo, setPrintDocumentNo] = useState("");
+  const [previewIssueNo, setPreviewIssueNo] = useState("");
   const [banks, setBanks] = useState<{ id: string; name: string }[]>([]);
   const [settlement, setSettlement] = useState(emptySettlement());
 
@@ -57,15 +62,23 @@ export function EmptySaleForm() {
       apiGet<{ customers: Lookup[] }>("/api/customers"),
       apiGet<{ items: Lookup[] }>("/api/items"),
       apiGet<{ banks: { id: string; name: string }[] }>("/api/banks"),
+      apiGet<{ documentNo: string }>("/api/documents/next-number?kind=empty-sale"),
     ])
-      .then(([customerData, itemData, bankData]) => {
+      .then(([customerData, itemData, bankData, preview]) => {
         setCustomers(customerData.customers);
         setItems(itemData.items);
         setBanks(bankData.banks);
+        setPreviewIssueNo(preview.documentNo);
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLookupLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (companySettingsLoaded && showDefaultDate && !transactionDate) {
+      setTransactionDate(defaultTransactionDate);
+    }
+  }, [companySettingsLoaded, showDefaultDate, defaultTransactionDate, transactionDate]);
 
   const totals = useMemo(
     () =>
@@ -89,8 +102,9 @@ export function EmptySaleForm() {
 
   function reset() {
     setCustomerId("");
-    setTransactionDate("");
+    setTransactionDate(showDefaultDate ? defaultTransactionDate : "");
     setRemarks("");
+    setInvoiceLanguage("English");
     setLines([{ ...blankLine }]);
     setPrintDocumentNo("");
     setSettlement(emptySettlement());
@@ -111,6 +125,7 @@ export function EmptySaleForm() {
       customerId,
       transactionDate,
       remarks,
+      invoiceLanguage,
       lines: preparedLines,
       discount: numberValue(settlement.discount),
       amountReceived: numberValue(settlement.amountReceived),
@@ -132,10 +147,10 @@ export function EmptySaleForm() {
       const issueNo = String(result.issueNo ?? "saved");
       setSuccess(`Saved ${issueNo}.`);
       if (result.ids && issueNo !== "saved") setPrintDocumentNo(issueNo);
-      setCustomerId("");
-      setTransactionDate("");
-      setRemarks("");
-      setLines([{ ...blankLine }]);
+      afterSave(reset);
+      apiGet<{ documentNo: string }>("/api/documents/next-number?kind=empty-sale")
+        .then((preview) => setPreviewIssueNo(preview.documentNo))
+        .catch(() => undefined);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed.");
     } finally {
@@ -145,7 +160,17 @@ export function EmptySaleForm() {
 
   return (
     <>
-      <PageHeader title="Empty Sale" description="Sell empty cylinders with one issue number, empty stock OUT, customer receivable voucher, GST payable, audit trail, and printable invoice." />
+      <PageHeader
+        title="Empty Sale"
+        description="Sell empty cylinders with one issue number, empty stock OUT, customer receivable voucher, GST payable, audit trail, and printable invoice."
+        actions={
+          previewIssueNo ? (
+            <span className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800">
+              Next Issue #: {previewIssueNo}
+            </span>
+          ) : null
+        }
+      />
       <form onSubmit={onSubmit} className="space-y-5">
         <ApiError message={error} />
         <SuccessMessage message={success} />
@@ -169,7 +194,7 @@ export function EmptySaleForm() {
             <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Sale Header</h2>
           </div>
           <div className="p-5">
-            <div className="grid gap-4 lg:grid-cols-4">
+            <div className="grid gap-4 lg:grid-cols-5">
               <div className="lg:col-span-2">
                 <label className="form-label" htmlFor="customerId">Customer *</label>
                 <select id="customerId" value={customerId} onChange={(e) => setCustomerId(e.target.value)} disabled={lookupLoading} className="form-input">
@@ -180,6 +205,13 @@ export function EmptySaleForm() {
               <div>
                 <label className="form-label" htmlFor="transactionDate">Date *</label>
                 <input id="transactionDate" type="date" value={transactionDate} onChange={(e) => setTransactionDate(e.target.value)} className="form-input" />
+              </div>
+              <div>
+                <label className="form-label" htmlFor="invoiceLanguage">Invoice Language</label>
+                <select id="invoiceLanguage" value={invoiceLanguage} onChange={(e) => setInvoiceLanguage(e.target.value)} className="form-input">
+                  <option value="English">English</option>
+                  <option value="Urdu">Urdu</option>
+                </select>
               </div>
               <div>
                 <label className="form-label" htmlFor="remarks">Remarks</label>

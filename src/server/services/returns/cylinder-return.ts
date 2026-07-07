@@ -182,6 +182,10 @@ export async function cylinderReturn(input: CylinderReturnInput) {
         payMode: input.payMode ?? "Credit",
         lines: lines.map((line) => {
           const item = itemById.get(line.itemId);
+          const gstPercent = line.returnType === "Filled" ? new Prisma.Decimal(5) : new Prisma.Decimal(0);
+          const exGstAmount = line.amount;
+          const gstAmount = line.returnType === "Filled" ? exGstAmount.times(gstPercent).div(100) : new Prisma.Decimal(0);
+          const totalAmount = exGstAmount.plus(gstAmount);
           return {
             itemId: line.itemId,
             item: item ? [item.code, item.name].filter(Boolean).join(" - ") : line.itemId,
@@ -190,7 +194,11 @@ export async function cylinderReturn(input: CylinderReturnInput) {
             direction: StockDirection.IN,
             quantity: line.quantity,
             unitPrice: String(line.unitPrice),
-            amount: String(line.amount),
+            gstPercent: String(gstPercent),
+            gstAmount: String(gstAmount),
+            exGstAmount: String(exGstAmount),
+            amount: String(exGstAmount),
+            totalAmount: String(totalAmount),
           };
         }),
       },

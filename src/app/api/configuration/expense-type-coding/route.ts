@@ -23,6 +23,9 @@ export async function POST(request: Request) {
       code: stringField(body, "code"),
       name: stringField(body, "name"),
       parentId: optionalStringField(body, "parentId"),
+      openingBalance: optionalStringField(body, "openingBalance"),
+      openingBalanceType: optionalStringField(body, "openingBalanceType"),
+      transactionDate: optionalStringField(body, "openingDate"),
       status: optionalStringField(body, "status") as never,
     });
     return ok({ expenseType });

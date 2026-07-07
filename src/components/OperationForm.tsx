@@ -39,6 +39,7 @@ export function OperationForm({
   fields,
   printableDocumentType,
   printableHrefBase,
+  balancePreview,
 }: {
   title: string;
   description: string;
@@ -47,6 +48,7 @@ export function OperationForm({
   fields: Field[];
   printableDocumentType?: string;
   printableHrefBase?: string;
+  balancePreview?: "cash" | "bank";
 }) {
   const [values, setValues] = useState<Record<string, string | boolean>>({});
   const [lookups, setLookups] = useState<Record<string, Record<string, unknown>[]>>({});
@@ -56,8 +58,10 @@ export function OperationForm({
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState("");
   const [printDocumentNo, setPrintDocumentNo] = useState("");
+  const [balances, setBalances] = useState<{ cashInHand: number; bankBalance: number | null } | null>(null);
 
   const neededLookups = useMemo(() => Array.from(new Set(fields.map((field) => field.lookup).filter(Boolean))) as LookupName[], [fields]);
+  const selectedBankId = balancePreview === "bank" ? String(values.bankId ?? "") : "";
 
   useEffect(() => {
     Promise.all(
@@ -70,6 +74,14 @@ export function OperationForm({
       .catch((err: Error) => setError(err.message))
       .finally(() => setLookupLoading(false));
   }, [neededLookups]);
+
+  useEffect(() => {
+    if (!balancePreview) return;
+    const params = balancePreview === "bank" && selectedBankId ? `?bankId=${encodeURIComponent(selectedBankId)}` : "";
+    apiGet<{ cashInHand: number; bankBalance: number | null }>(`/api/accounting/balances${params}`)
+      .then(setBalances)
+      .catch(() => setBalances(null));
+  }, [balancePreview, selectedBankId]);
 
   function payload() {
     const errors = validateFormValues(values, fields as FormFieldDefinition[]);
@@ -104,6 +116,12 @@ export function OperationForm({
       if (printableDocumentType && result.ids && number !== "saved") {
         setPrintDocumentNo(String(number));
       }
+      if (balancePreview) {
+        const params = balancePreview === "bank" && selectedBankId ? `?bankId=${encodeURIComponent(selectedBankId)}` : "";
+        apiGet<{ cashInHand: number; bankBalance: number | null }>(`/api/accounting/balances${params}`)
+          .then(setBalances)
+          .catch(() => undefined);
+      }
       setValues({});
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed.");
@@ -112,9 +130,26 @@ export function OperationForm({
     }
   }
 
+  const balanceAmount = balancePreview === "bank"
+    ? selectedBankId
+      ? balances?.bankBalance
+      : null
+    : balances?.cashInHand;
+
   return (
     <>
-      <PageHeader title={title} description={description} />
+      <PageHeader
+        title={title}
+        description={description}
+        actions={
+          balancePreview ? (
+            <span className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700">
+              {balancePreview === "bank" ? "Bank Balance" : "Cash Balance"}:{" "}
+              <span className="tabular-nums text-slate-900">{balanceAmount == null ? "—" : balanceAmount.toFixed(2)}</span>
+            </span>
+          ) : null
+        }
+      />
       <form onSubmit={onSubmit} className="max-w-3xl space-y-5">
         <ApiError message={error} />
         <SuccessMessage message={success} />

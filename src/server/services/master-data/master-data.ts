@@ -1,6 +1,7 @@
 import { AccountType, AuditAction, NormalBalance, PermissionAction, RecordStatus, Prisma } from "@prisma/client";
 import { prisma } from "../../../lib/prisma.ts";
 import { writeAuditLog } from "../audit/audit-log.ts";
+import { createExpenseAccountOpeningBalance, loadExpenseOpeningBalances } from "../opening-balances/opening-balances.ts";
 import { enforcePermission } from "../rbac/enforce.ts";
 
 type Tx = Prisma.TransactionClient;
@@ -29,11 +30,13 @@ type MasterInput = {
   accountNumber?: string;
   openingBalance?: string | number;
   openingBalanceType?: string;
+  transactionDate?: string | Date;
   status?: Status;
   cylinderWeightKg?: number;
   defaultSecurity?: number;
   categoryId?: string;
   brandId?: string;
+  brandIds?: string[];
   parentId?: string;
   accountType?: string;
   normalBalance?: string;
@@ -206,6 +209,19 @@ export async function updateCustomer(context: Context, id: string, input: Master
   });
 }
 
+async function syncVendorBrands(tx: Tx, companyId: string, vendorId: string, brandIds?: string[]) {
+  if (brandIds === undefined) return;
+  const uniqueIds = [...new Set(brandIds.filter(Boolean))];
+  if (uniqueIds.length > 0) {
+    const count = await tx.brand.count({ where: { companyId, id: { in: uniqueIds }, status: RecordStatus.ACTIVE } });
+    if (count !== uniqueIds.length) throw new Error("One or more selected brands are invalid.");
+  }
+  await tx.vendorBrand.deleteMany({ where: { vendorId } });
+  if (uniqueIds.length > 0) {
+    await tx.vendorBrand.createMany({ data: uniqueIds.map((brandId) => ({ vendorId, brandId })) });
+  }
+}
+
 export async function createVendor(context: Context, input: MasterInput) {
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "vendors", PermissionAction.CREATE);
@@ -233,6 +249,7 @@ export async function createVendor(context: Context, input: MasterInput) {
         status: cleanStatus(input.status),
       },
     });
+    await syncVendorBrands(tx, context.companyId, vendor.id, input.brandIds);
     await writeAuditLog(tx, { companyId: context.companyId, userId: context.userId, entityType: "Vendor", entityId: vendor.id, after: vendor });
     return vendor;
   });
@@ -264,6 +281,7 @@ export async function updateVendor(context: Context, id: string, input: MasterIn
         status: cleanStatus(input.status),
       },
     });
+    await syncVendorBrands(tx, context.companyId, id, input.brandIds);
     await writeAuditLog(tx, { companyId: context.companyId, userId: context.userId, action: AuditAction.UPDATE, entityType: "Vendor", entityId: id, before, after: vendor });
     return vendor;
   });
@@ -586,11 +604,24 @@ async function findExpenseParent(tx: Tx, companyId: string, parentId?: string) {
 export async function listExpenseTypes(context: Context, includeAll = false) {
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "chart-of-accounts", PermissionAction.VIEW);
-    return tx.chartAccount.findMany({
+    const accounts = await tx.chartAccount.findMany({
       where: { companyId: context.companyId, accountType: AccountType.EXPENSE, status: includeAll ? undefined : RecordStatus.ACTIVE },
       orderBy: { code: "asc" },
       select: { id: true, code: true, name: true, parentId: true, level: true, accountType: true, normalBalance: true, isSystem: true, status: true, parent: { select: { name: true } } },
       take: 200,
+    });
+    const openings = await loadExpenseOpeningBalances(
+      tx,
+      context,
+      accounts.map((account) => account.id),
+    );
+    return accounts.map((account) => {
+      const opening = openings.get(account.id);
+      return {
+        ...account,
+        openingAmount: opening?.openingAmount ?? "",
+        openingBalanceType: opening?.openingBalanceType ?? "",
+      };
     });
   });
 }
@@ -614,6 +645,14 @@ export async function createExpenseType(context: Context, input: MasterInput) {
         status: cleanStatus(input.status),
       },
     });
+    if (input.openingBalance !== undefined && input.openingBalance !== null && input.openingBalance !== "") {
+      await createExpenseAccountOpeningBalance(tx, context, {
+        accountId: account.id,
+        amount: input.openingBalance,
+        balanceType: input.openingBalanceType,
+        transactionDate: input.transactionDate ?? new Date(),
+      });
+    }
     await writeAuditLog(tx, { companyId: context.companyId, userId: context.userId, entityType: "ExpenseType", entityId: account.id, after: account });
     return account;
   });

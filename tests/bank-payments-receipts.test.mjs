@@ -137,9 +137,9 @@ test("unified screen supports date and type filters for bank vouchers", async ()
 test("unified screen uses Fusion4o blue/white styling patterns", async () => {
   const root = new URL("../", import.meta.url);
   const client = await readFile(new URL("src/components/BankPaymentsReceiptsClient.tsx", root), "utf8");
-  assert.match(client, /border-blue-100|bg-blue-50|text-blue-700/);
-  assert.match(client, /bg-white/);
-  assert.match(client, /shadow-sm/);
+  assert.match(client, /bg-flame-100|text-flame-700|bg-steel-100|text-steel-700/);
+  assert.match(client, /rounded-xl|card/);
+  assert.match(client, /PageHeader/);
 });
 
 test("navigation Bank Payments / Receipt tab requires bank-payments module permission", async () => {

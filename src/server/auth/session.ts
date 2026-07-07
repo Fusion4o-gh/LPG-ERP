@@ -18,12 +18,14 @@ export async function createSession(userId: string) {
   });
 }
 
+const SECURE_FLAG = process.env.NODE_ENV === "production" ? "; Secure" : "";
+
 export function sessionCookieValue(token: string) {
-  return `${SESSION_COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 12}`;
+  return `${SESSION_COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${60 * 60 * 12}${SECURE_FLAG}`;
 }
 
 export function clearSessionCookieValue() {
-  return `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
+  return `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${SECURE_FLAG}`;
 }
 
 function tokenFromCookieHeader(cookieHeader?: string | null) {

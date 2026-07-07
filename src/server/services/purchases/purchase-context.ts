@@ -2,6 +2,7 @@ import { CylinderState, NormalBalance, PermissionAction, type Prisma } from "@pr
 import { prisma } from "../../../lib/prisma.ts";
 import { enforcePermission } from "../rbac/enforce.ts";
 import { getLastUnitCost } from "../inventory/stock-ledger.ts";
+import { resolveKgPricingMap } from "../pricing/kg-pricing.ts";
 
 type Context = { companyId: string; financialYearId: string; userId: string };
 
@@ -37,6 +38,11 @@ export async function getPurchaseFilledContext(context: Context, input: { vendor
       }
     }
 
+    const company = await tx.company.findUniqueOrThrow({
+      where: { id: context.companyId },
+      select: { centralizedPricing: true },
+    });
+
     // Suggest each item's own last-used purchase price (flat, per item, no weight math)
     const itemIds = input.itemIds ?? [];
     const lastCost: Record<string, string | null> = {};
@@ -45,6 +51,14 @@ export async function getPurchaseFilledContext(context: Context, input: { vendor
       lastCost[itemId] = unitCost ? unitCost.toString() : null;
     }
 
-    return { vendorBalance, lastCost };
+    const transactionDate = new Date().toISOString();
+    const kgPricing = await resolveKgPricingMap(tx, {
+      companyId: context.companyId,
+      itemIds,
+      transactionDate,
+      centralizedPricing: company.centralizedPricing,
+    });
+
+    return { vendorBalance, lastCost, kgPricing, centralizedPricing: company.centralizedPricing };
   });
 }

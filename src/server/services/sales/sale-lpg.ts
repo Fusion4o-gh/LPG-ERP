@@ -8,6 +8,7 @@ import { createBalancedVoucher, type VoucherLineInput } from "../accounting/vouc
 import { writeAuditLog } from "../audit/audit-log.ts";
 import { assertWritableBusinessDate } from "../inventory/day-closing.ts";
 import { enforcePermission } from "../rbac/enforce.ts";
+import { assertCentralizedLinePrices } from "../pricing/kg-pricing.ts";
 
 type SaleInput = {
   companyId: string;
@@ -240,6 +241,13 @@ async function createSaleInTransaction(tx: Prisma.TransactionClient, input: Sale
     discountAccountId = null;
   }
   const lines = normalizeLines(input);
+  await assertCentralizedLinePrices(tx, {
+    companyId: input.companyId,
+    customerId: input.customerId,
+    transactionDate: input.transactionDate,
+    lines: lines.map((line) => ({ itemId: line.itemId, unitAmount: line.unitPrice })),
+    amountLabel: "unit price",
+  });
   const itemRows = await tx.item.findMany({
     where: { companyId: input.companyId, id: { in: [...new Set(lines.flatMap((line) => [line.itemId, line.emptyReturnItemId]))] } },
     select: { id: true, code: true, name: true },
@@ -472,27 +480,55 @@ async function createSaleInTransaction(tx: Prisma.TransactionClient, input: Sale
   };
 }
 
-export async function listSaleLpg(context: { companyId: string; financialYearId: string; userId: string }, input: { from?: string; to?: string; limit?: number }) {
+function legacyItemLabel(itemField: string) {
+  const separator = itemField.indexOf(" - ");
+  if (separator > 0) return `${itemField.slice(0, separator)}-${itemField.slice(separator + 3)}`;
+  return itemField;
+}
+
+function formatSaleItemsSummary(lines: unknown) {
+  if (!Array.isArray(lines) || lines.length === 0) return "";
+  return lines
+    .map((line) => {
+      const row = line as Record<string, unknown>;
+      const label = legacyItemLabel(String(row.item ?? row.itemId ?? ""));
+      const qty = Number(row.quantity ?? 0);
+      const amount = row.amount ?? row.unitPrice ?? "0";
+      return `${label} @ ${qty} : ${amount}`;
+    })
+    .join(", ");
+}
+
+export async function listSaleLpg(
+  context: { companyId: string; financialYearId: string; userId: string },
+  input: { from?: string; to?: string; limit?: number; offset?: number; search?: string },
+) {
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "sale-lpg", PermissionAction.VIEW);
     const from = input.from ? new Date(input.from) : undefined;
     const to = input.to ? new Date(input.to) : undefined;
+    if (to) to.setUTCHours(23, 59, 59, 999);
+    const pageSize = Math.min(Math.max(input.limit ?? 10, 1), 100);
+    const offset = Math.max(input.offset ?? 0, 0);
+    const search = input.search?.trim().toLowerCase();
+
+    const where = {
+      companyId: context.companyId,
+      financialYearId: context.financialYearId,
+      sourceType: "SaleLpg" as const,
+      ...(from || to
+        ? {
+            voucherDate: {
+              ...(from ? { gte: from } : {}),
+              ...(to ? { lte: to } : {}),
+            },
+          }
+        : {}),
+    };
+
     const vouchers = await tx.accountingVoucher.findMany({
-      where: {
-        companyId: context.companyId,
-        financialYearId: context.financialYearId,
-        sourceType: "SaleLpg",
-        ...(from || to
-          ? {
-              voucherDate: {
-                ...(from ? { gte: from } : {}),
-                ...(to ? { lte: to } : {}),
-              },
-            }
-          : {}),
-      },
+      where,
       orderBy: [{ voucherDate: "desc" }, { createdAt: "desc" }],
-      take: input.limit ?? 50,
       select: {
         id: true,
         voucherNo: true,
@@ -522,20 +558,41 @@ export async function listSaleLpg(context: { companyId: string; financialYearId:
     });
     const customerById = new Map(customers.map((row) => [row.id, row]));
 
-    return vouchers.map((voucher) => {
+    const rows = vouchers.map((voucher) => {
       const after = afterByIssue.get(voucher.sourceId ?? "") ?? {};
       const customerId = typeof after.customerId === "string" ? after.customerId : "";
       const customer = customerById.get(customerId);
+      const issueNo = voucher.sourceId ?? voucher.voucherNo;
+      const customerName = customer?.name ?? customerId;
+      const itemsSummary = formatSaleItemsSummary(after.lines);
       return {
-        issueNo: voucher.sourceId ?? voucher.voucherNo,
+        issueNo,
+        voucherId: voucher.id,
         transactionDate: voucher.voucherDate,
-        customerName: customer ? [customer.code, customer.name].filter(Boolean).join(" - ") : customerId,
+        customerName,
+        customerCode: customer?.code ?? "",
+        itemsSummary,
+        totalAmount: String(after.totalAmount ?? after.totalReceivableAmount ?? voucher.totalDebit),
         totalReceivableAmount: String(after.totalReceivableAmount ?? voucher.totalDebit),
         netReceivableAmount: String(after.netReceivableAmount ?? voucher.totalDebit),
         amountReceived: String(after.amountReceived ?? "0"),
         lineCount: Array.isArray(after.lines) ? after.lines.length : 0,
       };
     });
+
+    const filtered = search
+      ? rows.filter((row) => {
+          const haystack = [row.issueNo, row.customerName, row.customerCode, row.itemsSummary].join(" ").toLowerCase();
+          return haystack.includes(search);
+        })
+      : rows;
+
+    return {
+      sales: filtered.slice(offset, offset + pageSize),
+      total: filtered.length,
+      limit: pageSize,
+      offset,
+    };
   });
 }
 

@@ -20,7 +20,18 @@ import { assertWritableBusinessDate } from "../inventory/day-closing.ts";
 import { createStockLedgerEntry } from "../inventory/stock-ledger.ts";
 import { enforcePermission } from "../rbac/enforce.ts";
 
-export type ReversalKind = "sale" | "purchase" | "cash-receipt" | "cash-payment" | "bank-receipt" | "bank-payment" | "cylinder-return";
+export type ReversalKind =
+  | "sale"
+  | "purchase"
+  | "purchase-empty"
+  | "purchase-other"
+  | "empty-sale"
+  | "decanting-sale"
+  | "cash-receipt"
+  | "cash-payment"
+  | "bank-receipt"
+  | "bank-payment"
+  | "cylinder-return";
 
 type Context = { companyId: string; financialYearId: string; userId: string };
 
@@ -36,8 +47,10 @@ type ReversalInput = {
 type ReversalConfig = {
   module: string;
   voucherSourceType?: string;
+  voucherOptional?: boolean;
   stockSourceType?: StockSourceType;
   stockReverseDirection?: StockDirection;
+  stockOptional?: boolean;
   entityType: string;
 };
 
@@ -55,6 +68,36 @@ const configs: Record<ReversalKind, ReversalConfig> = {
     stockSourceType: StockSourceType.PURCHASE_FILLED,
     stockReverseDirection: StockDirection.OUT,
     entityType: "PurchaseFilledCylinderReversal",
+  },
+  "purchase-empty": {
+    module: "purchase-filled-cylinders",
+    voucherSourceType: "PurchaseEmptyCylinder",
+    stockSourceType: StockSourceType.PURCHASE_FILLED,
+    stockReverseDirection: StockDirection.OUT,
+    entityType: "PurchaseEmptyCylinderReversal",
+  },
+  "purchase-other": {
+    module: "purchase-filled-cylinders",
+    voucherSourceType: "PurchaseOther",
+    stockSourceType: StockSourceType.PURCHASE_FILLED,
+    stockReverseDirection: StockDirection.OUT,
+    stockOptional: true,
+    entityType: "PurchaseOtherReversal",
+  },
+  "empty-sale": {
+    module: "empty-sales",
+    voucherSourceType: "EmptySale",
+    stockSourceType: StockSourceType.SALE_LPG,
+    stockReverseDirection: StockDirection.IN,
+    entityType: "EmptySaleReversal",
+  },
+  "decanting-sale": {
+    module: "decanting-sales",
+    voucherSourceType: "DecantingSale",
+    voucherOptional: true,
+    stockSourceType: StockSourceType.SALE_LPG,
+    stockReverseDirection: StockDirection.IN,
+    entityType: "DecantingSaleReversal",
   },
   "cash-receipt": { module: "cash-receipts", voucherSourceType: "CashReceipt", entityType: "CashReceiptReversal" },
   "cash-payment": { module: "cash-payments", voucherSourceType: "CashPayment", entityType: "CashPaymentReversal" },
@@ -115,9 +158,9 @@ async function findOriginalVoucher(tx: PrismaTypes.TransactionClient, context: C
   });
 }
 
-async function findOriginalStockEntry(tx: PrismaTypes.TransactionClient, context: Context, config: ReversalConfig, documentNo: string) {
-  if (!config.stockSourceType) return null;
-  return tx.stockLedgerEntry.findFirst({
+async function findOriginalStockEntries(tx: PrismaTypes.TransactionClient, context: Context, config: ReversalConfig, documentNo: string) {
+  if (!config.stockSourceType) return [];
+  return tx.stockLedgerEntry.findMany({
     where: {
       companyId: context.companyId,
       financialYearId: context.financialYearId,
@@ -272,9 +315,11 @@ export async function createCompensatingReversal(context: Context, input: Revers
     await ensureNotReversed(tx, context, input.documentNo, input.kind);
 
     const originalVoucher = await findOriginalVoucher(tx, context, config, input.documentNo);
-    const originalStockEntry = await findOriginalStockEntry(tx, context, config, input.documentNo);
-    if (config.voucherSourceType && !originalVoucher) throw new Error("Original voucher was not found.");
-    if (config.stockSourceType && !originalStockEntry) throw new Error("Original stock ledger entry was not found.");
+    const originalStockEntries = await findOriginalStockEntries(tx, context, config, input.documentNo);
+    if (config.voucherSourceType && !config.voucherOptional && !originalVoucher) throw new Error("Original voucher was not found.");
+    if (config.stockSourceType && !config.stockOptional && originalStockEntries.length === 0) {
+      throw new Error("Original stock ledger entry was not found.");
+    }
 
     const reversalNo =
       input.reversalNo ??
@@ -285,12 +330,14 @@ export async function createCompensatingReversal(context: Context, input: Revers
       }));
 
     const voucher = originalVoucher ? await createReversalVoucher(tx, context, input, reversalNo, originalVoucher) : null;
-    const stockEntry =
-      originalStockEntry && config.stockReverseDirection
-        ? await createReversalStockEntry(tx, context, input, reversalNo, originalStockEntry, config.stockReverseDirection)
-        : null;
+    const stockEntries = [];
+    if (config.stockReverseDirection) {
+      for (const originalStockEntry of originalStockEntries) {
+        stockEntries.push(await createReversalStockEntry(tx, context, input, reversalNo, originalStockEntry, config.stockReverseDirection));
+      }
+    }
 
-    await reverseCylinderBalances(tx, input.kind, originalStockEntry, originalVoucher);
+    await reverseCylinderBalances(tx, input.kind, originalStockEntries[0] ?? null, originalVoucher);
 
     await writeAuditLog(tx, {
       companyId: context.companyId,
@@ -304,11 +351,11 @@ export async function createCompensatingReversal(context: Context, input: Revers
         kind: input.kind,
         reason: input.reason,
         voucherId: voucher?.id,
-        stockLedgerEntryId: stockEntry?.id,
+        stockLedgerEntryIds: stockEntries.map((entry) => entry.id),
       },
     });
 
-    return { reversalNo, voucher, stockEntries: stockEntry ? [stockEntry] : [] };
+    return { reversalNo, voucher, stockEntries };
   });
 }
 

@@ -318,7 +318,8 @@ model Brand {
   name      String
   status    RecordStatus @default(ACTIVE)
 
-  items Item[]
+  items        Item[]
+  vendorBrands VendorBrand[]
 
   @@unique([companyId, name])
 }
@@ -466,9 +467,20 @@ model Vendor {
   account            ChartAccount                  @relation(fields: [accountId], references: [id])
   cylinderBalances   VendorCylinderReturnBalance[]
   stockLedgerEntries StockLedgerEntry[]
+  brands             VendorBrand[]
 
   @@unique([companyId, code])
   @@index([companyId, name])
+}
+
+model VendorBrand {
+  vendorId String
+  brandId  String
+
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  brand  Brand  @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@id([vendorId, brandId])
 }
 
 model Bank {

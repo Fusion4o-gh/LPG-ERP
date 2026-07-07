@@ -1,5 +1,5 @@
-import { SecurityReceiptForm } from "@/components/SecurityReceiptForm";
+import { SecurityReceiptList } from "@/components/OperationalDocumentLists";
 
 export default function SecurityReceiptPage() {
-  return <SecurityReceiptForm />;
+  return <SecurityReceiptList />;
 }

@@ -1,5 +1,6 @@
 import { DOCUMENT_PREFIXES, nextDocumentNumber } from "../../../../server/services/accounting/document-numbers.ts";
 import { purchaseEmptyCylinder } from "../../../../server/services/purchases/purchase-empty-other.ts";
+import { listPurchaseEmptyCylinder } from "../../../../server/services/lists/operational-document-list.ts";
 import { getRequestContext } from "../../../../server/api/request-context.ts";
 import { fail, ok, serviceError } from "../../../../server/api/responses.ts";
 import { arrayField, booleanField, dateField, optionalPositiveNumberField, optionalStringField, positiveIntegerField, positiveNumberField, readJson, stringField } from "../../../../server/api/validation.ts";
@@ -10,6 +11,23 @@ function dateOrTransactionDate(body: Record<string, unknown>) {
 
 function receiptNumber(body: Record<string, unknown>) {
   return optionalStringField(body, "receiptNo") ?? optionalStringField(body, "issueNo") ?? optionalStringField(body, "documentNo");
+}
+
+export async function GET(request: Request) {
+  try {
+    const context = await getRequestContext(request);
+    const url = new URL(request.url);
+    const result = await listPurchaseEmptyCylinder(context, {
+      from: url.searchParams.get("from") ?? undefined,
+      to: url.searchParams.get("to") ?? undefined,
+      limit: url.searchParams.get("limit") ? Number(url.searchParams.get("limit")) : undefined,
+      offset: url.searchParams.get("offset") ? Number(url.searchParams.get("offset")) : undefined,
+      search: url.searchParams.get("search") ?? undefined,
+    });
+    return ok(result);
+  } catch (error) {
+    return serviceError(error);
+  }
 }
 
 export async function POST(request: Request) {
@@ -42,6 +60,8 @@ export async function POST(request: Request) {
       allowClosedDayOverride: booleanField(body, "allowClosedDayOverride"),
       discount: optionalPositiveNumberField(body, "discount"),
       amountPaid: optionalPositiveNumberField(body, "amountPaid"),
+      bankAmount: optionalPositiveNumberField(body, "bankAmount"),
+      cashAmount: optionalPositiveNumberField(body, "cashAmount"),
       payMode: optionalStringField(body, "payMode"),
       bankId: optionalStringField(body, "bankId"),
       chequeNo: optionalStringField(body, "chequeNo"),

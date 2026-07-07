@@ -1,5 +1,5 @@
-import { PurchaseEmptyOtherForm } from "@/components/PurchaseEmptyOtherForm";
+import { PurchaseEmptyCylinderList } from "@/components/OperationalDocumentLists";
 
 export default function PurchaseEmptyCylinderPage() {
-  return <PurchaseEmptyOtherForm kind="EmptyCylinder" />;
+  return <PurchaseEmptyCylinderList />;
 }

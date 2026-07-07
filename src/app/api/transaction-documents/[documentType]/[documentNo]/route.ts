@@ -212,7 +212,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ docu
         type: config.type,
         number: documentNo,
         date,
-        invoiceLanguage: documentType === "sale-lpg" ? String(lineAuditAfter.invoiceLanguage ?? "English") : undefined,
+        invoiceLanguage:
+          documentType === "sale-lpg" || documentType === "empty-sale"
+            ? String(lineAuditAfter.invoiceLanguage ?? "English")
+            : undefined,
         partyLabel: isPurchaseVendorDocument ? "Vendor" : party ? (stockEntries[0]?.customer ? "Customer" : "Vendor") : "Account",
         partyName: auditPartyName || partyName,
         lineItems:

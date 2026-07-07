@@ -1,5 +1,6 @@
 import { DOCUMENT_PREFIXES, nextDocumentNumber } from "../../../../server/services/accounting/document-numbers.ts";
 import { cashReceipt, multiLineCashReceipt } from "../../../../server/services/payments/cash-receipt.ts";
+import { listCashReceipts } from "../../../../server/services/payments/payment-lists.ts";
 import { getRequestContext } from "../../../../server/api/request-context.ts";
 import { fail, ok, serviceError } from "../../../../server/api/responses.ts";
 import { booleanField, dateField, optionalStringField, positiveNumberField, readJson, stringField } from "../../../../server/api/validation.ts";
@@ -12,6 +13,23 @@ function parseLines(raw: unknown[]) {
     if (!Number.isFinite(amount) || amount <= 0) throw new Error(`lines[${i}].amount must be a positive number.`);
     return { accountId: l.accountId, amount, description: typeof l.description === "string" ? l.description : undefined };
   });
+}
+
+export async function GET(request: Request) {
+  try {
+    const context = await getRequestContext(request);
+    const url = new URL(request.url);
+    const result = await listCashReceipts(context, {
+      from: url.searchParams.get("from") ?? undefined,
+      to: url.searchParams.get("to") ?? undefined,
+      limit: url.searchParams.get("limit") ? Number(url.searchParams.get("limit")) : undefined,
+      offset: url.searchParams.get("offset") ? Number(url.searchParams.get("offset")) : undefined,
+      search: url.searchParams.get("search") ?? undefined,
+    });
+    return ok(result);
+  } catch (error) {
+    return serviceError(error);
+  }
 }
 
 export async function POST(request: Request) {

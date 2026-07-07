@@ -53,7 +53,7 @@ type DashboardData = {
 };
 
 const QUICK_LINKS = [
-  { label: "Single Sale", href: "/operations/sale-lpg" },
+  { label: "Single Sale", href: "/operations/sale-lpg/add" },
   { label: "Complete Day Sale", href: "/operations/complete-day-sale" },
   { label: "Purchase", href: "/operations/purchase-filled-cylinder" },
   { label: "Payment", href: "/payments/cash-payment" },

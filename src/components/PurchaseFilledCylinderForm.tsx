@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api-client";
-import { emptySettlement } from "@/lib/settlement";
+import { emptySettlement, purchaseSettlementPayload } from "@/lib/settlement";
+import { useCompanyFormSettings, usePostSaveNavigation } from "@/lib/use-company-form-settings";
 import { ApiError } from "./ApiError";
+import { KgPriceField } from "./KgPriceField";
 import { PageHeader } from "./PageHeader";
 import { SettlementPanel } from "./SettlementPanel";
 import { SubmitButton } from "./SubmitButton";
@@ -65,6 +67,8 @@ function validateLine(line: PurchaseLine, label: string) {
 }
 
 export function PurchaseFilledCylinderForm() {
+  const { showDefaultDate, redirectOnSamePage, defaultTransactionDate, loaded: companySettingsLoaded } = useCompanyFormSettings();
+  const { afterSave } = usePostSaveNavigation(redirectOnSamePage, "/operations/purchase-filled-cylinder");
   const [vendors, setVendors] = useState<Lookup[]>([]);
   const [items, setItems] = useState<Lookup[]>([]);
   const [vendorId, setVendorId] = useState("");
@@ -86,6 +90,8 @@ export function PurchaseFilledCylinderForm() {
   const [vendorBalance, setVendorBalance] = useState<{ payableBalance: number } | null>(null);
   const [locationId, setLocationId] = useState("");
   const [lastCost, setLastCost] = useState<Record<string, string | null>>({});
+  const [kgPricing, setKgPricing] = useState<Record<string, { unitPrice: string; pricePerKg: string | null; cylinderWeightKg: string | null; usingKgPricing: boolean } | null>>({});
+  const [centralizedPricing, setCentralizedPricing] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -104,6 +110,12 @@ export function PurchaseFilledCylinderForm() {
       .finally(() => setLookupLoading(false));
   }, []);
 
+  useEffect(() => {
+    if (companySettingsLoaded && showDefaultDate && !transactionDate) {
+      setTransactionDate(defaultTransactionDate);
+    }
+  }, [companySettingsLoaded, showDefaultDate, defaultTransactionDate, transactionDate]);
+
   const itemById = useMemo(() => new Map(items.map((item) => [String(item.id), item])), [items]);
 
   function isStandardCylinder(itemId: string) {
@@ -113,10 +125,18 @@ export function PurchaseFilledCylinderForm() {
   }
 
   useEffect(() => {
+    if (centralizedPricing && draft.itemId && kgPricing[draft.itemId]) return;
     if (!elevenPointEightKgPrice || !draft.itemId || draft.unitCost) return;
     if (!isStandardCylinder(draft.itemId)) return;
     setDraft((current) => ({ ...current, unitCost: elevenPointEightKgPrice }));
-  }, [elevenPointEightKgPrice, draft.itemId, draft.unitCost, itemById]);
+  }, [centralizedPricing, elevenPointEightKgPrice, draft.itemId, draft.unitCost, itemById, kgPricing]);
+
+  useEffect(() => {
+    if (!centralizedPricing || !draft.itemId) return;
+    const pricing = kgPricing[draft.itemId];
+    if (!pricing) return;
+    setDraft((current) => ({ ...current, unitCost: pricing.unitPrice }));
+  }, [centralizedPricing, draft.itemId, kgPricing]);
 
   useEffect(() => {
     const relevantItemIds = new Set([...lines.map((line) => line.itemId), draft.itemId].filter(Boolean));
@@ -131,14 +151,20 @@ export function PurchaseFilledCylinderForm() {
     apiGet<{
       vendorBalance: { payableBalance: number } | null;
       lastCost: Record<string, string | null>;
+      kgPricing: Record<string, { unitPrice: string; pricePerKg: string | null; cylinderWeightKg: string | null; usingKgPricing: boolean } | null>;
+      centralizedPricing?: boolean;
     }>(`/api/purchases/filled-cylinder/context?${params.toString()}`)
       .then((data) => {
         setVendorBalance(data.vendorBalance);
         setLastCost(data.lastCost ?? {});
+        setKgPricing(data.kgPricing ?? {});
+        setCentralizedPricing(data.centralizedPricing === true);
       })
       .catch(() => {
         setVendorBalance(null);
         setLastCost({});
+        setKgPricing({});
+        setCentralizedPricing(false);
       });
   }, [vendorId, lines, draft.itemId]);
 
@@ -206,9 +232,13 @@ export function PurchaseFilledCylinderForm() {
     }
   }
 
+  function isCentralizedPriceLocked(itemId: string) {
+    return centralizedPricing && Boolean(kgPricing[itemId]);
+  }
+
   function reset() {
     setVendorId("");
-    setTransactionDate("");
+    setTransactionDate(showDefaultDate ? defaultTransactionDate : "");
     setRemarks("");
     setElevenPointEightKgPrice("");
     setLines([]);
@@ -220,6 +250,8 @@ export function PurchaseFilledCylinderForm() {
     setVendorBalance(null);
     setLocationId("");
     setLastCost({});
+    setKgPricing({});
+    setCentralizedPricing(false);
   }
 
   function payload() {
@@ -244,12 +276,7 @@ export function PurchaseFilledCylinderForm() {
       remarks,
       elevenPointEightKgPrice: elevenPointEightKgPrice ? Number(elevenPointEightKgPrice) : undefined,
       lines: preparedLines,
-      discount: amount(settlement.discount),
-      amountPaid: amount(settlement.amountReceived),
-      payMode: settlement.receiveMode,
-      bankId: settlement.bankId || undefined,
-      chequeNo: settlement.chequeNo || undefined,
-      chequeDate: settlement.chequeDate || undefined,
+      ...purchaseSettlementPayload(settlement),
     };
   }
 
@@ -264,7 +291,7 @@ export function PurchaseFilledCylinderForm() {
       const issueNo = String(result.issueNo ?? "saved");
       setSuccess(`Saved ${issueNo}.`);
       if (result.ids && issueNo !== "saved") setPrintDocumentNo(issueNo);
-      reset();
+      afterSave(reset);
       apiGet<{ documentNo: string }>("/api/documents/next-number?kind=purchase-receipt")
         .then((preview) => setPreviewReceiptNo(preview.documentNo))
         .catch(() => undefined);
@@ -354,18 +381,21 @@ export function PurchaseFilledCylinderForm() {
                     value={elevenPointEightKgPrice}
                     onChange={(e) => setElevenPointEightKgPrice(e.target.value)}
                     className="form-input"
+                    disabled={centralizedPricing}
                   />
                   <button
                     type="button"
                     onClick={applyElevenPointEightKgPrice}
-                    disabled={!elevenPointEightKgPrice}
+                    disabled={!elevenPointEightKgPrice || centralizedPricing}
                     className="shrink-0 rounded-lg border border-blue-200 bg-blue-50 px-2.5 text-xs font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-40 transition-colors"
                     title="Push this price into all already-added 11.8 KG cylinder lines. New lines pick it up automatically."
                   >
                     Apply to Lines
                   </button>
                 </div>
-                <p className="mt-1 text-[11px] leading-snug text-slate-400">Auto-fills new lines; Apply pushes to existing ones.</p>
+                <p className="mt-1 text-[11px] leading-snug text-slate-400">
+                  {centralizedPricing ? "Centralized pricing uses master Define Prices." : "Auto-fills new lines; Apply pushes to existing ones."}
+                </p>
               </div>
               <div>
                 <label className="form-label" htmlFor="remarks">
@@ -419,8 +449,25 @@ export function PurchaseFilledCylinderForm() {
               </div>
               <div>
                 <label className="form-label">Unit Price</label>
-                <input type="number" min="0" value={draft.unitCost} onChange={(e) => updateDraft({ unitCost: e.target.value })} className="form-input text-right" />
-                {draft.itemId && lastCost[draft.itemId] ? (
+                <input
+                  type="number"
+                  min="0"
+                  value={draft.unitCost}
+                  onChange={(e) => updateDraft({ unitCost: e.target.value })}
+                  readOnly={isCentralizedPriceLocked(draft.itemId)}
+                  className="form-input text-right"
+                />
+                {draft.itemId && kgPricing[draft.itemId] ? (
+                  <KgPriceField
+                    pricePerKg={kgPricing[draft.itemId]?.pricePerKg ? Number(kgPricing[draft.itemId]!.pricePerKg) : null}
+                    cylinderWeightKg={kgPricing[draft.itemId]?.cylinderWeightKg ? Number(kgPricing[draft.itemId]!.cylinderWeightKg) : null}
+                    quantity={amount(draft.quantity)}
+                    unitPrice={amount(draft.unitCost)}
+                    readOnly={isCentralizedPriceLocked(draft.itemId)}
+                    onUnitPriceChange={(price) => updateDraft({ unitCost: String(price) })}
+                  />
+                ) : null}
+                {!centralizedPricing && draft.itemId && lastCost[draft.itemId] ? (
                   <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
                     <span className="text-slate-500">
                       Last price: <span className="font-semibold text-blue-700">{Number(lastCost[draft.itemId]).toFixed(2)}</span>

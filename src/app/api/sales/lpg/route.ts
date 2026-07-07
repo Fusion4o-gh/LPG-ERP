@@ -8,12 +8,14 @@ export async function GET(request: Request) {
   try {
     const context = await getRequestContext(request);
     const url = new URL(request.url);
-    const sales = await listSaleLpg(context, {
+    const result = await listSaleLpg(context, {
       from: url.searchParams.get("from") ?? undefined,
       to: url.searchParams.get("to") ?? undefined,
-      limit: url.searchParams.get("limit") ? Number(url.searchParams.get("limit")) : 50,
+      limit: url.searchParams.get("limit") ? Number(url.searchParams.get("limit")) : undefined,
+      offset: url.searchParams.get("offset") ? Number(url.searchParams.get("offset")) : undefined,
+      search: url.searchParams.get("search") ?? undefined,
     });
-    return ok({ sales });
+    return ok(result);
   } catch (error) {
     return serviceError(error);
   }

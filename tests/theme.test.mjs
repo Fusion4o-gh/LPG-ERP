@@ -4,26 +4,24 @@ import test from "node:test";
 const theme = await import("../src/lib/theme.ts");
 
 test("isThemeId accepts known theme ids", () => {
-  assert.equal(theme.isThemeId("aurora"), true);
-  assert.equal(theme.isThemeId("midnight"), true);
+  assert.equal(theme.isThemeId("gas"), true);
+  assert.equal(theme.isThemeId("gas-amber"), true);
   assert.equal(theme.isThemeId("invalid"), false);
 });
 
 test("themeFromSystemPreference maps dark and light", () => {
-  assert.equal(theme.themeFromSystemPreference(true), "midnight");
-  assert.equal(theme.themeFromSystemPreference(false), "aurora");
+  assert.equal(theme.themeFromSystemPreference(true), "gas");
+  assert.equal(theme.themeFromSystemPreference(false), "gas");
 });
 
 test("themeCookieValue encodes theme for cookie storage", () => {
-  assert.match(theme.themeCookieValue("graphite"), /^lpg-theme=graphite;/);
+  assert.match(theme.themeCookieValue("gas-graphite"), /^lpg-theme=gas-graphite;/);
 });
 
 test("THEME_INIT_SCRIPT includes localStorage, cookie, and system preference fallbacks", () => {
   assert.match(theme.THEME_INIT_SCRIPT, /localStorage\.getItem\("lpg-theme"\)/);
   assert.match(theme.THEME_INIT_SCRIPT, /lpg-theme=/);
-  assert.match(theme.THEME_INIT_SCRIPT, /prefers-color-scheme: dark/);
-  assert.match(theme.THEME_INIT_SCRIPT, /"midnight"/);
-  assert.match(theme.THEME_INIT_SCRIPT, /"aurora"/);
+  assert.match(theme.THEME_INIT_SCRIPT, /"gas"/);
 });
 
 test("layout imports shared theme init script", async () => {
@@ -50,7 +48,7 @@ test("app shell context exposes themeId", async () => {
 test("globals.css defines accent utility tokens", async () => {
   const { readFile } = await import("node:fs/promises");
   const css = await readFile(new URL("../src/app/globals.css", import.meta.url), "utf8");
-  assert.match(css, /--accent-tint/);
+  assert.match(css, /--gas-blue/);
   assert.match(css, /\.accent-tile/);
   assert.match(css, /\.accent-row-hover/);
 });

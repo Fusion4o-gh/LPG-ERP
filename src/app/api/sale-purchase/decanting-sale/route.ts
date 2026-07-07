@@ -1,5 +1,6 @@
 import { DOCUMENT_PREFIXES, nextDocumentNumber } from "../../../../server/services/accounting/document-numbers.ts";
 import { decantingSale } from "../../../../server/services/sales/decanting-sale.ts";
+import { listDecantingSales } from "../../../../server/services/lists/operational-document-list.ts";
 import { getRequestContext } from "../../../../server/api/request-context.ts";
 import { fail, ok, serviceError } from "../../../../server/api/responses.ts";
 import { booleanField, dateField, optionalPositiveNumberField, optionalStringField, positiveIntegerField, positiveNumberField, readJson, stringField } from "../../../../server/api/validation.ts";
@@ -25,6 +26,23 @@ function decantedQuantity(body: Record<string, unknown>) {
   if (body.decantedQuantity !== undefined) return positiveNumberField(body, "decantedQuantity");
   if (body.decantedQty !== undefined) return positiveNumberField(body, "decantedQty");
   return positiveNumberField(body, "saleQuantity");
+}
+
+export async function GET(request: Request) {
+  try {
+    const context = await getRequestContext(request);
+    const url = new URL(request.url);
+    const result = await listDecantingSales(context, {
+      from: url.searchParams.get("from") ?? undefined,
+      to: url.searchParams.get("to") ?? undefined,
+      limit: url.searchParams.get("limit") ? Number(url.searchParams.get("limit")) : undefined,
+      offset: url.searchParams.get("offset") ? Number(url.searchParams.get("offset")) : undefined,
+      search: url.searchParams.get("search") ?? undefined,
+    });
+    return ok(result);
+  } catch (error) {
+    return serviceError(error);
+  }
 }
 
 export async function POST(request: Request) {

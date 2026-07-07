@@ -1,7 +1,7 @@
 import { CylinderState, PartyType, PermissionAction, Prisma, StockDirection, StockSourceType, VoucherType } from "@prisma/client";
 import { prisma } from "../../../lib/prisma.ts";
 import { ACCOUNT_CODES, getAccountIdByCode } from "../accounting/accounts.ts";
-import { capDiscount, postVendorPayment } from "../accounting/settlement-vouchers.ts";
+import { capDiscount, postVendorSettlement } from "../accounting/settlement-vouchers.ts";
 import { createBalancedVoucher } from "../accounting/vouchers.ts";
 import { writeAuditLog } from "../audit/audit-log.ts";
 import { assertWritableBusinessDate } from "../inventory/day-closing.ts";
@@ -19,6 +19,8 @@ type BasePurchaseInput = {
   allowClosedDayOverride?: boolean;
   discount?: string | number;
   amountPaid?: string | number;
+  bankAmount?: string | number;
+  cashAmount?: string | number;
   payMode?: string;
   bankId?: string;
   chequeNo?: string;
@@ -213,9 +215,12 @@ export async function purchaseEmptyCylinder(input: PurchaseEmptyCylinderInput) {
       ],
     });
 
-    const amountPaid = decimal(input.amountPaid);
+    const bankAmount = decimal(input.bankAmount);
+    const cashAmount = decimal(input.cashAmount);
+    const legacyAmountPaid = decimal(input.amountPaid);
+    const amountPaid = bankAmount.gt(0) || cashAmount.gt(0) ? bankAmount.plus(cashAmount) : legacyAmountPaid;
     if (amountPaid.gt(netPayableAmount)) throw new Error("amountPaid cannot exceed net payable after discount.");
-    const paymentVoucher = await postVendorPayment(tx, {
+    const settlement = await postVendorSettlement(tx, {
       companyId: input.companyId,
       financialYearId: input.financialYearId,
       userId: input.userId,
@@ -223,10 +228,13 @@ export async function purchaseEmptyCylinder(input: PurchaseEmptyCylinderInput) {
       allowClosedDayOverride: input.allowClosedDayOverride,
       partyAccountId: vendor.accountId,
       amount: amountPaid,
+      bankAmount,
+      cashAmount,
       payMode: input.payMode,
       bankId: input.bankId,
       chequeNo: input.chequeNo,
     });
+    const paymentVoucher = settlement.bankPaymentVoucher ?? settlement.cashPaymentVoucher;
 
     await writeAuditLog(tx, {
       companyId: input.companyId,
@@ -340,9 +348,12 @@ export async function purchaseOther(input: PurchaseOtherInput) {
       ],
     });
 
-    const amountPaid = decimal(input.amountPaid);
+    const bankAmount = decimal(input.bankAmount);
+    const cashAmount = decimal(input.cashAmount);
+    const legacyAmountPaid = decimal(input.amountPaid);
+    const amountPaid = bankAmount.gt(0) || cashAmount.gt(0) ? bankAmount.plus(cashAmount) : legacyAmountPaid;
     if (amountPaid.gt(netPayableAmount)) throw new Error("amountPaid cannot exceed net payable after discount.");
-    const paymentVoucher = await postVendorPayment(tx, {
+    const settlement = await postVendorSettlement(tx, {
       companyId: input.companyId,
       financialYearId: input.financialYearId,
       userId: input.userId,
@@ -350,10 +361,13 @@ export async function purchaseOther(input: PurchaseOtherInput) {
       allowClosedDayOverride: input.allowClosedDayOverride,
       partyAccountId: vendor.accountId,
       amount: amountPaid,
+      bankAmount,
+      cashAmount,
       payMode: input.payMode,
       bankId: input.bankId,
       chequeNo: input.chequeNo,
     });
+    const paymentVoucher = settlement.bankPaymentVoucher ?? settlement.cashPaymentVoucher;
 
     await writeAuditLog(tx, {
       companyId: input.companyId,

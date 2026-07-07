@@ -1,5 +1,5 @@
-import { EmptySaleForm } from "@/components/EmptySaleForm";
+import { EmptySaleList } from "@/components/OperationalDocumentLists";
 
 export default function EmptySalePage() {
-  return <EmptySaleForm />;
+  return <EmptySaleList />;
 }

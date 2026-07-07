@@ -27,6 +27,7 @@ type EmptySaleInput = {
   receiveMode?: string;
   bankId?: string;
   chequeNo?: string;
+  invoiceLanguage?: string;
 };
 
 type EmptySaleLineInput = {
@@ -171,6 +172,7 @@ export async function emptySale(input: EmptySaleInput) {
         netReceivableAmount: String(netReceivableAmount),
         amountReceived: String(input.amountReceived ?? 0),
         receiveMode: input.receiveMode ?? "Credit",
+        invoiceLanguage: input.invoiceLanguage ?? "English",
         lines: lines.map((line) => ({
           itemId: line.itemId,
           item: label(itemById.get(line.itemId), line.itemId),

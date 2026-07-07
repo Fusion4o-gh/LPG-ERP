@@ -6,7 +6,10 @@ const PREFIX_BY_KIND: Record<string, string> = {
   "sale-issue": DOCUMENT_PREFIXES.saleIssue,
   "purchase-receipt": DOCUMENT_PREFIXES.purchaseReceipt,
   "cash-receipt": DOCUMENT_PREFIXES.cashReceiptVoucher,
+  "cash-payment": DOCUMENT_PREFIXES.cashPaymentVoucher,
   "bank-receipt": DOCUMENT_PREFIXES.bankReceiptVoucher,
+  "bank-payment": DOCUMENT_PREFIXES.bankPaymentVoucher,
+  "empty-sale": DOCUMENT_PREFIXES.emptySaleIssue,
 };
 
 export async function GET(request: Request) {

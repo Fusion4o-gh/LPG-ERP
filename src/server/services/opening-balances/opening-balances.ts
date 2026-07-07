@@ -720,3 +720,74 @@ export async function deleteVendorOpeningBalance(context: Context, id: string) {
     return { id };
   });
 }
+
+type ExpenseOpeningInput = {
+  accountId: string;
+  amount: string | number;
+  transactionDate: string | Date;
+  balanceType?: string;
+};
+
+export async function createExpenseAccountOpeningBalance(tx: Tx, context: Context, input: ExpenseOpeningInput) {
+  const amount = positiveDecimal(input.amount, "openingBalance");
+  const existingCount = await tx.accountingVoucherLine.count({
+    where: {
+      accountId: input.accountId,
+      voucher: { companyId: context.companyId, financialYearId: context.financialYearId, sourceType: "ExpenseOpeningBalance" },
+    },
+  });
+  if (existingCount > 0) throw new Error("Expense opening balance already exists.");
+  const voucherNo = await nextDocumentNumberInTransaction(tx, {
+    companyId: context.companyId,
+    financialYearId: context.financialYearId,
+    prefix: "EOB",
+  });
+  const equityAccountId = await openingEquityAccount(tx, context.companyId);
+  const balanceType = input.balanceType === "CREDIT" ? "CREDIT" : "DEBIT";
+  return createBalancedVoucher(tx, {
+    companyId: context.companyId,
+    financialYearId: context.financialYearId,
+    voucherNo,
+    voucherType: VoucherType.OPENING,
+    voucherDate: openingDate(input.transactionDate),
+    sourceType: "ExpenseOpeningBalance",
+    sourceId: input.accountId,
+    createdById: context.userId,
+    narration: "ExpenseOpeningBalance",
+    lines:
+      balanceType === "DEBIT"
+        ? [
+            { accountId: input.accountId, debit: amount },
+            { accountId: equityAccountId, credit: amount },
+          ]
+        : [
+            { accountId: equityAccountId, debit: amount },
+            { accountId: input.accountId, credit: amount },
+          ],
+  });
+}
+
+export async function loadExpenseOpeningBalances(tx: Tx, context: Context, accountIds: string[]) {
+  if (accountIds.length === 0) return new Map<string, { openingAmount: string; openingBalanceType: string }>();
+  const vouchers = await tx.accountingVoucher.findMany({
+    where: {
+      companyId: context.companyId,
+      financialYearId: context.financialYearId,
+      sourceType: "ExpenseOpeningBalance",
+      sourceId: { in: accountIds },
+    },
+    include: { lines: true },
+  });
+  return new Map(
+    vouchers.map((voucher) => {
+      const accountLine = voucher.lines.find((line) => line.accountId === voucher.sourceId);
+      return [
+        voucher.sourceId,
+        {
+          openingAmount: voucher.totalDebit.toString(),
+          openingBalanceType: accountLine && Number(accountLine.debit) > 0 ? "DEBIT" : "CREDIT",
+        },
+      ] as const;
+    }),
+  );
+}

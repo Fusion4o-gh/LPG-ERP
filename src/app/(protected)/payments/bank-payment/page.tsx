@@ -34,6 +34,7 @@ export default function BankPaymentPage() {
           submitLabel="Post Bank Payment"
           printableDocumentType="bank-payment"
           printableHrefBase="/payments/bank-payment"
+          balancePreview="bank"
           fields={[
             { name: "vendorId", label: "Vendor", type: "select", lookup: "vendors", required: true },
             { name: "bankId", label: "Bank", type: "select", lookup: "banks", required: true },

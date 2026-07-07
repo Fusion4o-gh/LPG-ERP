@@ -5,7 +5,10 @@ import { baseFixture, doc, isolatedFixture } from "./helpers/lpg-fixtures.mjs";
 
 const prisma = new PrismaClient();
 const purchases = await import("../src/server/services/purchases/purchase-filled-cylinder.ts");
+const purchaseEmptyOther = await import("../src/server/services/purchases/purchase-empty-other.ts");
 const sales = await import("../src/server/services/sales/sale-lpg.ts");
+const emptySales = await import("../src/server/services/sales/empty-sale.ts");
+const decantingSales = await import("../src/server/services/sales/decanting-sale.ts");
 const returns = await import("../src/server/services/returns/cylinder-return.ts");
 const payments = await import("../src/server/services/payments/payment-services.ts");
 const reversals = await import("../src/server/services/reversals/reversal-policy.ts");
@@ -149,4 +152,145 @@ test("cylinder return reversal creates compensating empty-cylinder stock entry, 
   const after = await prisma.customerCylinderBalance.findUniqueOrThrow({ where: { customerId_itemId: { customerId: customer.id, itemId: item.id } } });
   assert.equal(after.emptyOwed, before.emptyOwed + 1);
   await assertReversalAudit("CylinderReturnReversal", returnNo);
+});
+
+async function seedEmptyStock(context, item, user, quantity = 10) {
+  return prisma.stockLedgerEntry.create({
+    data: {
+      companyId: context.companyId,
+      financialYearId: context.financialYearId,
+      itemId: item.id,
+      cylinderState: "EMPTY",
+      direction: "IN",
+      sourceType: "OPENING_BALANCE",
+      sourceId: doc("REV-EMPTY-OPEN"),
+      transactionDate: new Date("2026-12-01"),
+      quantity,
+      balanceAfter: quantity,
+      createdById: user.id,
+    },
+  });
+}
+
+async function seedFilledStock(context, item, user, quantity = 10) {
+  return prisma.stockLedgerEntry.create({
+    data: {
+      companyId: context.companyId,
+      financialYearId: context.financialYearId,
+      itemId: item.id,
+      cylinderState: "FILLED",
+      direction: "IN",
+      sourceType: "OPENING_BALANCE",
+      sourceId: doc("REV-FILLED-OPEN"),
+      transactionDate: new Date("2026-12-01"),
+      quantity,
+      balanceAfter: quantity,
+      createdById: user.id,
+    },
+  });
+}
+
+test("empty sale reversal creates compensating voucher, stock entry, and audit log", async () => {
+  const { company, financialYear, user, item, customer } = await fixture();
+  const context = { companyId: company.id, financialYearId: financialYear.id, userId: user.id };
+  await seedEmptyStock(context, item, user, 5);
+  const issueNo = doc("ES-REV");
+  await emptySales.emptySale({ ...context, issueNo, customerId: customer.id, itemId: item.id, quantity: 2, unitPrice: 1500, transactionDate: "2026-12-14" });
+
+  const result = await reverse(context, "empty-sale", issueNo);
+
+  assert.ok(result.voucher);
+  assert.equal(result.stockEntries.length, 1);
+  assert.equal(result.stockEntries[0].direction, "IN");
+  await assertReversalAudit("EmptySaleReversal", issueNo);
+});
+
+test("decanting sale reversal creates compensating voucher, stock entry, and audit log", async () => {
+  const { company, financialYear, user, item, customer } = await fixture();
+  const context = { companyId: company.id, financialYearId: financialYear.id, userId: user.id };
+  await seedFilledStock(context, item, user, 5);
+  const issueNo = doc("DS-REV");
+  await decantingSales.decantingSale({
+    ...context,
+    issueNo,
+    customerId: customer.id,
+    sourceItemId: item.id,
+    sourceQuantity: 2,
+    decantedQuantity: 20,
+    unitPrice: 100,
+    transactionDate: "2026-12-14",
+  });
+
+  const result = await reverse(context, "decanting-sale", issueNo);
+
+  assert.ok(result.voucher);
+  assert.equal(result.stockEntries[0].direction, "IN");
+  await assertReversalAudit("DecantingSaleReversal", issueNo);
+});
+
+test("zero-amount decanting sale reversal creates stock entry without voucher", async () => {
+  const { company, financialYear, user, item } = await fixture();
+  const context = { companyId: company.id, financialYearId: financialYear.id, userId: user.id };
+  await seedFilledStock(context, item, user, 5);
+  const issueNo = doc("DS-ZERO-REV");
+  await decantingSales.decantingSale({
+    ...context,
+    issueNo,
+    sourceItemId: item.id,
+    sourceQuantity: 1,
+    decantedQuantity: 10,
+    unitPrice: 0,
+    transactionDate: "2026-12-14",
+  });
+
+  const result = await reverse(context, "decanting-sale", issueNo);
+
+  assert.equal(result.voucher, null);
+  assert.equal(result.stockEntries[0].direction, "IN");
+  await assertReversalAudit("DecantingSaleReversal", issueNo);
+});
+
+test("purchase empty reversal creates compensating voucher, stock entry, and audit log", async () => {
+  const { company, financialYear, user, item, vendor } = await fixture();
+  const context = { companyId: company.id, financialYearId: financialYear.id, userId: user.id };
+  const receiptNo = doc("PE-REV");
+  await purchaseEmptyOther.purchaseEmptyCylinder({
+    ...context,
+    receiptNo,
+    vendorId: vendor.id,
+    itemId: item.id,
+    quantity: 2,
+    unitPrice: 1000,
+    gstPercent: 0,
+    transactionDate: "2026-12-14",
+  });
+
+  const result = await reverse(context, "purchase-empty", receiptNo);
+
+  assert.ok(result.voucher);
+  assert.equal(result.stockEntries[0].direction, "OUT");
+  await assertReversalAudit("PurchaseEmptyCylinderReversal", receiptNo);
+});
+
+test("purchase other reversal without stock still creates compensating voucher and audit log", async () => {
+  const { company, financialYear, user, vendor } = await fixture();
+  const context = { companyId: company.id, financialYearId: financialYear.id, userId: user.id };
+  const expenseAccount = await prisma.chartAccount.findFirstOrThrow({
+    where: { companyId: company.id, accountType: "EXPENSE", status: "ACTIVE" },
+    orderBy: { code: "asc" },
+  });
+  const receiptNo = doc("PO-REV");
+  await purchaseEmptyOther.purchaseOther({
+    ...context,
+    receiptNo,
+    vendorId: vendor.id,
+    lines: [{ accountId: expenseAccount.id, amount: 500, gstPercent: 0, stockIn: false }],
+    transactionDate: "2026-12-14",
+  });
+
+  const result = await reverse(context, "purchase-other", receiptNo);
+
+  assert.ok(result.voucher);
+  assert.equal(result.stockEntries.length, 0);
+  await assertReversalAudit("PurchaseOtherReversal", receiptNo);
 });

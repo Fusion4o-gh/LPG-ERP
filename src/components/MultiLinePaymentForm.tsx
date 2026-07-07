@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useId, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api-client";
+import { useCompanyFormSettings, usePostSaveNavigation } from "@/lib/use-company-form-settings";
 import { ApiError } from "./ApiError";
 import { PageHeader } from "./PageHeader";
 import { SubmitButton } from "./SubmitButton";
@@ -58,8 +59,12 @@ function emptyLine(): PaymentLine {
   return { uid: lineCounter++, accountId: "", description: "", amount: "" };
 }
 
-function money(value: string) {
+function money(value: string | number) {
   return Number(value || 0).toFixed(2);
+}
+
+function balanceLabel(type: PaymentType) {
+  return type === "bank-receipt" || type === "bank-payment" ? "Bank Balance" : "Cash Balance";
 }
 
 export function MultiLinePaymentForm({ type }: { type: PaymentType }) {
@@ -67,6 +72,8 @@ export function MultiLinePaymentForm({ type }: { type: PaymentType }) {
   const config = CONFIG[type];
   const isBankType = type === "bank-receipt" || type === "bank-payment";
   const allowedTypes = ACCOUNT_TYPES_FOR_PAYMENT[type];
+  const { showDefaultDate, redirectOnSamePage, defaultTransactionDate, loaded: companySettingsLoaded } = useCompanyFormSettings();
+  const { afterSave } = usePostSaveNavigation(redirectOnSamePage, config.printBase);
 
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [banks, setBanks] = useState<Bank[]>([]);
@@ -77,6 +84,8 @@ export function MultiLinePaymentForm({ type }: { type: PaymentType }) {
   const [bankId, setBankId] = useState("");
   const [lines, setLines] = useState<PaymentLine[]>([emptyLine()]);
   const [allowOverride, setAllowOverride] = useState(false);
+  const [previewVoucherNo, setPreviewVoucherNo] = useState("");
+  const [balances, setBalances] = useState<{ cashInHand: number; bankBalance: number | null } | null>(null);
 
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
@@ -87,6 +96,9 @@ export function MultiLinePaymentForm({ type }: { type: PaymentType }) {
       apiGet<{ accounts: Account[] }>("/api/chart-of-accounts")
         .then((d) => setAccounts(d.accounts.filter((a) => allowedTypes.includes(a.accountType))))
         .catch((e: Error) => setLoadError(e.message)),
+      apiGet<{ documentNo: string }>(`/api/documents/next-number?kind=${type}`)
+        .then((d) => setPreviewVoucherNo(d.documentNo))
+        .catch(() => undefined),
     ];
     if (isBankType) {
       fetches.push(
@@ -98,6 +110,29 @@ export function MultiLinePaymentForm({ type }: { type: PaymentType }) {
     Promise.all(fetches);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (companySettingsLoaded && showDefaultDate && !voucherDate) {
+      setVoucherDate(defaultTransactionDate);
+    }
+  }, [companySettingsLoaded, showDefaultDate, defaultTransactionDate, voucherDate]);
+
+  useEffect(() => {
+    const params = isBankType && bankId ? `?bankId=${encodeURIComponent(bankId)}` : "";
+    apiGet<{ cashInHand: number; bankBalance: number | null }>(`/api/accounting/balances${params}`)
+      .then(setBalances)
+      .catch(() => setBalances(null));
+  }, [isBankType, bankId]);
+
+  function resetForm() {
+    setVoucherDate(showDefaultDate ? defaultTransactionDate : "");
+    setNarration("");
+    setBankId("");
+    setLines([emptyLine()]);
+    setAllowOverride(false);
+    setFormError("");
+    setPostedNo("");
+  }
 
   function addLine() {
     setLines((prev) => [...prev, emptyLine()]);
@@ -114,6 +149,11 @@ export function MultiLinePaymentForm({ type }: { type: PaymentType }) {
 
   const total = lines.reduce((sum, l) => sum + (parseFloat(l.amount) || 0), 0);
   const isValid = total > 0 && voucherDate && lines.every((l) => l.accountId) && (!isBankType || bankId);
+  const balanceAmount = isBankType
+    ? bankId
+      ? balances?.bankBalance
+      : null
+    : balances?.cashInHand;
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -138,11 +178,13 @@ export function MultiLinePaymentForm({ type }: { type: PaymentType }) {
       const result = await apiPost<Record<string, string>>(endpoint, payload);
       const docNo = String(result[config.receiptKey] ?? result.voucherNo ?? "");
       setPostedNo(docNo);
-      setVoucherDate("");
-      setNarration("");
-      setBankId("");
-      setLines([emptyLine()]);
-      setAllowOverride(false);
+      afterSave(resetForm);
+      apiGet<{ documentNo: string }>(`/api/documents/next-number?kind=${type}`)
+        .then((d) => setPreviewVoucherNo(d.documentNo))
+        .catch(() => undefined);
+      apiGet<{ cashInHand: number; bankBalance: number | null }>(`/api/accounting/balances${isBankType && bankId ? `?bankId=${encodeURIComponent(bankId)}` : ""}`)
+        .then(setBalances)
+        .catch(() => undefined);
     } catch (err) {
       setFormError(err instanceof Error ? err.message : "Failed to post voucher.");
     } finally {
@@ -152,7 +194,17 @@ export function MultiLinePaymentForm({ type }: { type: PaymentType }) {
 
   return (
     <>
-      <PageHeader title={config.title} description={config.description} />
+      <PageHeader
+        title={config.title}
+        description={config.description}
+        actions={
+          previewVoucherNo ? (
+            <span className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800">
+              Next Voucher #: {previewVoucherNo}
+            </span>
+          ) : null
+        }
+      />
       <ApiError message={loadError} />
       <form id={formId} onSubmit={handleSubmit} className="space-y-5">
         <ApiError message={formError} />
@@ -245,17 +297,23 @@ export function MultiLinePaymentForm({ type }: { type: PaymentType }) {
               </tbody>
             </table>
           </div>
-          <div className="border-t border-slate-100 bg-slate-50/60 px-5 py-4 flex items-center justify-end">
+          <div className="border-t border-slate-100 bg-slate-50/60 px-5 py-4 flex flex-wrap items-center justify-end gap-3">
+            <div className="rounded-lg border border-slate-200 bg-white p-3 min-w-[160px]">
+              <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">{balanceLabel(type)}</div>
+              <div className="mt-1.5 text-lg font-bold tabular-nums text-slate-800">
+                {balanceAmount == null ? "—" : money(balanceAmount)}
+              </div>
+            </div>
             <div className="rounded-lg bg-blue-700 p-3 min-w-[160px]">
               <div className="text-xs font-semibold uppercase tracking-wide text-blue-200">Total</div>
-              <div className="mt-1.5 text-lg font-bold text-white tabular-nums">{money(String(total))}</div>
+              <div className="mt-1.5 text-lg font-bold text-white tabular-nums">{money(total)}</div>
             </div>
           </div>
         </section>
 
         <div className="flex flex-wrap items-center gap-4">
           <SubmitButton loading={submitting} disabled={!isValid || submitting}>Post {config.title}</SubmitButton>
-          <button type="button" onClick={() => { setVoucherDate(""); setNarration(""); setBankId(""); setLines([emptyLine()]); setAllowOverride(false); setFormError(""); setPostedNo(""); }} className="btn-outline">Reset Form</button>
+          <button type="button" onClick={resetForm} className="btn-outline">Reset Form</button>
           <label className="flex items-center gap-2 text-xs text-slate-600 ml-auto">
             <input type="checkbox" checked={allowOverride} onChange={(e) => setAllowOverride(e.target.checked)} className="h-4 w-4 rounded border-slate-300" />
             Closed-day override

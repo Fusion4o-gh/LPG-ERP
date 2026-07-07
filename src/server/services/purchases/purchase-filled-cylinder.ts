@@ -1,12 +1,13 @@
 import { CylinderState, PartyType, PermissionAction, Prisma, StockDirection, StockSourceType, VoucherType } from "@prisma/client";
 import { prisma } from "../../../lib/prisma.ts";
-import { DOCUMENT_PREFIXES, nextDocumentNumberInTransaction } from "../accounting/document-numbers.ts";
-import { ACCOUNT_CODES, getAccountIdByCode, getBankAccountId, getCashAccountId } from "../accounting/accounts.ts";
+import { postVendorSettlement } from "../accounting/settlement-vouchers.ts";
+import { ACCOUNT_CODES, getAccountIdByCode } from "../accounting/accounts.ts";
 import { createBalancedVoucher } from "../accounting/vouchers.ts";
 import { writeAuditLog } from "../audit/audit-log.ts";
 import { assertWritableBusinessDate } from "../inventory/day-closing.ts";
 import { createStockLedgerEntry } from "../inventory/stock-ledger.ts";
 import { enforcePermission } from "../rbac/enforce.ts";
+import { assertCentralizedLinePrices } from "../pricing/kg-pricing.ts";
 
 type PurchaseFilledCylinderInput = {
   companyId: string;
@@ -26,7 +27,9 @@ type PurchaseFilledCylinderInput = {
   allowClosedDayOverride?: boolean;
   discount?: string | number;
   amountPaid?: string | number;
-  payMode?: "Credit" | "Cash" | "Bank" | string;
+  bankAmount?: string | number;
+  cashAmount?: string | number;
+  payMode?: "Credit" | "Cash" | "Bank" | "Split" | string;
   bankId?: string;
   chequeNo?: string;
   chequeDate?: string | Date;
@@ -100,6 +103,12 @@ export async function purchaseFilledCylinder(input: PurchaseFilledCylinderInput)
     const stockAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.stock);
     const gstReceivableAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.gstReceivable);
     const lines = normalizeLines(input);
+    await assertCentralizedLinePrices(tx, {
+      companyId: input.companyId,
+      transactionDate: input.transactionDate,
+      lines: lines.map((line) => ({ itemId: line.itemId, unitAmount: line.unitCost })),
+      amountLabel: "unit cost",
+    });
     const itemRows = await tx.item.findMany({
       where: { companyId: input.companyId, id: { in: [...new Set(lines.map((line) => line.itemId))] } },
       select: { id: true, code: true, name: true },
@@ -207,6 +216,8 @@ export async function purchaseFilledCylinder(input: PurchaseFilledCylinderInput)
         discountAmount: String(discountAmount),
         netPayableAmount: String(netPayableAmount),
         amountPaid: String(input.amountPaid ?? 0),
+        bankAmount: String(input.bankAmount ?? 0),
+        cashAmount: String(input.cashAmount ?? 0),
         payMode: input.payMode ?? "Credit",
         lines: lines.map((line) => {
           const item = itemById.get(line.itemId);
@@ -226,63 +237,33 @@ export async function purchaseFilledCylinder(input: PurchaseFilledCylinderInput)
       },
     });
 
-    const amountPaid = decimal(input.amountPaid);
-    const payMode = String(input.payMode ?? "Credit");
-    let paymentVoucher = null;
-    if (amountPaid.gt(0)) {
-      if (amountPaid.gt(netPayableAmount)) throw new Error("amountPaid cannot exceed net payable after discount.");
-      if (payMode.toLowerCase() === "bank") {
-        if (!input.bankId) throw new Error("bankId is required for bank payment.");
-        const voucherNo = await nextDocumentNumberInTransaction(tx, {
-          companyId: input.companyId,
-          financialYearId: input.financialYearId,
-          prefix: DOCUMENT_PREFIXES.bankPaymentVoucher,
-        });
-        const bankAccountId = await getBankAccountId(tx, input.bankId);
-        const narration = input.chequeNo ? `Cheque ${input.chequeNo}` : undefined;
-        paymentVoucher = await createBalancedVoucher(tx, {
-            companyId: input.companyId,
-            financialYearId: input.financialYearId,
-            voucherNo,
-            voucherType: VoucherType.BP,
-            voucherDate: input.transactionDate,
-            narration,
-            sourceType: "BankPayment",
-            sourceId: voucherNo,
-            createdById: input.userId,
-            lines: [
-              { accountId: vendor.accountId, debit: amountPaid },
-              { accountId: bankAccountId, credit: amountPaid },
-            ],
-          });
-      } else {
-        const voucherNo = await nextDocumentNumberInTransaction(tx, {
-          companyId: input.companyId,
-          financialYearId: input.financialYearId,
-          prefix: DOCUMENT_PREFIXES.cashPaymentVoucher,
-        });
-        const cashAccountId = await getCashAccountId(tx, input.companyId);
-        paymentVoucher = await createBalancedVoucher(tx, {
-            companyId: input.companyId,
-            financialYearId: input.financialYearId,
-            voucherNo,
-            voucherType: VoucherType.CP,
-            voucherDate: input.transactionDate,
-            sourceType: "CashPayment",
-            sourceId: voucherNo,
-            createdById: input.userId,
-            lines: [
-              { accountId: vendor.accountId, debit: amountPaid },
-              { accountId: cashAccountId, credit: amountPaid },
-            ],
-          });
-      }
-    }
+    const bankAmount = decimal(input.bankAmount);
+    const cashAmount = decimal(input.cashAmount);
+    const legacyAmountPaid = decimal(input.amountPaid);
+    const amountPaid = bankAmount.gt(0) || cashAmount.gt(0) ? bankAmount.plus(cashAmount) : legacyAmountPaid;
+    if (amountPaid.gt(netPayableAmount)) throw new Error("amountPaid cannot exceed net payable after discount.");
+    const settlement = await postVendorSettlement(tx, {
+      companyId: input.companyId,
+      financialYearId: input.financialYearId,
+      userId: input.userId,
+      transactionDate: input.transactionDate,
+      allowClosedDayOverride: input.allowClosedDayOverride,
+      partyAccountId: vendor.accountId,
+      amount: amountPaid,
+      bankAmount,
+      cashAmount,
+      payMode: input.payMode,
+      bankId: input.bankId,
+      chequeNo: input.chequeNo,
+    });
+    const paymentVoucher = settlement.bankPaymentVoucher ?? settlement.cashPaymentVoucher;
 
     return {
       issueNo: input.issueNo,
       voucher,
       paymentVoucher,
+      bankPaymentVoucher: settlement.bankPaymentVoucher,
+      cashPaymentVoucher: settlement.cashPaymentVoucher,
       stockEntries,
       totalExGstAmount: grossAmount,
       totalGstAmount: gstAmount,
@@ -290,6 +271,117 @@ export async function purchaseFilledCylinder(input: PurchaseFilledCylinderInput)
       discountAmount,
       netPayableAmount,
       amountPaid,
+    };
+  });
+}
+
+function legacyItemLabel(itemField: string) {
+  const separator = itemField.indexOf(" - ");
+  if (separator > 0) return `${itemField.slice(0, separator)}-${itemField.slice(separator + 3)}`;
+  return itemField;
+}
+
+function formatPurchaseItemsSummary(lines: unknown) {
+  if (!Array.isArray(lines) || lines.length === 0) return "";
+  return lines
+    .map((line) => {
+      const row = line as Record<string, unknown>;
+      const label = legacyItemLabel(String(row.item ?? row.itemId ?? ""));
+      const qty = Number(row.quantity ?? 0);
+      const amount = row.incGstAmount ?? row.exGstAmount ?? row.unitCost ?? "0";
+      return `${label} @ ${qty} : ${amount}`;
+    })
+    .join(", ");
+}
+
+export async function listPurchaseFilledCylinder(
+  context: { companyId: string; financialYearId: string; userId: string },
+  input: { from?: string; to?: string; limit?: number; offset?: number; search?: string },
+) {
+  return prisma.$transaction(async (tx) => {
+    await enforcePermission(tx, context.userId, "purchase-filled-cylinders", PermissionAction.VIEW);
+    const from = input.from ? new Date(input.from) : undefined;
+    const to = input.to ? new Date(input.to) : undefined;
+    if (to) to.setUTCHours(23, 59, 59, 999);
+    const pageSize = Math.min(Math.max(input.limit ?? 10, 1), 100);
+    const offset = Math.max(input.offset ?? 0, 0);
+    const search = input.search?.trim().toLowerCase();
+
+    const where = {
+      companyId: context.companyId,
+      financialYearId: context.financialYearId,
+      sourceType: "PurchaseFilledCylinder" as const,
+      ...(from || to
+        ? {
+            voucherDate: {
+              ...(from ? { gte: from } : {}),
+              ...(to ? { lte: to } : {}),
+            },
+          }
+        : {}),
+    };
+
+    const vouchers = await tx.accountingVoucher.findMany({
+      where,
+      orderBy: [{ voucherDate: "desc" }, { createdAt: "desc" }],
+      select: {
+        id: true,
+        voucherNo: true,
+        voucherDate: true,
+        totalDebit: true,
+        sourceId: true,
+      },
+    });
+
+    const receiptNos = vouchers.map((v) => v.sourceId ?? "").filter(Boolean);
+    const logs = await tx.auditLog.findMany({
+      where: { companyId: context.companyId, entityType: "PurchaseFilledCylinder", entityId: { in: receiptNos } },
+      select: { entityId: true, after: true },
+    });
+    const afterByReceipt = new Map(logs.map((log) => [log.entityId, log.after as Record<string, unknown> | null]));
+    const vendorIds = [
+      ...new Set(
+        logs
+          .map((log) => (afterByReceipt.get(log.entityId)?.vendorId as string | undefined) ?? "")
+          .filter(Boolean),
+      ),
+    ];
+    const vendors = await tx.vendor.findMany({
+      where: { companyId: context.companyId, id: { in: vendorIds } },
+      select: { id: true, name: true, code: true },
+    });
+    const vendorById = new Map(vendors.map((row) => [row.id, row]));
+
+    const rows = vouchers.map((voucher) => {
+      const after = afterByReceipt.get(voucher.sourceId ?? "") ?? {};
+      const vendorId = typeof after.vendorId === "string" ? after.vendorId : "";
+      const vendor = vendorById.get(vendorId);
+      const receiptNo = voucher.sourceId ?? voucher.voucherNo;
+      return {
+        receiptNo,
+        voucherId: voucher.id,
+        transactionDate: voucher.voucherDate,
+        vendorCode: vendor?.code ?? "",
+        vendorName: vendor?.name ?? vendorId,
+        itemsSummary: formatPurchaseItemsSummary(after.lines),
+        totalAmount: String(after.totalIncGstAmount ?? after.netPayableAmount ?? voucher.totalDebit),
+        netPayableAmount: String(after.netPayableAmount ?? voucher.totalDebit),
+        amountPaid: String(after.amountPaid ?? "0"),
+      };
+    });
+
+    const filtered = search
+      ? rows.filter((row) => {
+          const haystack = [row.receiptNo, row.vendorCode, row.vendorName, row.itemsSummary].join(" ").toLowerCase();
+          return haystack.includes(search);
+        })
+      : rows;
+
+    return {
+      purchases: filtered.slice(offset, offset + pageSize),
+      total: filtered.length,
+      limit: pageSize,
+      offset,
     };
   });
 }

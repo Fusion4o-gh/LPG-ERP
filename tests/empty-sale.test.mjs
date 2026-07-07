@@ -129,6 +129,7 @@ test("printable empty sale payload includes all lines", async () => {
         { itemId: item.id, quantity: 1, unitPrice: 1000 },
         { itemId: secondItem.id, quantity: 2, unitPrice: 500 },
       ],
+      invoiceLanguage: "Urdu",
     }),
   );
   const createdBody = await created.json();
@@ -141,6 +142,7 @@ test("printable empty sale payload includes all lines", async () => {
 
   assert.equal(response.status, 200);
   assert.equal(body.document.type, "Empty Sale Invoice");
+  assert.equal(body.document.invoiceLanguage, "Urdu");
   assert.equal(body.document.number, createdBody.issueNo);
   assert.equal(body.document.partyLabel, "Customer");
   assert.equal(body.document.lineItems.length, 2);

@@ -7,6 +7,13 @@ function optionalStringOrNumberField(body: Body, name: string) {
   return optionalStringField(body, name);
 }
 
+function optionalStringArrayField(body: Body, name: string) {
+  const value = body[name];
+  if (value === undefined || value === null) return undefined;
+  if (!Array.isArray(value)) throw new Error(`${name} must be an array.`);
+  return value.map((entry) => String(entry)).filter(Boolean);
+}
+
 export function customerBody(body: Body) {
   return {
     code: stringField(body, "code"),
@@ -44,6 +51,7 @@ export function vendorBody(body: Body) {
     companyRegNo: optionalStringField(body, "companyRegNo"),
     vatNumber: optionalStringField(body, "vatNumber"),
     creditDays: optionalStringOrNumberField(body, "creditDays"),
+    brandIds: optionalStringArrayField(body, "brandIds"),
     status: optionalStringField(body, "status") as never,
   };
 }
@@ -89,13 +97,17 @@ export const vendorListSelect = {
   status: true,
   city: { select: { name: true } },
   area: { select: { name: true } },
+  brands: { select: { brand: { select: { id: true, name: true } } } },
 } as const;
 
-export function mapMasterRow<T extends { registrationDate?: Date | null; city?: { name: string } | null; area?: { name: string } | null }>(row: T) {
+export function mapMasterRow<T extends { registrationDate?: Date | null; city?: { name: string } | null; area?: { name: string } | null; brands?: Array<{ brand: { id: string; name: string } }> }>(row: T) {
+  const brandRows = row.brands?.map((entry) => entry.brand) ?? [];
   return {
     ...row,
     registrationDate: row.registrationDate ? row.registrationDate.toISOString().slice(0, 10) : null,
     cityName: row.city?.name ?? "",
     areaName: row.area?.name ?? "",
+    brandIds: brandRows.map((brand) => brand.id),
+    brandNames: brandRows.map((brand) => brand.name).join(", "),
   };
 }

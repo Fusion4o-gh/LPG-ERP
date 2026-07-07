@@ -34,6 +34,7 @@ export default function BankReceiptPage() {
           submitLabel="Post Bank Receipt"
           printableDocumentType="bank-receipt"
           printableHrefBase="/payments/bank-receipt"
+          balancePreview="bank"
           fields={[
             { name: "customerId", label: "Customer", type: "select", lookup: "customers", required: true },
             { name: "bankId", label: "Bank", type: "select", lookup: "banks", required: true },

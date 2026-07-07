@@ -1,5 +1,5 @@
-import { PurchaseEmptyOtherForm } from "@/components/PurchaseEmptyOtherForm";
+import { PurchaseOtherList } from "@/components/OperationalDocumentLists";
 
 export default function PurchaseOtherPage() {
-  return <PurchaseEmptyOtherForm kind="Other" />;
+  return <PurchaseOtherList />;
 }
