@@ -143,7 +143,6 @@ export const UR: Record<string, string> = {
   "Fleet & Plants": "فلیٹ اور پلانٹس",
   Opening: "ابتدائیہ",
   System: "سسٹم",
-  Purchases: "خریداری",
   Ledgers: "لیجرز",
   Financial: "مالیاتی",
 

@@ -1,4 +1,4 @@
-import { type Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 export type ResolveItemPriceInput = {
   companyId: string;
@@ -128,7 +128,7 @@ export async function assertCentralizedLinePrices(
     companyId: string;
     customerId?: string;
     transactionDate: string | Date;
-    lines: { itemId: string; unitAmount: string | number }[];
+    lines: { itemId: string; unitAmount: string | number | Prisma.Decimal }[];
     amountLabel?: string;
   },
 ) {
