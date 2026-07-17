@@ -1,5 +1,3 @@
 export async function GET() {
-  return Response.json({
-    status: "placeholder",
-  });
+  return Response.json({ error: "Not found." }, { status: 404 });
 }

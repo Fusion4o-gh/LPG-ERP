@@ -1,18 +1,43 @@
+/**
+ * Production bootstrap for Hasnan Traders.
+ * Requires SEED_ADMIN_PASSWORD. Creates company, FY, RBAC, admin user, and COA only.
+ * Does not create customers, vendors, items, or transactions.
+ *
+ * Usage:
+ *   SEED_ADMIN_PASSWORD='...' DATABASE_URL='...' node prisma/seed-production.js
+ */
 const { PrismaClient, PermissionAction, AccountType, NormalBalance } = require("@prisma/client");
 const { scryptSync, randomBytes } = require("node:crypto");
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: (() => {
+        const url = process.env.DATABASE_URL?.trim();
+        if (!url) {
+          console.error("DATABASE_URL is required.");
+          process.exit(1);
+        }
+        if (/localhost|127\.0\.0\.1/i.test(url)) {
+          console.error("Refusing to run production seed against a local DATABASE_URL.");
+          process.exit(1);
+        }
+        return url;
+      })(),
+    },
+  },
+});
 
 const SEED_ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD?.trim();
-if (!SEED_ADMIN_PASSWORD) {
-  if (process.env.NODE_ENV === "production") {
-    console.error("SEED_ADMIN_PASSWORD is required in production. Refusing to seed with a default password.");
-    process.exit(1);
-  }
-  // Local/test only — never used when NODE_ENV=production.
-  console.warn("SEED_ADMIN_PASSWORD unset; using local test default. Do not use this against production.");
+if (!SEED_ADMIN_PASSWORD || SEED_ADMIN_PASSWORD.length < 12) {
+  console.error("SEED_ADMIN_PASSWORD is required and must be at least 12 characters.");
+  process.exit(1);
 }
-const resolvedAdminPassword = SEED_ADMIN_PASSWORD || "4784Shani";
+
+const COMPANY_ID = "seed-company-hasnan-traders";
+const COMPANY_NAME = "Hasnan Traders";
+const ADMIN_LOGIN_ID = "HasnanTraders";
+const ADMIN_NAME = "Hasnan Traders";
 
 const modules = [
   "dashboard",
@@ -41,7 +66,6 @@ const modules = [
   "day-closing",
   "day-closing.override",
   "audit-log",
-  // --- Bulk / import / dollar / plant extension ---
   "transporters",
   "vehicles",
   "drivers",
@@ -91,18 +115,33 @@ async function upsertAccount(companyId, code, name, accountType, normalBalance, 
 }
 
 async function main() {
+  console.log("Starting Hasnan Traders production bootstrap...");
   const company = await prisma.company.upsert({
-    where: { id: "seed-company-lpg-management-system" },
-    update: {},
+    where: { id: COMPANY_ID },
+    update: {
+      legalName: COMPANY_NAME,
+      tradeName: COMPANY_NAME,
+      locale: "en-PK",
+      timeZone: "Asia/Karachi",
+      status: "ACTIVE",
+    },
     create: {
-      id: "seed-company-lpg-management-system",
-      legalName: "LPG Management System",
-      tradeName: "LPG Management System",
+      id: COMPANY_ID,
+      legalName: COMPANY_NAME,
+      tradeName: COMPANY_NAME,
       baseCurrency: "PKR",
       locale: "en-PK",
       timeZone: "Asia/Karachi",
       stockAvailableCheck: true,
-      workingDays: { monday: true, tuesday: true, wednesday: true, thursday: true, friday: true, saturday: true, sunday: false },
+      workingDays: {
+        monday: true,
+        tuesday: true,
+        wednesday: true,
+        thursday: true,
+        friday: true,
+        saturday: true,
+        sunday: false,
+      },
     },
   });
 
@@ -118,15 +157,14 @@ async function main() {
     },
   });
 
+  console.log("Seeding permissions...");
+  const permissionRows = [];
   for (const module of modules) {
     for (const action of actions) {
-      await prisma.permission.upsert({
-        where: { module_action: { module, action } },
-        update: {},
-        create: { module, action },
-      });
+      permissionRows.push({ module, action });
     }
   }
+  await prisma.permission.createMany({ data: permissionRows, skipDuplicates: true });
 
   const adminRole = await prisma.role.upsert({
     where: { companyId_name: { companyId: company.id, name: "Admin" } },
@@ -137,7 +175,12 @@ async function main() {
   const operatorRole = await prisma.role.upsert({
     where: { companyId_name: { companyId: company.id, name: "Shop Operator" } },
     update: {},
-    create: { companyId: company.id, name: "Shop Operator", isSystem: true, description: "Daily LPG sales, returns, receipts, and reports." },
+    create: {
+      companyId: company.id,
+      name: "Shop Operator",
+      isSystem: true,
+      description: "Daily LPG sales, returns, receipts, and reports.",
+    },
   });
 
   const allPermissions = await prisma.permission.findMany();
@@ -149,7 +192,17 @@ async function main() {
     skipDuplicates: true,
   });
 
-  const operatorModules = new Set(["dashboard", "customers", "items", "sale-lpg", "cylinder-returns", "cash-receipts", "stock-ledger", "customer-ledger", "reports"]);
+  const operatorModules = new Set([
+    "dashboard",
+    "customers",
+    "items",
+    "sale-lpg",
+    "cylinder-returns",
+    "cash-receipts",
+    "stock-ledger",
+    "customer-ledger",
+    "reports",
+  ]);
   const operatorPermissions = allPermissions.filter(
     (permission) =>
       operatorModules.has(permission.module) &&
@@ -164,15 +217,20 @@ async function main() {
   });
 
   const admin = await prisma.user.upsert({
-    where: { companyId_loginId: { companyId: company.id, loginId: "admin" } },
-    update: { financialYearId: financialYear.id, passwordHash: hashPassword(resolvedAdminPassword) },
+    where: { companyId_loginId: { companyId: company.id, loginId: ADMIN_LOGIN_ID } },
+    update: {
+      name: ADMIN_NAME,
+      financialYearId: financialYear.id,
+      passwordHash: hashPassword(SEED_ADMIN_PASSWORD),
+      status: "ACTIVE",
+    },
     create: {
       companyId: company.id,
       financialYearId: financialYear.id,
-      name: "Administrator",
-      loginId: "admin",
-      email: "admin@lpg-management.local",
-      passwordHash: hashPassword(resolvedAdminPassword),
+      name: ADMIN_NAME,
+      loginId: ADMIN_LOGIN_ID,
+      email: "admin@hasnantraders.local",
+      passwordHash: hashPassword(SEED_ADMIN_PASSWORD),
     },
   });
 
@@ -200,7 +258,6 @@ async function main() {
   await upsertAccount(company.id, "4001001501", "Sales Discount Allowed", AccountType.EXPENSE, NormalBalance.DEBIT, 3, expenses.id);
   await upsertAccount(company.id, "4001001502", "Purchase Discount Received", AccountType.REVENUE, NormalBalance.CREDIT, 3, expenses.id);
 
-  // --- Bulk / import / dollar / plant control accounts ---
   await upsertAccount(company.id, "2003002001", "Bulk LPG Stock", AccountType.ASSET, NormalBalance.DEBIT, 3, assets.id);
   await upsertAccount(company.id, "2003003001", "Bulk Stock In Transit", AccountType.ASSET, NormalBalance.DEBIT, 3, assets.id);
   await upsertAccount(company.id, "3001002001", "Bulk LPG Sales", AccountType.REVENUE, NormalBalance.CREDIT, 3, revenue.id);
@@ -210,10 +267,7 @@ async function main() {
   await upsertAccount(company.id, "4001004001", "Inventory Loss", AccountType.EXPENSE, NormalBalance.DEBIT, 3, expenses.id);
   await upsertAccount(company.id, "4002001001", "Exchange Loss", AccountType.EXPENSE, NormalBalance.DEBIT, 3, expenses.id);
 
-  await prisma.company.update({
-    where: { id: company.id },
-    data: { tradeName: "LPG Management System" },
-  });
+  console.log(`Production bootstrap complete: ${COMPANY_NAME} / login ${ADMIN_LOGIN_ID}`);
 }
 
 main()

@@ -21,8 +21,9 @@ of the existing cylinder-distribution ERP. Started 2026-06-12.
   `DATABASE_URL=<unpooled> npx prisma migrate deploy`
 - Seed the new permissions/accounts to any target with the idempotent, target-agnostic
   script (NOT the fixed-id seed): `DATABASE_URL=<url> node prisma/extend-bulk.js`
-- Neon's company id happens to be `seed-company-lpg-management-system`. Admin login is
-  `admin` / `4784Shani`. Start embedded PG: `pg_ctl -D .local-postgres -o "-p 5432" start`.
+- Production bootstrap uses `prisma/seed-production.js` with `SEED_ADMIN_PASSWORD` (required).
+  Local/test seed remains `prisma/seed.js`. Start embedded PG:
+  `pg_ctl -D .local-postgres -o "-p 5432" start`.
 
 ## Phase 1 — Foundation ✅ DONE (live on Neon + local)
 - `prisma/schema.prisma`: 21 new models + 11 enums (migration

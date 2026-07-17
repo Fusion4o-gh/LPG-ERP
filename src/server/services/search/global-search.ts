@@ -1,5 +1,5 @@
 import { PermissionAction } from "@prisma/client";
-import { prisma } from "../../lib/prisma.ts";
+import { prisma } from "../../../lib/prisma.ts";
 import { purchaseRoutes } from "../../../lib/purchase-routes.ts";
 import { enforcePermission } from "../rbac/enforce.ts";
 

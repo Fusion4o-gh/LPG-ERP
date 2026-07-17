@@ -16,7 +16,7 @@ export async function getRequestContext(request?: Request): Promise<RequestConte
   }
 
   const headerContext = header(request, "x-company-id") && header(request, "x-financial-year-id") && header(request, "x-user-id");
-  if (headerContext && process.env.NODE_ENV === "test") {
+  if (headerContext && process.env.NODE_ENV === "test" && process.env.ALLOW_TEST_AUTH === "1") {
     return {
       companyId: header(request, "x-company-id") as string,
       financialYearId: header(request, "x-financial-year-id") as string,

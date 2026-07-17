@@ -17,3 +17,5 @@ const testUrl = resolveTestDatabaseUrl();
 assertSafeTestDatabase(testUrl, devUrl);
 process.env.DATABASE_URL = testUrl;
 process.env.DATABASE_URL_TEST = testUrl;
+process.env.NODE_ENV = process.env.NODE_ENV || "test";
+process.env.ALLOW_TEST_AUTH = "1";
