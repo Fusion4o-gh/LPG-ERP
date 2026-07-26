@@ -169,12 +169,12 @@ export function ReportTableClient({
       </div>
 
       {/* Filter panel */}
-      <form onSubmit={submit} data-print-hidden className="card rounded-xl mb-4 overflow-hidden">
-        <div className="accent-section-header px-4 pt-3">
+      <form onSubmit={submit} data-print-hidden className="card mb-3 overflow-hidden">
+        <div className="accent-section-header">
           <div className="accent-bar" />
-          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Filters</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-steel-600">Filters</p>
         </div>
-        <div className="grid gap-3 p-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 items-end">
+        <div className="grid items-end gap-2.5 p-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {showItemFilter && (
           <div>
             <label className="form-label mb-1">Item</label>

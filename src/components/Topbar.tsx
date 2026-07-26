@@ -26,8 +26,7 @@ export function Topbar({ shell, permissions }: { shell: AppShellContext; permiss
   return (
     <header
       data-print-hidden
-      className="app-topbar sticky top-0 z-20 hidden h-12 shrink-0 items-center gap-4 px-5 backdrop-blur-md md:flex"
-      style={{ background: 'linear-gradient(180deg, #FAFAF7, #f0f0ea)', borderBottom: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.8)' }}
+      className="app-topbar sticky top-0 z-20 hidden h-11 shrink-0 items-center gap-3 border-b border-[var(--surface-border)] bg-white px-4 md:flex"
     >
       <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 text-sm text-steel-500">
         {crumbs.map((crumb, index) => {
@@ -38,7 +37,7 @@ export function Topbar({ shell, permissions }: { shell: AppShellContext; permiss
               {isLast ? (
                 <span className="truncate font-bold text-gas-700">{t(crumb.label)}</span>
               ) : (
-                <Link href={crumb.href} className="accent-link truncate transition-colors font-medium">
+                <Link href={crumb.href} className="accent-link truncate font-medium">
                   {t(crumb.label)}
                 </Link>
               )}
@@ -47,36 +46,24 @@ export function Topbar({ shell, permissions }: { shell: AppShellContext; permiss
         })}
       </nav>
 
-      <div className="ml-auto flex items-center gap-3">
+      <div className="mx-auto w-full max-w-md min-w-[220px] flex-1 px-2">
         <GlobalSearch />
+      </div>
 
+      <div className="ml-auto flex items-center gap-2">
         {(() => {
           const canSales = canAccess(permissions, "sale-lpg", "VIEW");
           const canPurchases = canAccess(permissions, "purchase-filled-cylinders", "VIEW");
           if (!canSales && !canPurchases) return null;
           return (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {canSales ? (
-                <Link
-                  href="/sales"
-                  className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-white shadow-sm transition-all hover:brightness-110 active:scale-95"
-                  style={{ background: "var(--flame-gradient)", boxShadow: "var(--skeu-shadow-btn)" }}
-                >
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 7h16" /><path d="M7 4h10l2 3v13H5V7l2-3z" /><path d="M9 11h6" /><path d="M9 15h4" />
-                  </svg>
+                <Link href="/operations/sale-lpg" className="btn-primary-sm">
                   {t("Sales")}
                 </Link>
               ) : null}
               {canPurchases ? (
-                <Link
-                  href="/purchases"
-                  className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-white shadow-sm transition-all hover:brightness-110 active:scale-95"
-                  style={{ background: "linear-gradient(180deg, #4f46e5, #4338ca)", boxShadow: "var(--skeu-shadow-btn)" }}
-                >
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 7h16" /><path d="M7 4h10l2 3v13H5V7l2-3z" /><path d="M9 11l2 2 4-4" /><path d="M9 17h6" />
-                  </svg>
+                <Link href="/purchases/filled-cylinder" className="btn-outline !py-1.5 !px-2.5 !text-xs">
                   {t("Purchases")}
                 </Link>
               ) : null}
@@ -88,13 +75,12 @@ export function Topbar({ shell, permissions }: { shell: AppShellContext; permiss
 
         <span className="hidden text-xs text-steel-400 whitespace-nowrap xl:inline">{formatToday()}</span>
 
-        <div className="flex items-center gap-2 pl-3" style={{ borderLeft: '1px solid rgba(0,0,0,0.08)' }}>
+        <div className="flex items-center gap-2 border-l border-[var(--surface-border)] pl-3">
           {shell.logoUrl ? (
-            <img src={shell.logoUrl} alt="" className="h-8 w-8 shrink-0 rounded-full object-contain" style={{ border: '2px solid rgba(242,140,40,0.3)' }} aria-hidden />
+            <img src={shell.logoUrl} alt="" className="h-7 w-7 shrink-0 rounded-full object-contain border border-[var(--surface-border)]" aria-hidden />
           ) : (
             <div
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-              style={{ background: 'var(--flame-gradient)', boxShadow: '2px 2px 4px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.2)' }}
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gas-600 text-[10px] font-bold text-white"
               aria-hidden
             >
               {shell.userName

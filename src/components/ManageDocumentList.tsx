@@ -134,15 +134,15 @@ export function ManageDocumentList<T extends Record<string, unknown>>({
         }
       />
 
-      <section className="card rounded-xl overflow-hidden">
-        <form onSubmit={submitFilters} className="border-b border-slate-100 bg-slate-50/70 px-5 py-4">
-          <div className="flex flex-wrap items-end gap-3">
-            <label className="block text-sm">
-              <span className="mb-1 block font-medium text-slate-700">From Date</span>
+      <section className="card overflow-hidden">
+        <form onSubmit={submitFilters} className="border-b border-[var(--surface-border)] bg-[var(--surface-muted)] px-3 py-2.5">
+          <div className="flex flex-wrap items-end gap-2.5">
+            <label className="block">
+              <span className="form-label">From Date</span>
               <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="form-input" />
             </label>
-            <label className="block text-sm">
-              <span className="mb-1 block font-medium text-slate-700">To Date</span>
+            <label className="block">
+              <span className="form-label">To Date</span>
               <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="form-input" />
             </label>
             <button type="submit" className="btn-primary-sm">
@@ -151,12 +151,12 @@ export function ManageDocumentList<T extends Record<string, unknown>>({
           </div>
         </form>
 
-        <div className="border-b border-slate-100 bg-white px-5 py-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
+        <div className="border-b border-[var(--surface-border)] bg-white px-3 py-2">
+          <div className="flex flex-wrap items-center justify-between gap-2.5">
+            <div className="flex flex-wrap items-center gap-2.5 text-sm text-steel-600">
               <label className="flex items-center gap-2">
                 <span>Display</span>
-                <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="form-input py-1.5">
+                <select value={pageSize} onChange={(e) => setPageSize(Number(e.target.value))} className="form-select !mt-0 py-1.5">
                   {PAGE_SIZES.map((size) => (
                     <option key={size} value={size}>
                       {size}
@@ -165,18 +165,18 @@ export function ManageDocumentList<T extends Record<string, unknown>>({
                 </select>
                 <span>records</span>
               </label>
-              <span className="text-slate-400">|</span>
+              <span className="text-steel-300">|</span>
               <span>
                 Showing {total === 0 ? 0 : (page - 1) * pageSize + 1} to {Math.min(page * pageSize, total)} of {total} entries
               </span>
             </div>
-            <label className="flex items-center gap-2 text-sm text-slate-600">
+            <label className="flex items-center gap-2 text-sm text-steel-600">
               <span>Search:</span>
               <input
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="form-input py-1.5"
+                className="form-input !mt-0 py-1.5"
                 placeholder={searchPlaceholder ?? "Search"}
               />
             </label>
@@ -188,50 +188,50 @@ export function ManageDocumentList<T extends Record<string, unknown>>({
         <div className="overflow-x-auto" data-report-print>
           <table className="min-w-full border-collapse text-sm">
             <thead>
-              <tr className="bg-blue-700 text-white">
-                <th colSpan={colSpan} className="px-4 py-2.5 text-left text-sm font-semibold">
+              <tr className="bg-gas-600 text-white">
+                <th colSpan={colSpan} className="px-3 py-2 text-left text-sm font-semibold">
                   Results for &apos;{resultsLabel}&apos;
                 </th>
               </tr>
-              <tr className="bg-blue-600 text-white">
+              <tr className="report-table-head">
                 {columns.map((column) => (
                   <th
                     key={column.key}
-                    className={`whitespace-nowrap px-4 py-2.5 text-xs font-semibold uppercase tracking-wide ${
+                    className={`whitespace-nowrap px-3 py-2 text-xs font-semibold uppercase tracking-wide text-steel-500 ${
                       column.align === "right" ? "text-right" : "text-left"
                     }`}
                   >
                     {column.label}
                   </th>
                 ))}
-                <th className="whitespace-nowrap px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide">Actions</th>
+                <th className="whitespace-nowrap px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-steel-500">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
+            <tbody className="divide-y divide-[var(--surface-border)] bg-white">
               {loading ? (
                 <tr>
-                  <td colSpan={colSpan} className="px-4 py-10 text-center text-slate-500">
+                  <td colSpan={colSpan} className="px-3 py-8 text-center text-steel-500">
                     Loading…
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={colSpan} className="px-4 py-10 text-center text-slate-500">
+                  <td colSpan={colSpan} className="px-3 py-8 text-center text-steel-500">
                     No records found for the selected filters.
                   </td>
                 </tr>
               ) : (
                 rows.map((row) => (
-                  <tr key={String(row[rowKey])} className="hover:bg-slate-50/80">
+                  <tr key={String(row[rowKey])} className="accent-row-hover">
                     {columns.map((column) => (
                       <td
                         key={column.key}
-                        className={`px-4 py-3 text-slate-800 ${column.align === "right" ? "text-right font-medium" : ""}`}
+                        className={`px-3 py-2 text-steel-800 ${column.align === "right" ? "text-right font-medium tabular-nums" : ""}`}
                       >
                         {column.render ? column.render(row) : String(row[column.key] ?? "")}
                       </td>
                     ))}
-                    <td className="px-4 py-3">{renderActions(row)}</td>
+                    <td className="px-3 py-2">{renderActions(row)}</td>
                   </tr>
                 ))
               )}
@@ -239,12 +239,12 @@ export function ManageDocumentList<T extends Record<string, unknown>>({
           </table>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3">
-          <p className="text-sm text-slate-500">
+        <div className="flex flex-wrap items-center justify-between gap-2.5 border-t border-[var(--surface-border)] px-3 py-2">
+          <p className="text-sm text-steel-500">
             Page {page} of {totalPages}
           </p>
           <div className="flex flex-wrap items-center gap-1">
-            <button type="button" onClick={() => goToPage(page - 1)} disabled={page <= 1} className="btn-outline px-3 py-1.5 disabled:opacity-40">
+            <button type="button" onClick={() => goToPage(page - 1)} disabled={page <= 1} className="btn-outline !px-2.5 !py-1 disabled:opacity-40">
               Previous
             </button>
             {pageButtons.map((buttonPage) => (
@@ -252,14 +252,14 @@ export function ManageDocumentList<T extends Record<string, unknown>>({
                 key={buttonPage}
                 type="button"
                 onClick={() => goToPage(buttonPage)}
-                className={`rounded-lg px-3 py-1.5 text-sm font-medium ${
-                  buttonPage === page ? "bg-blue-700 text-white" : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                className={`rounded-md px-2.5 py-1 text-sm font-medium ${
+                  buttonPage === page ? "bg-gas-600 text-white" : "btn-outline !px-2.5 !py-1"
                 }`}
               >
                 {buttonPage}
               </button>
             ))}
-            <button type="button" onClick={() => goToPage(page + 1)} disabled={page >= totalPages} className="btn-outline px-3 py-1.5 disabled:opacity-40">
+            <button type="button" onClick={() => goToPage(page + 1)} disabled={page >= totalPages} className="btn-outline !px-2.5 !py-1 disabled:opacity-40">
               Next
             </button>
           </div>

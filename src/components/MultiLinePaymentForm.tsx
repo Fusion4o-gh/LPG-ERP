@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { FormEvent, useEffect, useId, useState } from "react";
@@ -199,36 +199,36 @@ export function MultiLinePaymentForm({ type }: { type: PaymentType }) {
         description={config.description}
         actions={
           previewVoucherNo ? (
-            <span className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800">
+            <span className="badge-blue">
               Next Voucher #: {previewVoucherNo}
             </span>
           ) : null
         }
       />
       <ApiError message={loadError} />
-      <form id={formId} onSubmit={handleSubmit} className="space-y-5">
+      <form id={formId} onSubmit={handleSubmit} className="space-y-3">
         <ApiError message={formError} />
         <SuccessMessage message={postedNo ? `${config.title} voucher ${postedNo} posted.` : ""} />
 
         {postedNo ? (
-          <div className="card rounded-lg flex flex-wrap items-center gap-3 px-4 py-3 text-sm">
+          <div className="card flex flex-wrap items-center gap-3 px-4 py-3 text-sm">
             <svg className="h-4 w-4 shrink-0 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
             <span className="text-slate-600">Voucher number: <span className="font-semibold text-slate-900">{postedNo}</span></span>
-            <Link href={`${config.printBase}/print/${encodeURIComponent(postedNo)}`} className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
+            <Link href={`${config.printBase}/print/${encodeURIComponent(postedNo)}`} className="btn-outline ml-auto !px-2.5 !py-1 !text-xs">
               Open Print View
             </Link>
           </div>
         ) : null}
 
         {/* Voucher Header */}
-        <section className="card rounded-xl overflow-hidden">
-          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center gap-2">
-            <div className="h-3.5 w-0.5 rounded-full bg-blue-500/60 shrink-0" />
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Voucher Header</h2>
+        <section className="card overflow-hidden">
+          <div className="accent-section-header">
+            <div className="accent-bar" />
+            <h2 className="text-xs font-bold uppercase tracking-widest text-steel-600">Voucher Header</h2>
           </div>
-          <div className="p-5">
+          <div className="p-3">
             <div className="grid gap-4 md:grid-cols-3">
               <div>
                 <label className="form-label" htmlFor="voucherDate">Date *</label>
@@ -256,25 +256,25 @@ export function MultiLinePaymentForm({ type }: { type: PaymentType }) {
         </section>
 
         {/* Payment Lines */}
-        <section className="card rounded-xl overflow-hidden">
-          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between gap-3">
+        <section className="card overflow-hidden">
+          <div className="accent-section-header justify-between">
             <div className="flex items-center gap-2">
-              <div className="h-3.5 w-0.5 rounded-full bg-blue-500/60 shrink-0" />
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Payment Lines</h2>
+              <div className="accent-bar" />
+              <h2 className="text-xs font-bold uppercase tracking-widest text-steel-600">Payment Lines</h2>
             </div>
             <button type="button" onClick={addLine} className="btn-primary-sm">+ Add Row</button>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-[640px] w-full border-collapse text-sm">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200">
+                <tr className="report-table-head">
                   <th className="whitespace-nowrap px-2.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Account</th>
                   <th className="whitespace-nowrap px-2.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Description</th>
                   <th className="whitespace-nowrap px-2.5 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Amount</th>
                   <th className="whitespace-nowrap px-2.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[var(--surface-border)]">
                 {lines.map((line) => (
                   <tr key={line.uid} className="hover:bg-blue-50/30 transition-colors">
                     <td className="px-2.5 py-2">
@@ -297,25 +297,34 @@ export function MultiLinePaymentForm({ type }: { type: PaymentType }) {
               </tbody>
             </table>
           </div>
-          <div className="border-t border-slate-100 bg-slate-50/60 px-5 py-4 flex flex-wrap items-center justify-end gap-3">
-            <div className="rounded-lg border border-slate-200 bg-white p-3 min-w-[160px]">
-              <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">{balanceLabel(type)}</div>
+          <div className="border-t border-[var(--surface-border)] bg-[var(--surface-muted)] px-3 py-2.5 flex flex-wrap items-center justify-end gap-3">
+            <div className="rounded-md border border-[var(--surface-border)] bg-white p-2.5 min-w-[160px]">
+              <div className="text-xs font-semibold uppercase tracking-wide text-steel-400">{balanceLabel(type)}</div>
               <div className="mt-1.5 text-lg font-bold tabular-nums text-slate-800">
-                {balanceAmount == null ? "—" : money(balanceAmount)}
+                {balanceAmount == null ? "â€”" : money(balanceAmount)}
               </div>
             </div>
-            <div className="rounded-lg bg-blue-700 p-3 min-w-[160px]">
-              <div className="text-xs font-semibold uppercase tracking-wide text-blue-200">Total</div>
+            <div className="rounded-md bg-gas-600 p-2.5 min-w-[160px]">
+              <div className="text-xs font-semibold uppercase tracking-wide text-gas-100">Total</div>
               <div className="mt-1.5 text-lg font-bold text-white tabular-nums">{money(total)}</div>
             </div>
           </div>
         </section>
 
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="sticky bottom-0 z-[5] -mx-1 mt-1 flex flex-wrap items-center gap-2 border-t border-[var(--surface-border)] bg-white/95 px-3 py-2.5 backdrop-blur-sm">
+          <div className="mr-auto flex flex-wrap items-baseline gap-3 text-sm">
+            <span className="text-steel-500">
+              Total{" "}
+              <span className={`font-bold tabular-nums ${type.includes("payment") ? "text-[var(--danger-red)]" : "text-[var(--success-green)]"}`}>
+                {money(total)}
+              </span>
+            </span>
+            {previewVoucherNo ? <span className="text-xs text-steel-400">#{previewVoucherNo}</span> : null}
+          </div>
           <SubmitButton loading={submitting} disabled={!isValid || submitting}>Post {config.title}</SubmitButton>
           <button type="button" onClick={resetForm} className="btn-outline">Reset Form</button>
-          <label className="flex items-center gap-2 text-xs text-slate-600 ml-auto">
-            <input type="checkbox" checked={allowOverride} onChange={(e) => setAllowOverride(e.target.checked)} className="h-4 w-4 rounded border-slate-300" />
+          <label className="flex items-center gap-2 text-xs text-steel-600">
+            <input type="checkbox" checked={allowOverride} onChange={(e) => setAllowOverride(e.target.checked)} className="h-4 w-4 rounded border-[var(--surface-border)]" />
             Closed-day override
           </label>
         </div>
@@ -323,3 +332,4 @@ export function MultiLinePaymentForm({ type }: { type: PaymentType }) {
     </>
   );
 }
+

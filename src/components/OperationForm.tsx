@@ -143,31 +143,28 @@ export function OperationForm({
         description={description}
         actions={
           balancePreview ? (
-            <span className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700">
+            <span className="rounded-md border border-[var(--surface-border)] bg-white px-3 py-1.5 text-xs font-semibold text-steel-700">
               {balancePreview === "bank" ? "Bank Balance" : "Cash Balance"}:{" "}
-              <span className="tabular-nums text-slate-900">{balanceAmount == null ? "—" : balanceAmount.toFixed(2)}</span>
+              <span className="tabular-nums text-gas-800">{balanceAmount == null ? "—" : balanceAmount.toFixed(2)}</span>
             </span>
           ) : null
         }
       />
-      <form onSubmit={onSubmit} className="max-w-3xl space-y-5">
+      <form onSubmit={onSubmit} className="max-w-3xl space-y-3">
         <ApiError message={error} />
         <SuccessMessage message={success} />
 
         {printableDocumentType && printDocumentNo ? (
-          <div className="card rounded-lg flex flex-wrap items-center gap-3 px-4 py-3 text-sm">
-            <svg className="h-4 w-4 shrink-0 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-            </svg>
-            <span className="text-slate-600">Document number: <span className="font-semibold text-slate-900">{printDocumentNo}</span></span>
-            <Link href={`${printableHrefBase ?? ""}/print/${encodeURIComponent(printDocumentNo)}`} className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
+          <div className="card flex flex-wrap items-center gap-3 px-3 py-2.5 text-sm">
+            <span className="text-steel-600">Document number: <span className="font-semibold text-gas-800">{printDocumentNo}</span></span>
+            <Link href={`${printableHrefBase ?? ""}/print/${encodeURIComponent(printDocumentNo)}`} className="btn-outline ml-auto !px-2.5 !py-1 !text-xs">
               Open Print View
             </Link>
           </div>
         ) : null}
 
         <FormSection title={title}>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-3 md:grid-cols-2">
             {fields.map((field) => (
               <div key={field.name} className={field.type === "checkbox" ? "flex items-center gap-2 md:col-span-2" : "block"}>
                 {field.type === "checkbox" ? (
@@ -177,9 +174,9 @@ export function OperationForm({
                       id={field.name}
                       checked={Boolean(values[field.name])}
                       onChange={(event) => setValues((current) => ({ ...current, [field.name]: event.target.checked }))}
-                      className="h-4 w-4 rounded border-slate-300"
+                      className="h-4 w-4 rounded border-[var(--surface-border)]"
                     />
-                    <label htmlFor={field.name} className="text-sm text-slate-700">{field.label}</label>
+                    <label htmlFor={field.name} className="text-sm text-steel-700">{field.label}</label>
                   </>
                 ) : (
                   <>
@@ -192,7 +189,7 @@ export function OperationForm({
                         value={String(values[field.name] ?? "")}
                         onChange={(event) => setValues((current) => ({ ...current, [field.name]: event.target.value }))}
                         disabled={lookupLoading}
-                        className="form-input"
+                        className="form-select"
                       >
                         <option value="">Select {field.label}</option>
                         {(lookups[field.lookup ?? "customers"] ?? []).map((row) => (
@@ -211,7 +208,7 @@ export function OperationForm({
                         className="form-input"
                       />
                     )}
-                    {fieldErrors[field.name] ? <span className="mt-1 block text-xs text-red-600">{fieldErrors[field.name]}</span> : null}
+                    {fieldErrors[field.name] ? <span className="mt-1 block text-xs text-[var(--danger-red)]">{fieldErrors[field.name]}</span> : null}
                   </>
                 )}
               </div>

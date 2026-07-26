@@ -49,7 +49,6 @@ const configurationFleet: NavTab[] = [
   { label: "Vehicles", href: "/configuration/vehicles", module: "vehicles" },
   { label: "Drivers", href: "/configuration/drivers", module: "drivers" },
   { label: "Plants", href: "/configuration/plants", module: "plants" },
-  { label: "Stock Locations", href: "/configuration/stock-locations", module: "stock-locations" },
   { label: "Bulk Products", href: "/configuration/bulk-products", module: "bulk-products" },
 ];
 
@@ -219,7 +218,7 @@ export const NAV_MODULES: NavModule[] = [
     id: "sales",
     label: "Sales",
     icon: "sales",
-    defaultHref: "/sales",
+    defaultHref: "/operations/sale-lpg",
     matchPrefixes: [
       "/sales",
       "/operations/sale-lpg",
@@ -233,7 +232,7 @@ export const NAV_MODULES: NavModule[] = [
     id: "purchases",
     label: "Purchases",
     icon: "purchases",
-    defaultHref: "/purchases",
+    defaultHref: "/purchases/filled-cylinder",
     matchPrefixes: ["/purchases"],
     tabs: purchasesTabs,
   },

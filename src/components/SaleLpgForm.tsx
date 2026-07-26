@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
@@ -344,35 +344,35 @@ export function SaleLpgForm() {
         description="Create a legacy-style LPG invoice: fill one entry line, click Add, and repeat for each item before posting."
         actions={
           previewIssueNo ? (
-            <span className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800">
+            <span className="badge-blue">
               Next Issue #: {previewIssueNo}
             </span>
           ) : null
         }
       />
-      <form onSubmit={onSubmit} className="space-y-5">
+      <form onSubmit={onSubmit} className="space-y-3">
         <ApiError message={error} />
         <SuccessMessage message={success} />
 
         {printDocumentNo ? (
-          <div className="card rounded-lg flex flex-wrap items-center gap-3 px-4 py-3 text-sm">
+          <div className="card flex flex-wrap items-center gap-3 px-4 py-3 text-sm">
             <svg className="h-4 w-4 shrink-0 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
             <span className="text-slate-600">Issue number: <span className="font-semibold text-slate-900">{printDocumentNo}</span></span>
-            <Link href={`/operations/sale-lpg/print/${encodeURIComponent(printDocumentNo)}`} className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50">
+            <Link href={`/operations/sale-lpg/print/${encodeURIComponent(printDocumentNo)}`} className="btn-outline ml-auto !px-2.5 !py-1 !text-xs">
               Open Print View
             </Link>
           </div>
         ) : null}
 
         {/* Invoice Header */}
-        <section className="card rounded-xl overflow-hidden">
-          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center gap-2">
-            <div className="h-3.5 w-0.5 rounded-full bg-blue-500/60 shrink-0" />
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Invoice Header</h2>
+        <section className="card overflow-hidden">
+          <div className="accent-section-header">
+            <div className="accent-bar" />
+            <h2 className="text-xs font-bold uppercase tracking-widest text-steel-600">Invoice Header</h2>
           </div>
-          <div className="p-5">
+          <div className="p-3">
             <div className="grid items-start gap-4 lg:grid-cols-6">
               <div className="lg:col-span-2">
                 <label className="form-label" htmlFor="customerId">Customer *</label>
@@ -412,7 +412,7 @@ export function SaleLpgForm() {
                     type="button"
                     onClick={applyElevenPointEightKgPrice}
                     disabled={!elevenPointEightKgPrice || centralizedPricing}
-                    className="shrink-0 rounded-lg border border-blue-200 bg-blue-50 px-2.5 text-xs font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-40 transition-colors"
+                    className="btn-outline !px-2 !py-1.5 !text-xs disabled:opacity-40"
                     title="Push this price into all already-added 11.8 KG cylinder lines."
                   >
                     Apply to Lines
@@ -433,8 +433,8 @@ export function SaleLpgForm() {
                 <label className="form-label" htmlFor="remarks">Remarks</label>
                 <input id="remarks" value={remarks} onChange={(e) => setRemarks(e.target.value)} className="form-input" />
               </div>
-              <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-3 lg:col-span-2">
-                <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Customer Balance</div>
+              <div className="rounded-md border border-[var(--surface-border)] bg-[var(--surface-muted)] p-2.5 lg:col-span-2">
+                <div className="text-xs font-semibold uppercase tracking-wide text-steel-400">Customer Balance</div>
                 {customerBalance ? (
                   <div className="mt-1 space-y-0.5 text-sm text-slate-700 tabular-nums">
                     <div>Receivable: {money(customerBalance.receivableBalance)}</div>
@@ -450,14 +450,14 @@ export function SaleLpgForm() {
         </section>
 
         {/* Entry Line */}
-        <section className="card rounded-xl overflow-hidden">
-          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center gap-2">
-            <div className="h-3.5 w-0.5 rounded-full bg-blue-500/60 shrink-0" />
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+        <section className="card overflow-hidden">
+          <div className="accent-section-header">
+            <div className="accent-bar" />
+            <h2 className="text-xs font-bold uppercase tracking-widest text-steel-600">
               {editingIndex === null ? "New Sale Line" : `Editing Line ${editingIndex + 1}`}
             </h2>
           </div>
-          <div className="p-5 space-y-3">
+          <div className="p-3 space-y-2.5">
             <ApiError message={draftError} />
             <div className="grid gap-3 lg:grid-cols-7 lg:items-end">
               <div className="lg:col-span-2">
@@ -472,7 +472,7 @@ export function SaleLpgForm() {
                   {items.map((item) => <option key={String(item.id)} value={String(item.id)}>{optionLabel(item)}</option>)}
                 </select>
                 <div className="mt-1 text-[11px] text-slate-400">
-                  Filled stock: <span className="font-semibold text-slate-600">{draft.itemId ? filledStock[draft.itemId] ?? 0 : "—"}</span>
+                  Filled stock: <span className="font-semibold text-slate-600">{draft.itemId ? filledStock[draft.itemId] ?? 0 : "â€”"}</span>
                 </div>
               </div>
               <div>
@@ -546,21 +546,21 @@ export function SaleLpgForm() {
         </section>
 
         {/* Sale Lines */}
-        <section className="card rounded-xl overflow-hidden">
-          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center gap-2">
-            <div className="h-3.5 w-0.5 rounded-full bg-blue-500/60 shrink-0" />
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Sale Lines ({lines.length})</h2>
+        <section className="card overflow-hidden">
+          <div className="accent-section-header">
+            <div className="accent-bar" />
+            <h2 className="text-xs font-bold uppercase tracking-widest text-steel-600">Sale Lines ({lines.length})</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-[1260px] border-collapse text-sm">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200">
+                <tr className="report-table-head">
                   {["Item", "Sale Qty", "Unit Price", "Security", "Empty Return Item", "Return Qty", "Amount", ""].map((h, i) => (
                     <th key={i} className={`whitespace-nowrap px-2.5 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 ${[1, 2, 3, 5, 6].includes(i) ? "text-right" : "text-left"}`}>{h}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[var(--surface-border)]">
                 {lines.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="px-4 py-6 text-center text-sm text-slate-400">
@@ -578,7 +578,7 @@ export function SaleLpgForm() {
                         <td className="px-2.5 py-2 text-right tabular-nums">{line.quantity}</td>
                         <td className="px-2.5 py-2 text-right tabular-nums">{money(amount(line.unitPrice))}</td>
                         <td className="px-2.5 py-2 text-right tabular-nums">{money(amount(line.securityDepositAmount))}</td>
-                        <td className="px-2.5 py-2">{returnItem ? optionLabel(returnItem) : (item ? optionLabel(item) : "—")}</td>
+                        <td className="px-2.5 py-2">{returnItem ? optionLabel(returnItem) : (item ? optionLabel(item) : "â€”")}</td>
                         <td className="px-2.5 py-2 text-right tabular-nums">{line.emptyReturnQuantity}</td>
                         <td className="px-2.5 py-2 text-right tabular-nums font-medium text-slate-800">{money(current.amount)}</td>
                         <td className="px-2.5 py-2 whitespace-nowrap">
@@ -592,17 +592,17 @@ export function SaleLpgForm() {
               </tbody>
             </table>
           </div>
-          <div className="border-t border-slate-100 bg-slate-50/60 px-5 py-4 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-lg border border-slate-200 bg-white p-3">
-              <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Sale Total</div>
+          <div className="border-t border-[var(--surface-border)] bg-[var(--surface-muted)] px-3 py-2.5 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-md border border-[var(--surface-border)] bg-white p-2.5">
+              <div className="text-xs font-semibold uppercase tracking-wide text-steel-400">Sale Total</div>
               <div className="mt-1.5 text-lg font-bold text-slate-800 tabular-nums">{money(totals.amount)}</div>
             </div>
-            <div className="rounded-lg border border-slate-200 bg-white p-3">
-              <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Security Total</div>
+            <div className="rounded-md border border-[var(--surface-border)] bg-white p-2.5">
+              <div className="text-xs font-semibold uppercase tracking-wide text-steel-400">Security Total</div>
               <div className="mt-1.5 text-lg font-bold text-slate-800 tabular-nums">{money(totals.securityAmount)}</div>
             </div>
-            <div className="rounded-lg bg-blue-700 p-3">
-              <div className="text-xs font-semibold uppercase tracking-wide text-blue-200">Total Bill (Receivable)</div>
+            <div className="rounded-md bg-gas-600 p-2.5">
+              <div className="text-xs font-semibold uppercase tracking-wide text-gas-100">Total Bill (Receivable)</div>
               <div className="mt-1.5 text-lg font-bold text-white tabular-nums">{money(totals.receivableAmount)}</div>
             </div>
           </div>
@@ -618,7 +618,11 @@ export function SaleLpgForm() {
           onGasReturnChange={(patch) => setGasReturn((current) => ({ ...current, ...patch }))}
         />
 
-        <div className="flex flex-wrap gap-2">
+        <div className="sticky bottom-0 z-[5] -mx-1 mt-1 flex flex-wrap items-center gap-2 border-t border-[var(--surface-border)] bg-white/95 px-3 py-2.5 backdrop-blur-sm">
+          <div className="mr-auto flex flex-wrap items-baseline gap-3 text-sm">
+            <span className="text-steel-500">Receivable <span className="font-bold tabular-nums text-[var(--success-green)]">{money(totals.receivableAmount)}</span></span>
+            {previewIssueNo ? <span className="text-xs text-steel-400">#{previewIssueNo}</span> : null}
+          </div>
           <SubmitButton loading={loading} disabled={lines.length === 0}>Post Sale</SubmitButton>
           <button type="button" onClick={reset} className="btn-outline">Reset Form</button>
         </div>
@@ -626,3 +630,4 @@ export function SaleLpgForm() {
     </>
   );
 }
+

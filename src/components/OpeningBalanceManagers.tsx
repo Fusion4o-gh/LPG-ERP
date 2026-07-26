@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { FormEvent, useEffect, useState } from "react";
 import { apiDelete, apiGet, apiPost, apiPut } from "@/lib/api-client";
@@ -100,14 +100,14 @@ export function ShopOpeningBalanceManager() {
   return (
     <>
       <PageHeader title="Shop Opening Balance" description="Enter initial filled or empty cylinder stock before item movement starts." />
-      <div className="grid gap-5 xl:grid-cols-[minmax(320px,420px)_1fr]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(320px,380px)_1fr]">
         <form onSubmit={submit} className="space-y-4">
           <ApiError message={error} />
           <SuccessMessage message={success} />
           <FormSection title={editingId ? "Edit Shop Opening Balance" : "Add Shop Opening Balance"}>
             <div className="space-y-3">
               <Field label="Item" required>
-                <select value={values.itemId} onChange={(event) => setValues((current) => ({ ...current, itemId: event.target.value }))} className="w-full rounded-md border border-slate-300 bg-white px-3 py-2">
+                <select value={values.itemId} onChange={(event) => setValues((current) => ({ ...current, itemId: event.target.value }))} className="form-select">
                   <option value="">Select item</option>
                   {items.map((item) => (
                     <option key={String(item.id)} value={String(item.id)}>
@@ -117,16 +117,16 @@ export function ShopOpeningBalanceManager() {
                 </select>
               </Field>
               <Field label="Type" required>
-                <select value={values.cylinderState} onChange={(event) => setValues((current) => ({ ...current, cylinderState: event.target.value }))} className="w-full rounded-md border border-slate-300 bg-white px-3 py-2">
+                <select value={values.cylinderState} onChange={(event) => setValues((current) => ({ ...current, cylinderState: event.target.value }))} className="form-select">
                   <option value="FILLED">Filled</option>
                   <option value="EMPTY">Empty</option>
                 </select>
               </Field>
               <Field label="Quantity" required>
-                <input type="number" min="1" value={values.quantity} onChange={(event) => setValues((current) => ({ ...current, quantity: event.target.value }))} className="w-full rounded-md border border-slate-300 px-3 py-2" />
+                <input type="number" min="1" value={values.quantity} onChange={(event) => setValues((current) => ({ ...current, quantity: event.target.value }))} className="form-input" />
               </Field>
               <Field label="Date" required>
-                <input type="date" value={values.transactionDate} onChange={(event) => setValues((current) => ({ ...current, transactionDate: event.target.value }))} className="w-full rounded-md border border-slate-300 px-3 py-2" />
+                <input type="date" value={values.transactionDate} onChange={(event) => setValues((current) => ({ ...current, transactionDate: event.target.value }))} className="form-input" />
               </Field>
             </div>
           </FormSection>
@@ -134,7 +134,7 @@ export function ShopOpeningBalanceManager() {
             <button disabled={saving} className="rounded-md bg-blue-950 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
               {saving ? "Saving..." : editingId ? "Update" : "Create"}
             </button>
-            <button type="button" onClick={reset} className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">
+            <button type="button" onClick={reset} className="btn-outline">
               Reset
             </button>
           </div>
@@ -154,7 +154,7 @@ export function ShopOpeningBalanceManager() {
               label: "Actions",
               render: (row) => (
                 <div className="flex gap-2">
-                  <button disabled={Boolean(row.locked)} onClick={() => edit(row)} className="rounded-md border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-700 disabled:opacity-40">
+                  <button disabled={Boolean(row.locked)} onClick={() => edit(row)} className="btn-outline !px-2 !py-1 !text-xs disabled:opacity-40">
                     Edit
                   </button>
                   <button disabled={Boolean(row.locked)} onClick={() => remove(row)} className="rounded-md border border-red-200 px-2 py-1 text-xs font-semibold text-red-700 disabled:opacity-40">
@@ -248,14 +248,14 @@ export function CashOpeningManager() {
   return (
     <>
       <PageHeader title="Cash Opening" description="Enter opening cash balance before cash account movement starts." />
-      <div className="grid gap-5 xl:grid-cols-[minmax(320px,420px)_1fr]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(320px,380px)_1fr]">
         <form onSubmit={submit} className="space-y-4">
           <ApiError message={error} />
           <SuccessMessage message={success} />
           <FormSection title={editingId ? "Edit Cash Opening" : "Add Cash Opening"}>
             <div className="space-y-3">
               <Field label="Account" required>
-                <select value={values.accountId} onChange={(event) => setValues((current) => ({ ...current, accountId: event.target.value }))} className="w-full rounded-md border border-slate-300 bg-white px-3 py-2">
+                <select value={values.accountId} onChange={(event) => setValues((current) => ({ ...current, accountId: event.target.value }))} className="form-select">
                   <option value="">Select cash account</option>
                   {accounts.map((account) => (
                     <option key={String(account.id)} value={String(account.id)}>
@@ -265,16 +265,16 @@ export function CashOpeningManager() {
                 </select>
               </Field>
               <Field label="Amount" required>
-                <input type="number" min="0.01" step="0.01" value={values.amount} onChange={(event) => setValues((current) => ({ ...current, amount: event.target.value }))} className="w-full rounded-md border border-slate-300 px-3 py-2" />
+                <input type="number" min="0.01" step="0.01" value={values.amount} onChange={(event) => setValues((current) => ({ ...current, amount: event.target.value }))} className="form-input" />
               </Field>
               <Field label="Debit / Credit Type" required>
-                <select value={values.balanceType} onChange={(event) => setValues((current) => ({ ...current, balanceType: event.target.value }))} className="w-full rounded-md border border-slate-300 bg-white px-3 py-2">
+                <select value={values.balanceType} onChange={(event) => setValues((current) => ({ ...current, balanceType: event.target.value }))} className="form-select">
                   <option value="DEBIT">Debit</option>
                   <option value="CREDIT">Credit</option>
                 </select>
               </Field>
               <Field label="Date" required>
-                <input type="date" value={values.transactionDate} onChange={(event) => setValues((current) => ({ ...current, transactionDate: event.target.value }))} className="w-full rounded-md border border-slate-300 px-3 py-2" />
+                <input type="date" value={values.transactionDate} onChange={(event) => setValues((current) => ({ ...current, transactionDate: event.target.value }))} className="form-input" />
               </Field>
             </div>
           </FormSection>
@@ -282,7 +282,7 @@ export function CashOpeningManager() {
             <button disabled={saving} className="rounded-md bg-blue-950 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
               {saving ? "Saving..." : editingId ? "Update" : "Create"}
             </button>
-            <button type="button" onClick={reset} className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">
+            <button type="button" onClick={reset} className="btn-outline">
               Reset
             </button>
           </div>
@@ -302,7 +302,7 @@ export function CashOpeningManager() {
               label: "Actions",
               render: (row) => (
                 <div className="flex gap-2">
-                  <button disabled={Boolean(row.locked)} onClick={() => edit(row)} className="rounded-md border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-700 disabled:opacity-40">
+                  <button disabled={Boolean(row.locked)} onClick={() => edit(row)} className="btn-outline !px-2 !py-1 !text-xs disabled:opacity-40">
                     Edit
                   </button>
                   <button disabled={Boolean(row.locked)} onClick={() => remove(row)} className="rounded-md border border-red-200 px-2 py-1 text-xs font-semibold text-red-700 disabled:opacity-40">
@@ -396,14 +396,14 @@ export function CustomerOpeningBalanceManager() {
   return (
     <>
       <PageHeader title="CustomerOpeningBalance" description="Enter initial customer debit or credit balance before later customer movement is posted." />
-      <div className="grid gap-5 xl:grid-cols-[minmax(320px,420px)_1fr]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(320px,380px)_1fr]">
         <form onSubmit={submit} className="space-y-4 rounded-lg border border-blue-100 bg-white p-4 shadow-sm">
           <ApiError message={error} />
           <SuccessMessage message={success} />
           <FormSection title={editingId ? "Edit CustomerOpeningBalance" : "Add CustomerOpeningBalance"}>
             <div className="space-y-3">
               <Field label="Customer" required>
-                <select value={values.customerId} onChange={(event) => setValues((current) => ({ ...current, customerId: event.target.value }))} className="w-full rounded-md border border-blue-200 bg-white px-3 py-2 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100">
+                <select value={values.customerId} onChange={(event) => setValues((current) => ({ ...current, customerId: event.target.value }))} className="form-select">
                   <option value="">Select customer</option>
                   {customers.map((customer) => (
                     <option key={String(customer.id)} value={String(customer.id)}>
@@ -413,24 +413,24 @@ export function CustomerOpeningBalanceManager() {
                 </select>
               </Field>
               <Field label="Amount" required>
-                <input type="number" min="0.01" step="0.01" value={values.amount} onChange={(event) => setValues((current) => ({ ...current, amount: event.target.value }))} className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+                <input type="number" min="0.01" step="0.01" value={values.amount} onChange={(event) => setValues((current) => ({ ...current, amount: event.target.value }))} className="form-input" />
               </Field>
               <Field label="Debit / Credit Type" required>
-                <select value={values.balanceType} onChange={(event) => setValues((current) => ({ ...current, balanceType: event.target.value }))} className="w-full rounded-md border border-blue-200 bg-white px-3 py-2 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100">
+                <select value={values.balanceType} onChange={(event) => setValues((current) => ({ ...current, balanceType: event.target.value }))} className="form-select">
                   <option value="DEBIT">Debit</option>
                   <option value="CREDIT">Credit</option>
                 </select>
               </Field>
               <Field label="Date" required>
-                <input type="date" value={values.transactionDate} onChange={(event) => setValues((current) => ({ ...current, transactionDate: event.target.value }))} className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+                <input type="date" value={values.transactionDate} onChange={(event) => setValues((current) => ({ ...current, transactionDate: event.target.value }))} className="form-input" />
               </Field>
             </div>
           </FormSection>
           <div className="flex gap-2">
-            <button disabled={saving} className="rounded-md bg-blue-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
+            <button disabled={saving} className="btn-primary">
               {saving ? "Saving..." : editingId ? "Update" : "Create"}
             </button>
-            <button type="button" onClick={reset} className="rounded-md border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-800">
+            <button type="button" onClick={reset} className="btn-outline">
               Reset
             </button>
           </div>
@@ -450,7 +450,7 @@ export function CustomerOpeningBalanceManager() {
               label: "Actions",
               render: (row) => (
                 <div className="flex gap-2">
-                  <button disabled={Boolean(row.locked)} onClick={() => edit(row)} className="rounded-md border border-blue-200 px-2 py-1 text-xs font-semibold text-blue-800 disabled:opacity-40">
+                  <button disabled={Boolean(row.locked)} onClick={() => edit(row)} className="btn-outline !px-2 !py-1 !text-xs disabled:opacity-40">
                     Edit
                   </button>
                   <button disabled={Boolean(row.locked)} onClick={() => remove(row)} className="rounded-md border border-red-200 px-2 py-1 text-xs font-semibold text-red-700 disabled:opacity-40">
@@ -544,14 +544,14 @@ export function VendorOpeningBalanceManager() {
   return (
     <>
       <PageHeader title="Vendor Opening Balance" description="Enter initial vendor debit or credit balance before later vendor movement is posted." />
-      <div className="grid gap-5 xl:grid-cols-[minmax(320px,420px)_1fr]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(320px,380px)_1fr]">
         <form onSubmit={submit} className="space-y-4 rounded-lg border border-blue-100 bg-white p-4 shadow-sm">
           <ApiError message={error} />
           <SuccessMessage message={success} />
           <FormSection title={editingId ? "Edit Vendor Opening Balance" : "Add Vendor Opening Balance"}>
             <div className="space-y-3">
               <Field label="Vendor" required>
-                <select value={values.vendorId} onChange={(event) => setValues((current) => ({ ...current, vendorId: event.target.value }))} className="w-full rounded-md border border-blue-200 bg-white px-3 py-2 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100">
+                <select value={values.vendorId} onChange={(event) => setValues((current) => ({ ...current, vendorId: event.target.value }))} className="form-select">
                   <option value="">Select vendor</option>
                   {vendors.map((vendor) => (
                     <option key={String(vendor.id)} value={String(vendor.id)}>
@@ -561,24 +561,24 @@ export function VendorOpeningBalanceManager() {
                 </select>
               </Field>
               <Field label="Amount" required>
-                <input type="number" min="0.01" step="0.01" value={values.amount} onChange={(event) => setValues((current) => ({ ...current, amount: event.target.value }))} className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+                <input type="number" min="0.01" step="0.01" value={values.amount} onChange={(event) => setValues((current) => ({ ...current, amount: event.target.value }))} className="form-input" />
               </Field>
               <Field label="Debit / Credit Type" required>
-                <select value={values.balanceType} onChange={(event) => setValues((current) => ({ ...current, balanceType: event.target.value }))} className="w-full rounded-md border border-blue-200 bg-white px-3 py-2 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100">
+                <select value={values.balanceType} onChange={(event) => setValues((current) => ({ ...current, balanceType: event.target.value }))} className="form-select">
                   <option value="DEBIT">Debit</option>
                   <option value="CREDIT">Credit</option>
                 </select>
               </Field>
               <Field label="Date" required>
-                <input type="date" value={values.transactionDate} onChange={(event) => setValues((current) => ({ ...current, transactionDate: event.target.value }))} className="w-full rounded-md border border-blue-200 px-3 py-2 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+                <input type="date" value={values.transactionDate} onChange={(event) => setValues((current) => ({ ...current, transactionDate: event.target.value }))} className="form-input" />
               </Field>
             </div>
           </FormSection>
           <div className="flex gap-2">
-            <button disabled={saving} className="rounded-md bg-blue-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
+            <button disabled={saving} className="btn-primary">
               {saving ? "Saving..." : editingId ? "Update" : "Create"}
             </button>
-            <button type="button" onClick={reset} className="rounded-md border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-800">
+            <button type="button" onClick={reset} className="btn-outline">
               Reset
             </button>
           </div>
@@ -598,7 +598,7 @@ export function VendorOpeningBalanceManager() {
               label: "Actions",
               render: (row) => (
                 <div className="flex gap-2">
-                  <button disabled={Boolean(row.locked)} onClick={() => edit(row)} className="rounded-md border border-blue-200 px-2 py-1 text-xs font-semibold text-blue-800 disabled:opacity-40">
+                  <button disabled={Boolean(row.locked)} onClick={() => edit(row)} className="btn-outline !px-2 !py-1 !text-xs disabled:opacity-40">
                     Edit
                   </button>
                   <button disabled={Boolean(row.locked)} onClick={() => remove(row)} className="rounded-md border border-red-200 px-2 py-1 text-xs font-semibold text-red-700 disabled:opacity-40">
@@ -625,3 +625,4 @@ function Field({ label, required, children }: { label: string; required?: boolea
     </label>
   );
 }
+

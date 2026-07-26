@@ -25,25 +25,30 @@ html[data-lang="ur"] body {
   --danger-red: #C62828;
   --warning-amber: #F9A825;
 
-  /* Skeuomorphic shadows */
-  --skeu-shadow: 6px 6px 14px rgba(0, 0, 0, 0.15), -6px -6px 14px rgba(255, 255, 255, 0.8);
-  --skeu-shadow-sm: 3px 3px 8px rgba(0, 0, 0, 0.12), -3px -3px 8px rgba(255, 255, 255, 0.7);
-  --skeu-shadow-lg: 8px 8px 20px rgba(0, 0, 0, 0.18), -8px -8px 20px rgba(255, 255, 255, 0.7);
-  --skeu-shadow-inset: inset 3px 3px 8px rgba(0, 0, 0, 0.12), inset -3px -3px 8px rgba(255, 255, 255, 0.7);
-  --skeu-shadow-inset-sm: inset 2px 2px 5px rgba(0, 0, 0, 0.1), inset -2px -2px 5px rgba(255, 255, 255, 0.6);
-  --skeu-shadow-btn: 3px 3px 6px rgba(0, 0, 0, 0.2), -3px -3px 6px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-  --skeu-shadow-pressed: inset 2px 2px 5px rgba(0, 0, 0, 0.2), inset -1px -1px 3px rgba(255, 255, 255, 0.1);
+  /* Flat surfaces (legacy --skeu-* names kept as aliases for existing refs) */
+  --surface-bg: #F4F5F7;
+  --surface-card: #ffffff;
+  --surface-border: #D9DDE3;
+  --surface-muted: #F0F1F3;
+  --shadow-soft: 0 1px 2px rgba(15, 49, 80, 0.06);
+  --shadow-soft-md: 0 1px 3px rgba(15, 49, 80, 0.08);
 
-  /* Gradients */
-  --skeu-raised: linear-gradient(145deg, #ffffff, #d9dde3);
-  --skeu-pressed: linear-gradient(145deg, #d9dde3, #ffffff);
-  --skeu-input: linear-gradient(135deg, #e8ecf1, #ffffff);
-  --gas-gradient: linear-gradient(135deg, #123A5A, #0F3150);
-  --gas-gradient-light: linear-gradient(135deg, #1B4A6F, #123A5A);
-  --flame-gradient: linear-gradient(135deg, #F28C28, #D97823);
-  --skeu-surface: linear-gradient(145deg, #FAFAF7, #f0f0ea);
+  --skeu-shadow: var(--shadow-soft);
+  --skeu-shadow-sm: var(--shadow-soft);
+  --skeu-shadow-lg: var(--shadow-soft-md);
+  --skeu-shadow-inset: none;
+  --skeu-shadow-inset-sm: none;
+  --skeu-shadow-btn: none;
+  --skeu-shadow-pressed: none;
 
-  /* Easing */
+  --skeu-raised: #ffffff;
+  --skeu-pressed: #F0F1F3;
+  --skeu-input: #ffffff;
+  --gas-gradient: var(--gas-blue);
+  --gas-gradient-light: var(--gas-blue-light);
+  --flame-gradient: var(--flame-orange);
+  --skeu-surface: var(--surface-bg);
+
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 }
@@ -55,8 +60,7 @@ html, body {
 
 body {
   margin: 0;
-  background: var(--skeu-surface);
-  background-attachment: fixed;
+  background: var(--surface-bg);
   color: #1f2937;
   font-family: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -67,9 +71,8 @@ body {
   box-sizing: border-box;
 }
 
-/* ─── Skeuomorphic Base: Buttons & Links ─── */
 a, button {
-  transition: color 150ms var(--ease-out), background-color 150ms var(--ease-out), border-color 150ms var(--ease-out), box-shadow 150ms var(--ease-out), opacity 150ms var(--ease-out), transform 120ms var(--ease-out);
+  transition: color 120ms var(--ease-out), background-color 120ms var(--ease-out), border-color 120ms var(--ease-out), opacity 120ms var(--ease-out), transform 100ms var(--ease-out);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -84,133 +87,124 @@ a, button {
 /* ─── Scrollbar ─── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: #e8ecf1; border-radius: 3px; }
-::-webkit-scrollbar-thumb { background: #A5A9B3; border-radius: 3px; box-shadow: inset 1px 1px 2px rgba(0,0,0,0.1); }
+::-webkit-scrollbar-thumb { background: #A5A9B3; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #8B909D; }
 
 /* ─── Component Layer ─── */
 @layer components {
 
-  /* ── Form Inputs (carved-in appearance) ── */
   .form-input {
-    @apply mt-1 w-full rounded-lg px-3 py-2.5 text-sm text-steel-900 placeholder:text-steel-400;
-    background: var(--skeu-input);
-    border: none;
-    box-shadow: var(--skeu-shadow-inset-sm), 0 0 0 1px rgba(0,0,0,0.04);
-    transition: box-shadow 150ms var(--ease-out), background-color 150ms var(--ease-out);
+    @apply mt-1 w-full rounded-md px-3 py-2 text-sm text-steel-900 placeholder:text-steel-400;
+    background: #ffffff;
+    border: 1px solid var(--surface-border);
+    box-shadow: none;
+    transition: border-color 120ms var(--ease-out), box-shadow 120ms var(--ease-out);
   }
   .form-input:focus {
-    background: linear-gradient(135deg, #ffffff, #f4f6f9);
-    box-shadow: var(--skeu-shadow-inset), 0 0 0 2px rgba(18, 58, 90, 0.15);
+    background: #ffffff;
+    border-color: var(--gas-blue);
+    box-shadow: 0 0 0 2px rgba(18, 58, 90, 0.15);
     outline: none;
   }
   .form-input:disabled {
-    background: #e8ecf1;
-    box-shadow: inset 2px 2px 4px rgba(0,0,0,0.08);
+    background: var(--surface-muted);
+    border-color: var(--surface-border);
     cursor: not-allowed;
     color: #8B909D;
   }
 
   .form-label {
-    @apply block text-sm font-semibold;
+    @apply block text-xs font-semibold uppercase tracking-wide;
     color: #3D4552;
   }
 
-  /* ── Select (carved-in) ── */
   .form-select {
-    @apply mt-1 w-full rounded-lg px-3 py-2.5 text-sm text-steel-900;
-    background: var(--skeu-input);
-    border: none;
-    box-shadow: var(--skeu-shadow-inset-sm), 0 0 0 1px rgba(0,0,0,0.04);
-    transition: box-shadow 150ms var(--ease-out), background-color 150ms var(--ease-out);
+    @apply mt-1 w-full rounded-md px-3 py-2 text-sm text-steel-900;
+    background: #ffffff;
+    border: 1px solid var(--surface-border);
+    box-shadow: none;
+    transition: border-color 120ms var(--ease-out), box-shadow 120ms var(--ease-out);
   }
   .form-select:focus {
-    background: linear-gradient(135deg, #ffffff, #f4f6f9);
-    box-shadow: var(--skeu-shadow-inset), 0 0 0 2px rgba(18, 58, 90, 0.15);
+    background: #ffffff;
+    border-color: var(--gas-blue);
+    box-shadow: 0 0 0 2px rgba(18, 58, 90, 0.15);
     outline: none;
   }
 
-  /* ── Cards (raised surfaces) ── */
   .card {
-    @apply rounded-xl;
-    background: var(--skeu-raised);
-    box-shadow: var(--skeu-shadow);
-    border: none;
+    @apply rounded-lg;
+    background: var(--surface-card);
+    border: 1px solid var(--surface-border);
+    box-shadow: var(--shadow-soft);
   }
 
   .card-md {
-    @apply rounded-xl;
-    background: var(--skeu-raised);
-    box-shadow: var(--skeu-shadow-lg);
-    border: none;
+    @apply rounded-lg;
+    background: var(--surface-card);
+    border: 1px solid var(--surface-border);
+    box-shadow: var(--shadow-soft-md);
   }
 
-  /* ── Badges ── */
   .badge {
-    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 1px 1px 3px rgba(0,0,0,0.1);
+    @apply inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold;
   }
 
   .badge-blue {
     @apply badge;
-    background: linear-gradient(145deg, #C5D9E9, #9EBAD8);
+    background: #E8F0F7;
     color: #0C2845;
   }
 
   .badge-green {
     @apply badge;
-    background: linear-gradient(145deg, #C8E6C9, #A5D6A7);
+    background: #E8F5E9;
     color: #1B5E20;
   }
 
   .badge-red {
     @apply badge;
-    background: linear-gradient(145deg, #FFCDD2, #EF9A9A);
+    background: #FFEBEE;
     color: #B71C1C;
   }
 
   .badge-orange {
     @apply badge;
-    background: linear-gradient(145deg, #FDE0C3, #FBCB9B);
+    background: #FEF3E7;
     color: #A75019;
   }
 
-  /* ── Buttons ── */
   .btn-primary {
-    @apply inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold shadow-sm disabled:cursor-not-allowed disabled:opacity-60;
-    background: var(--gas-gradient);
-    box-shadow: var(--skeu-shadow-btn);
+    @apply inline-flex items-center gap-2 rounded-md px-3.5 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-60;
+    background: var(--gas-blue);
     color: white;
-    transition: box-shadow 120ms var(--ease-out), transform 120ms var(--ease-out), background 150ms var(--ease-out);
+    border: 1px solid var(--gas-blue-dark);
   }
   .btn-primary:hover:not(:disabled) {
-    background: var(--gas-gradient-light);
+    background: var(--gas-blue-light);
   }
   .btn-primary:active:not(:disabled) {
     transform: scale(0.97);
-    box-shadow: var(--skeu-shadow-pressed);
   }
 
   .btn-outline {
-    @apply inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold;
-    background: var(--skeu-raised);
-    box-shadow: var(--skeu-shadow-btn);
+    @apply inline-flex items-center gap-2 rounded-md px-3.5 py-2 text-sm font-bold;
+    background: #ffffff;
+    border: 1px solid var(--surface-border);
     color: var(--gas-blue);
-    transition: box-shadow 120ms var(--ease-out), transform 120ms var(--ease-out), background 150ms var(--ease-out);
   }
   .btn-outline:hover {
-    background: linear-gradient(145deg, #f0f2f5, #d0d4da);
+    background: var(--surface-muted);
+    border-color: #C5CCD6;
   }
   .btn-outline:active {
     transform: scale(0.97);
-    box-shadow: var(--skeu-shadow-pressed);
-    background: var(--skeu-pressed);
   }
 
   .btn-ghost {
-    @apply inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold;
+    @apply inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold;
     color: #4B5563;
     background: transparent;
-    transition: background 150ms var(--ease-out), color 150ms var(--ease-out), transform 120ms var(--ease-out);
   }
   .btn-ghost:hover {
     background: rgba(18,58,90,0.06);
@@ -221,93 +215,82 @@ a, button {
   }
 
   .btn-primary-sm {
-    @apply inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-60;
-    background: var(--gas-gradient);
-    box-shadow: var(--skeu-shadow-sm), inset 0 1px 0 rgba(255,255,255,0.15);
-    transition: box-shadow 120ms var(--ease-out), transform 120ms var(--ease-out);
+    @apply inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-bold text-white disabled:cursor-not-allowed disabled:opacity-60;
+    background: var(--gas-blue);
+    border: 1px solid var(--gas-blue-dark);
   }
   .btn-primary-sm:active {
     transform: scale(0.97);
-    box-shadow: var(--skeu-shadow-inset-sm);
   }
 
+  /* Money-out / secondary destructive confirm — not flame "you are here" */
   .btn-flame {
-    @apply inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60;
-    background: var(--flame-gradient);
-    box-shadow: var(--skeu-shadow-btn);
-    transition: box-shadow 120ms var(--ease-out), transform 120ms var(--ease-out), background 150ms var(--ease-out);
+    @apply inline-flex items-center gap-2 rounded-md px-3.5 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60;
+    background: var(--danger-red);
+    border: 1px solid #B71C1C;
   }
   .btn-flame:hover:not(:disabled) {
-    background: linear-gradient(135deg, #F7A04B, #E88520);
+    background: #B71C1C;
   }
   .btn-flame:active:not(:disabled) {
     transform: scale(0.97);
-    box-shadow: var(--skeu-shadow-pressed);
   }
 
-  /* ── Table cell inputs ── */
   .tbl-input {
     @apply rounded-md px-2 py-1.5 text-sm text-steel-900 placeholder:text-steel-400;
-    background: var(--skeu-input);
-    border: none;
-    box-shadow: var(--skeu-shadow-inset-sm), 0 0 0 1px rgba(0,0,0,0.04);
-    transition: box-shadow 120ms var(--ease-out);
+    background: #ffffff;
+    border: 1px solid var(--surface-border);
   }
   .tbl-input:focus {
-    box-shadow: var(--skeu-shadow-inset), 0 0 0 2px rgba(18, 58, 90, 0.15);
+    border-color: var(--gas-blue);
+    box-shadow: 0 0 0 2px rgba(18, 58, 90, 0.15);
     outline: none;
   }
   .tbl-input:disabled {
-    background: #e8ecf1;
-    box-shadow: inset 2px 2px 4px rgba(0,0,0,0.08);
+    background: var(--surface-muted);
     cursor: not-allowed;
   }
 
   .tbl-select {
     @apply rounded-md px-2 py-1.5 text-sm text-steel-900;
-    background: var(--skeu-input);
-    border: none;
-    box-shadow: var(--skeu-shadow-inset-sm), 0 0 0 1px rgba(0,0,0,0.04);
-    transition: box-shadow 120ms var(--ease-out);
+    background: #ffffff;
+    border: 1px solid var(--surface-border);
   }
   .tbl-select:focus {
-    box-shadow: var(--skeu-shadow-inset), 0 0 0 2px rgba(18, 58, 90, 0.15);
+    border-color: var(--gas-blue);
+    box-shadow: 0 0 0 2px rgba(18, 58, 90, 0.15);
     outline: none;
   }
 
-  /* ── Accent helpers ── */
+  /* Flame = location marker only */
   .accent-bar {
     @apply h-4 w-1 shrink-0 rounded-full;
-    background: linear-gradient(to bottom, var(--flame-orange), var(--flame-orange-dark));
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 1px 1px 2px rgba(0,0,0,0.15);
+    background: var(--flame-orange);
   }
 
   .accent-section-header {
-    @apply flex items-center gap-2 px-5 py-3;
-    background: linear-gradient(180deg, #f4f6f9, #e8ecf1);
-    border-bottom: 1px solid rgba(0,0,0,0.06);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+    @apply flex items-center gap-2 px-4 py-2;
+    background: var(--surface-muted);
+    border-bottom: 1px solid var(--surface-border);
   }
 
   .accent-chip {
-    background: linear-gradient(145deg, #C5D9E9, #9EBAD8);
+    background: #E8F0F7;
     color: #0C2845;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 1px 1px 3px rgba(0,0,0,0.1);
   }
 
   .accent-tile {
-    background: linear-gradient(145deg, #fafbfc, #eef0f3);
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.1), -2px -2px 5px rgba(255,255,255,0.6);
+    background: #ffffff;
+    border: 1px solid var(--surface-border);
     color: var(--gas-blue);
-    border: none;
   }
   .accent-tile:hover {
-    background: linear-gradient(145deg, #f0f2f5, #e0e4e9);
-    box-shadow: 3px 3px 8px rgba(0,0,0,0.12), -3px -3px 8px rgba(255,255,255,0.6);
+    background: var(--surface-muted);
+    border-color: #C5CCD6;
   }
 
   .accent-row-hover:hover {
-    background: linear-gradient(90deg, rgba(18,58,90,0.04), rgba(18,58,90,0.02));
+    background: rgba(18,58,90,0.04);
   }
 
   .accent-link:hover {
@@ -315,103 +298,89 @@ a, button {
   }
 
   .report-table-head {
-    @apply border-b;
-    background: linear-gradient(180deg, #f4f6f9, #e2e6ec);
-    border-bottom: 2px solid rgba(18,58,90,0.2);
+    background: var(--surface-muted);
+    border-bottom: 1px solid var(--gas-blue);
   }
 
   .report-table-head th {
-    border-bottom: 2px solid rgba(18,58,90,0.15);
+    border-bottom: 1px solid rgba(18,58,90,0.2);
   }
 
-  /* ── Section divider ── */
   .section-divider {
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(0,0,0,0.08), transparent);
-    box-shadow: 0 1px 0 rgba(255,255,255,0.5);
+    background: var(--surface-border);
   }
 
-  /* ── Dropdown command surfaces (flat white → skeuomorphic raised) ── */
   .skeu-dropdown-item {
     background: transparent;
-    transition: background 120ms var(--ease-out);
   }
   .skeu-dropdown-item:hover {
-    background: linear-gradient(90deg, rgba(18,58,90,0.06), transparent);
+    background: rgba(18,58,90,0.06);
   }
   .skeu-dropdown-item:active {
-    background: linear-gradient(90deg, rgba(18,58,90,0.1), transparent);
+    background: rgba(18,58,90,0.1);
   }
 
-  /* ── Alert / notification surfaces ── */
   .skeu-alert-info {
-    background: linear-gradient(145deg, #E8F0F7, #C5D9E9);
-    box-shadow: var(--skeu-shadow-sm), inset 0 1px 0 rgba(255,255,255,0.4);
+    background: #E8F0F7;
+    border: 1px solid #9EBAD8;
     color: #0C2845;
   }
   .skeu-alert-warning {
-    background: linear-gradient(145deg, #FFF8E1, #FFECB3);
-    box-shadow: var(--skeu-shadow-sm), inset 0 1px 0 rgba(255,255,255,0.4);
+    background: #FFF8E1;
+    border: 1px solid #FFE082;
     color: #7c5a00;
   }
   .skeu-alert-error {
-    background: linear-gradient(145deg, #FFEBEE, #FFCDD2);
-    box-shadow: var(--skeu-shadow-sm), inset 0 1px 0 rgba(255,255,255,0.4);
+    background: #FFEBEE;
+    border: 1px solid #EF9A9A;
     color: #B71C1C;
   }
   .skeu-alert-success {
-    background: linear-gradient(145deg, #E8F5E9, #C8E6C9);
-    box-shadow: var(--skeu-shadow-sm), inset 0 1px 0 rgba(255,255,255,0.4);
+    background: #E8F5E9;
+    border: 1px solid #A5D6A7;
     color: #1B5E20;
   }
 
-  /* ── Pills / tags ── */
   .skeu-pill {
-    @apply inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 1px 1px 3px rgba(0,0,0,0.1);
+    @apply inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold;
+    background: var(--surface-muted);
+    border: 1px solid var(--surface-border);
   }
 
-  /* ── Subtle bevel separator ── */
   .skeu-separator {
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(0,0,0,0.07), transparent);
-    box-shadow: 0 1px 0 rgba(255,255,255,0.6);
+    background: var(--surface-border);
   }
 }
 
-/* ── Surface press interaction ── */
 .surface-press {
-  transition: transform 120ms var(--ease-out), box-shadow 150ms var(--ease-out), background-color 150ms var(--ease-out);
+  transition: transform 100ms var(--ease-out), background-color 120ms var(--ease-out);
 }
 .surface-press:active {
   transform: scale(0.98);
 }
 @media (hover: hover) and (pointer: fine) {
   .surface-press:hover {
-    box-shadow: var(--skeu-shadow-lg);
+    background: var(--surface-muted);
   }
 }
 
-/* ── Sidebar link interactions (glass cards) ── */
 .sidebar-link-hover {
-  background: rgba(255,255,255,0.03);
+  background: transparent;
   border: 1px solid transparent;
 }
 .sidebar-link-hover:hover {
-  background: rgba(255,255,255,0.09);
-  border-color: rgba(255,255,255,0.12);
-  box-shadow: 0 4px 14px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.08);
-  transform: translateY(-1px);
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.1);
 }
 .sidebar-link-active {
-  background: rgba(255,255,255,0.13);
-  border: 1px solid rgba(255,255,255,0.2);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.16);
 }
 
-/* ── Flame glow (for accent elements) ── */
 .flame-glow {
-  box-shadow: 0 0 12px rgba(242,140,40,0.3);
+  box-shadow: none;
 }
 
 /* ── Print styles ── */

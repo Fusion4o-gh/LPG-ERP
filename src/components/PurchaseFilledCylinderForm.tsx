@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
@@ -313,18 +313,18 @@ export function PurchaseFilledCylinderForm() {
         description="Create a legacy-style GIRN: fill one entry row, click Add, and repeat for each item before posting."
         actions={
           previewReceiptNo ? (
-            <span className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800">
+            <span className="badge-blue">
               Next Receipt #: {previewReceiptNo}
             </span>
           ) : null
         }
       />
-      <form onSubmit={onSubmit} className="space-y-5">
+      <form onSubmit={onSubmit} className="space-y-3">
         <ApiError message={error} />
         <SuccessMessage message={success} />
 
         {printDocumentNo ? (
-          <div className="card rounded-lg flex flex-wrap items-center gap-3 px-4 py-3 text-sm">
+          <div className="card flex flex-wrap items-center gap-3 px-4 py-3 text-sm">
             <svg className="h-4 w-4 shrink-0 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
@@ -333,19 +333,19 @@ export function PurchaseFilledCylinderForm() {
             </span>
             <Link
               href={purchaseRoutes.filled.print(printDocumentNo)}
-              className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+              className="btn-outline ml-auto !px-2.5 !py-1 !text-xs"
             >
               Open Print View
             </Link>
           </div>
         ) : null}
 
-        <section className="card rounded-xl overflow-hidden">
-          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center gap-2">
-            <div className="h-3.5 w-0.5 rounded-full bg-blue-500/60 shrink-0" />
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">GIRN Header</h2>
+        <section className="card overflow-hidden">
+          <div className="accent-section-header">
+            <div className="accent-bar" />
+            <h2 className="text-xs font-bold uppercase tracking-widest text-steel-600">GIRN Header</h2>
           </div>
-          <div className="p-5">
+          <div className="p-3">
             <div className="grid items-start gap-4 lg:grid-cols-5">
               <div className="lg:col-span-2">
                 <label className="form-label" htmlFor="vendorId">
@@ -388,7 +388,7 @@ export function PurchaseFilledCylinderForm() {
                     type="button"
                     onClick={applyElevenPointEightKgPrice}
                     disabled={!elevenPointEightKgPrice || centralizedPricing}
-                    className="shrink-0 rounded-lg border border-blue-200 bg-blue-50 px-2.5 text-xs font-medium text-blue-700 hover:bg-blue-100 disabled:opacity-40 transition-colors"
+                    className="btn-outline !px-2 !py-1.5 !text-xs disabled:opacity-40"
                     title="Push this price into all already-added 11.8 KG cylinder lines. New lines pick it up automatically."
                   >
                     Apply to Lines
@@ -404,8 +404,8 @@ export function PurchaseFilledCylinderForm() {
                 </label>
                 <input id="remarks" value={remarks} onChange={(e) => setRemarks(e.target.value)} className="form-input" />
               </div>
-              <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-3 lg:col-span-5 lg:max-w-xs">
-                <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Vendor Balance</div>
+              <div className="rounded-md border border-[var(--surface-border)] bg-[var(--surface-muted)] p-2.5 lg:col-span-5 lg:max-w-xs">
+                <div className="text-xs font-semibold uppercase tracking-wide text-steel-400">Vendor Balance</div>
                 {vendorBalance ? (
                   <div className="mt-1 text-sm font-medium tabular-nums text-slate-700">Payable: {money(vendorBalance.payableBalance)}</div>
                 ) : (
@@ -416,14 +416,14 @@ export function PurchaseFilledCylinderForm() {
           </div>
         </section>
 
-        <section className="card rounded-xl overflow-hidden">
-          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center gap-2">
-            <div className="h-3.5 w-0.5 rounded-full bg-blue-500/60 shrink-0" />
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+        <section className="card overflow-hidden">
+          <div className="accent-section-header">
+            <div className="accent-bar" />
+            <h2 className="text-xs font-bold uppercase tracking-widest text-steel-600">
               {editingIndex === null ? "New Purchase Line" : `Editing Line ${editingIndex + 1}`}
             </h2>
           </div>
-          <div className="p-5 space-y-3">
+          <div className="p-3 space-y-2.5">
             <ApiError message={draftError} />
             <div className="grid gap-3 lg:grid-cols-8 lg:items-end">
               <div className="lg:col-span-2">
@@ -511,15 +511,15 @@ export function PurchaseFilledCylinderForm() {
           </div>
         </section>
 
-        <section className="card rounded-xl">
-          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70 flex items-center gap-2">
-            <div className="h-3.5 w-0.5 rounded-full bg-blue-500/60 shrink-0" />
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">Purchase Lines ({lines.length})</h2>
+        <section className="card">
+          <div className="accent-section-header">
+            <div className="accent-bar" />
+            <h2 className="text-xs font-bold uppercase tracking-widest text-steel-600">Purchase Lines ({lines.length})</h2>
           </div>
           <div className="w-full overflow-x-auto md:overflow-x-visible">
             <table className="w-full table-fixed border-collapse text-sm">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200">
+                <tr className="report-table-head">
                   {[
                     { label: "Item", className: "w-[26%] text-left" },
                     { label: "Type", className: "w-[8%] text-left" },
@@ -541,7 +541,7 @@ export function PurchaseFilledCylinderForm() {
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[var(--surface-border)]">
                 {lines.length === 0 ? (
                   <tr>
                     <td colSpan={10} className="px-4 py-6 text-center text-sm text-slate-400">
@@ -578,17 +578,17 @@ export function PurchaseFilledCylinderForm() {
               </tbody>
             </table>
           </div>
-          <div className="border-t border-slate-100 bg-slate-50/60 px-5 py-4 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-lg border border-slate-200 bg-white p-3">
-              <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Ex-GST Total</div>
+          <div className="border-t border-[var(--surface-border)] bg-[var(--surface-muted)] px-3 py-2.5 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-md border border-[var(--surface-border)] bg-white p-2.5">
+              <div className="text-xs font-semibold uppercase tracking-wide text-steel-400">Ex-GST Total</div>
               <div className="mt-1.5 text-lg font-bold text-slate-800 tabular-nums">{money(totals.exGstAmount)}</div>
             </div>
-            <div className="rounded-lg border border-slate-200 bg-white p-3">
-              <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">GST Total</div>
+            <div className="rounded-md border border-[var(--surface-border)] bg-white p-2.5">
+              <div className="text-xs font-semibold uppercase tracking-wide text-steel-400">GST Total</div>
               <div className="mt-1.5 text-lg font-bold text-slate-800 tabular-nums">{money(totals.gstAmount)}</div>
             </div>
-            <div className="rounded-lg bg-blue-700 p-3">
-              <div className="text-xs font-semibold uppercase tracking-wide text-blue-200">Total Bill (Inc-GST)</div>
+            <div className="rounded-md bg-gas-600 p-2.5">
+              <div className="text-xs font-semibold uppercase tracking-wide text-gas-100">Total Bill (Inc-GST)</div>
               <div className="mt-1.5 text-lg font-bold text-white tabular-nums">{money(totals.incGstAmount)}</div>
             </div>
           </div>
@@ -602,7 +602,11 @@ export function PurchaseFilledCylinderForm() {
           banks={banks}
         />
 
-        <div className="flex flex-wrap gap-2">
+        <div className="sticky bottom-0 z-[5] -mx-1 mt-1 flex flex-wrap items-center gap-2 border-t border-[var(--surface-border)] bg-white/95 px-3 py-2.5 backdrop-blur-sm">
+          <div className="mr-auto flex flex-wrap items-baseline gap-3 text-sm">
+            <span className="text-steel-500">Payable <span className="font-bold tabular-nums text-[var(--danger-red)]">{money(totals.incGstAmount)}</span></span>
+            {previewReceiptNo ? <span className="text-xs text-steel-400">#{previewReceiptNo}</span> : null}
+          </div>
           <SubmitButton loading={loading} disabled={lines.length === 0}>Post Purchase</SubmitButton>
           <button type="button" onClick={reset} className="btn-outline">
             Reset Form
@@ -612,3 +616,4 @@ export function PurchaseFilledCylinderForm() {
     </>
   );
 }
+

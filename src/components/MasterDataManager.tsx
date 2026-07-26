@@ -125,20 +125,24 @@ export function MasterDataManager({
   return (
     <>
       <PageHeader title={title} description={description} />
-      <div className="grid gap-5 xl:grid-cols-[minmax(320px,420px)_1fr]">
-        <form onSubmit={onSubmit} className="space-y-4">
+      <div className="grid gap-4 xl:grid-cols-[minmax(320px,380px)_1fr]">
+        <form onSubmit={onSubmit} className="space-y-3">
           <ApiError message={error} />
           <SuccessMessage message={success} />
           <FormSection title={editingId ? `Edit ${title}` : `Create ${title}`}>
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {fields.map((field) => (
-                <label key={field.name} className="block text-sm text-slate-700">
-                  <span className="mb-1 block font-medium">
+                <label key={field.name} className="block">
+                  <span className="form-label">
                     {field.label}
-                    {field.required ? <span className="text-red-600"> *</span> : null}
+                    {field.required ? <span className="text-[var(--danger-red)]"> *</span> : null}
                   </span>
                   {field.options || field.optionSource ? (
-                    <select value={values[field.name] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [field.name]: event.target.value }))} className="w-full rounded-md border border-slate-300 bg-white px-3 py-2">
+                    <select
+                      value={values[field.name] ?? ""}
+                      onChange={(event) => setValues((current) => ({ ...current, [field.name]: event.target.value }))}
+                      className="form-select"
+                    >
                       {field.optionSource ? <option value="">Select {field.label}</option> : null}
                       {(field.optionSource ? dynamicOptions[field.name] ?? [] : field.options?.map((option) => ({ value: option, label: option })) ?? []).map((option) => (
                         <option key={option.value} value={option.value}>
@@ -147,18 +151,23 @@ export function MasterDataManager({
                       ))}
                     </select>
                   ) : (
-                    <input type={field.type} value={values[field.name] ?? ""} onChange={(event) => setValues((current) => ({ ...current, [field.name]: event.target.value }))} className="w-full rounded-md border border-slate-300 px-3 py-2" />
+                    <input
+                      type={field.type}
+                      value={values[field.name] ?? ""}
+                      onChange={(event) => setValues((current) => ({ ...current, [field.name]: event.target.value }))}
+                      className="form-input"
+                    />
                   )}
-                  {fieldErrors[field.name] ? <span className="mt-1 block text-xs text-red-700">{fieldErrors[field.name]}</span> : null}
+                  {fieldErrors[field.name] ? <span className="mt-1 block text-xs text-[var(--danger-red)]">{fieldErrors[field.name]}</span> : null}
                 </label>
               ))}
             </div>
           </FormSection>
           <div className="flex gap-2">
-            <button disabled={saving} className="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">
+            <button type="submit" disabled={saving} className="btn-primary">
               {saving ? "Saving..." : editingId ? "Update" : "Create"}
             </button>
-            <button type="button" onClick={reset} className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">
+            <button type="button" onClick={reset} className="btn-outline">
               Reset
             </button>
           </div>
@@ -172,7 +181,7 @@ export function MasterDataManager({
               key: "actions",
               label: "Actions",
               render: (row) => (
-                <button onClick={() => edit(row)} className="rounded-md border border-slate-300 px-2 py-1 text-xs font-semibold text-slate-700">
+                <button type="button" onClick={() => edit(row)} className="btn-outline !px-2 !py-1 !text-xs">
                   Edit
                 </button>
               ),

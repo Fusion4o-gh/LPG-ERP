@@ -50,9 +50,9 @@ export function GlobalSearch() {
   }, []);
 
   return (
-    <div ref={containerRef} className="relative hidden lg:block">
+    <div ref={containerRef} className="relative w-full">
       <svg
-        className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-steel-400"
+        className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-steel-400"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
@@ -67,8 +67,7 @@ export function GlobalSearch() {
         onChange={(e) => setQuery(e.target.value)}
         onFocus={() => results.length > 0 && setOpen(true)}
         placeholder={t("Search customers, vouchers…")}
-        className="h-8 w-64 rounded-lg px-3 pl-9 text-sm text-steel-600 placeholder:text-steel-400"
-        style={{ background: "var(--skeu-input)", boxShadow: "var(--skeu-shadow-inset-sm), 0 0 0 1px rgba(0,0,0,0.04)" }}
+        className="form-input !mt-0 h-8 w-full !rounded-md pl-8 text-sm"
         aria-label="Global search"
         aria-expanded={open}
         aria-controls="global-search-results"
@@ -76,16 +75,16 @@ export function GlobalSearch() {
       {open ? (
         <div
           id="global-search-results"
-          className="absolute right-0 top-[calc(100%+6px)] z-50 w-80 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg"
+          className="absolute left-0 right-0 top-[calc(100%+4px)] z-50 overflow-hidden rounded-md border border-[var(--surface-border)] bg-white shadow-soft-md"
         >
-          {loading ? <p className="px-3 py-2 text-xs text-slate-500">Searching…</p> : null}
+          {loading ? <p className="px-3 py-2 text-xs text-steel-500">Searching…</p> : null}
           <ul className="max-h-72 overflow-y-auto py-1">
             {results.map((result) => (
               <li key={`${result.type}-${result.href}-${result.label}`}>
                 <Link
                   href={result.href}
                   onClick={() => setOpen(false)}
-                  className="block px-3 py-2 hover:bg-slate-50"
+                  className="block px-3 py-2 skeu-dropdown-item"
                 >
                   <p className="text-sm font-medium text-slate-900">{result.label}</p>
                   <p className="text-xs text-slate-500">
