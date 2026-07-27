@@ -60,6 +60,12 @@ enum CountStatus {
   CANCELLED
 }
 
+enum DeliveryChallanStatus {
+  DISPATCHED
+  INVOICED
+  CANCELLED
+}
+
 enum StockSourceType {
   OPENING_BALANCE
   PURCHASE_FILLED
@@ -69,6 +75,7 @@ enum StockSourceType {
   ADJUSTMENT
   WAREHOUSE_TRANSFER
   PHYSICAL_COUNT_ADJUSTMENT
+  DELIVERY_CHALLAN
 }
 
 enum PartyType {
@@ -597,6 +604,44 @@ model WarehouseTransferLine {
   transfer WarehouseTransfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
 
   @@index([transferId])
+}
+
+model DeliveryChallan {
+  id              String                @id @default(cuid())
+  companyId       String
+  financialYearId String
+  documentNo      String                @unique
+  challanDate     DateTime              @db.Date
+  customerId      String
+  locationId      String?
+  transporterId   String?
+  vehicleId       String?
+  driverId        String?
+  status          DeliveryChallanStatus @default(DISPATCHED)
+  saleIssueNo     String?
+  remarks         String?
+  createdById     String
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  lines DeliveryChallanLine[]
+
+  @@index([companyId, financialYearId, challanDate])
+  @@index([companyId, customerId, status])
+  @@index([companyId, status])
+}
+
+model DeliveryChallanLine {
+  id       String  @id @default(cuid())
+  challanId String
+  itemId   String
+  quantity Int
+  remarks  String?
+
+  challan DeliveryChallan @relation(fields: [challanId], references: [id], onDelete: Cascade)
+
+  @@index([challanId])
+  @@index([itemId])
 }
 
 model PhysicalCount {

@@ -81,6 +81,7 @@ export const UR: Record<string, string> = {
 
   // Sales tabs
   "Sale LPG": "ایل پی جی فروخت",
+  "Delivery Challan": "ڈیلیوری چالان",
   "Complete Day Sale": "مکمل دن کی فروخت",
   "Decanting Sale": "ڈی کینٹنگ فروخت",
   "Empty Sale": "خالی سلنڈر فروخت",

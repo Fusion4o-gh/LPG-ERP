@@ -84,6 +84,8 @@ export function SaleLpgForm() {
   const [customers, setCustomers] = useState<Lookup[]>([]);
   const [items, setItems] = useState<Lookup[]>([]);
   const [customerId, setCustomerId] = useState("");
+  const [deliveryChallanId, setDeliveryChallanId] = useState("");
+  const [openChallans, setOpenChallans] = useState<Array<{ id: string; documentNo: string; locationId: string | null; lines: Array<{ itemId: string; quantity: number }> }>>([]);
   const [transactionDate, setTransactionDate] = useState("");
   const [saleType, setSaleType] = useState("Direct");
   const [remarks, setRemarks] = useState("");
@@ -191,6 +193,41 @@ export function SaleLpgForm() {
       });
   }, [customerId, lines, draft.itemId]);
 
+  useEffect(() => {
+    if (!customerId) {
+      setOpenChallans([]);
+      setDeliveryChallanId("");
+      return;
+    }
+    apiGet<{ challans: Array<{ id: string; documentNo: string; locationId: string | null; lines: Array<{ itemId: string; quantity: number }> }> }>(
+      `/api/sales/delivery-challan?openForCustomer=${encodeURIComponent(customerId)}`,
+    )
+      .then((data) => setOpenChallans(data.challans ?? []))
+      .catch(() => setOpenChallans([]));
+  }, [customerId]);
+
+  function applyDeliveryChallan(challanId: string) {
+    setDeliveryChallanId(challanId);
+    const challan = openChallans.find((row) => row.id === challanId);
+    if (!challan) {
+      if (!challanId) setLines([]);
+      return;
+    }
+    if (challan.locationId) setLocationId(challan.locationId);
+    setLines(
+      challan.lines.map((line) => ({
+        itemId: line.itemId,
+        quantity: String(line.quantity),
+        unitPrice: "",
+        securityDepositAmount: "0",
+        emptyReturnItemId: line.itemId,
+        emptyReturnQuantity: "0",
+      })),
+    );
+    setDraft({ ...emptyLine });
+    setEditingIndex(null);
+  }
+
   const totals = useMemo(
     () =>
       lines.reduce(
@@ -258,6 +295,8 @@ export function SaleLpgForm() {
 
   function reset() {
     setCustomerId("");
+    setDeliveryChallanId("");
+    setOpenChallans([]);
     setTransactionDate(showDefaultDate ? defaultTransactionDate : "");
     setSaleType("Direct");
     setRemarks("");
@@ -309,6 +348,7 @@ export function SaleLpgForm() {
       chequeDate: settlement.chequeDate || undefined,
       returnGasKg: amount(gasReturn.returnGasKg) || undefined,
       gasReturnRate: amount(gasReturn.rate) || undefined,
+      deliveryChallanId: deliveryChallanId || undefined,
     };
   }
 
@@ -376,14 +416,43 @@ export function SaleLpgForm() {
             <div className="grid items-start gap-4 lg:grid-cols-6">
               <div className="lg:col-span-2">
                 <label className="form-label" htmlFor="customerId">Customer *</label>
-                <select id="customerId" value={customerId} onChange={(e) => setCustomerId(e.target.value)} disabled={lookupLoading} className="form-input">
+                <select
+                  id="customerId"
+                  value={customerId}
+                  onChange={(e) => {
+                    setCustomerId(e.target.value);
+                    setDeliveryChallanId("");
+                  }}
+                  disabled={lookupLoading}
+                  className="form-input"
+                >
                   <option value="">Select Customer</option>
                   {customers.map((c) => <option key={String(c.id)} value={String(c.id)}>{optionLabel(c)}</option>)}
                 </select>
               </div>
+              <div className="lg:col-span-2">
+                <label className="form-label" htmlFor="deliveryChallanId">Delivery Challan</label>
+                <select
+                  id="deliveryChallanId"
+                  value={deliveryChallanId}
+                  onChange={(e) => applyDeliveryChallan(e.target.value)}
+                  disabled={!customerId || openChallans.length === 0}
+                  className="form-select"
+                >
+                  <option value="">None (direct sale)</option>
+                  {openChallans.map((challan) => (
+                    <option key={challan.id} value={challan.id}>
+                      {challan.documentNo} ({challan.lines.reduce((sum, line) => sum + line.quantity, 0)} cyl)
+                    </option>
+                  ))}
+                </select>
+                {deliveryChallanId ? (
+                  <p className="mt-1 text-[11px] text-steel-500">Stock already dispatched on challan — invoice will not OUT stock again.</p>
+                ) : null}
+              </div>
               <div>
                 <label className="form-label" htmlFor="locationId">Dispatch Warehouse</label>
-                <WarehouseSelector value={locationId} onChange={setLocationId} disabled={lookupLoading} />
+                <WarehouseSelector value={locationId} onChange={setLocationId} disabled={lookupLoading || Boolean(deliveryChallanId)} />
               </div>
               <div>
                 <label className="form-label" htmlFor="transactionDate">Date *</label>

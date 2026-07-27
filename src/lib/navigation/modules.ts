@@ -68,6 +68,7 @@ const configurationSystem: NavTab[] = [
 
 const salesTabs: NavTab[] = [
   { label: "Sale LPG", href: "/operations/sale-lpg", module: "sale-lpg" },
+  { label: "Delivery Challan", href: "/operations/delivery-challan", module: "delivery-challan" },
   { label: "Complete Day Sale", href: "/operations/complete-day-sale", module: "sale-lpg" },
   { label: "Decanting Sale", href: "/sale-purchase/decanting-sale", module: "decanting-sales" },
   { label: "Empty Sale", href: "/sale-purchase/empty-sale", module: "empty-sales" },
@@ -222,6 +223,7 @@ export const NAV_MODULES: NavModule[] = [
     matchPrefixes: [
       "/sales",
       "/operations/sale-lpg",
+      "/operations/delivery-challan",
       "/operations/complete-day-sale",
       "/sale-purchase/decanting-sale",
       "/sale-purchase/empty-sale",

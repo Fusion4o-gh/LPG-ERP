@@ -9,6 +9,11 @@ import { writeAuditLog } from "../audit/audit-log.ts";
 import { assertWritableBusinessDate } from "../inventory/day-closing.ts";
 import { enforcePermission } from "../rbac/enforce.ts";
 import { assertCentralizedLinePrices } from "../pricing/kg-pricing.ts";
+import {
+  assertSaleMatchesChallan,
+  getDeliveryChallan,
+  markDeliveryChallanInvoiced,
+} from "./delivery-challan.ts";
 
 type SaleInput = {
   companyId: string;
@@ -36,6 +41,8 @@ type SaleInput = {
   returnGasKg?: string | number;
   gasReturnRate?: string | number;
   locationId?: string;
+  /** When set, stock OUT and emptyOwed were already posted by the challan. */
+  deliveryChallanId?: string;
 };
 
 type SaleLpgLineInput = {
@@ -248,6 +255,22 @@ async function createSaleInTransaction(tx: Prisma.TransactionClient, input: Sale
     lines: lines.map((line) => ({ itemId: line.itemId, unitAmount: line.unitPrice })),
     amountLabel: "unit price",
   });
+
+  let linkedChallan: Awaited<ReturnType<typeof getDeliveryChallan>> | null = null;
+  if (input.deliveryChallanId) {
+    linkedChallan = await getDeliveryChallan(tx, input.companyId, input.deliveryChallanId);
+    if (linkedChallan.customerId !== input.customerId) {
+      throw new Error("Delivery challan customer must match the sale customer.");
+    }
+    if (linkedChallan.financialYearId !== input.financialYearId) {
+      throw new Error("Delivery challan must belong to the active financial year.");
+    }
+    assertSaleMatchesChallan(linkedChallan.lines, lines);
+    if (!input.locationId && linkedChallan.locationId) {
+      input.locationId = linkedChallan.locationId;
+    }
+  }
+
   const itemRows = await tx.item.findMany({
     where: { companyId: input.companyId, id: { in: [...new Set(lines.flatMap((line) => [line.itemId, line.emptyReturnItemId]))] } },
     select: { id: true, code: true, name: true },
@@ -261,8 +284,9 @@ async function createSaleInTransaction(tx: Prisma.TransactionClient, input: Sale
   const discountAmount = discountRaw.gt(receivableAmount) ? receivableAmount : discountRaw;
   const netReceivableAmount = receivableAmount.minus(discountAmount);
   const stockEntries = [];
+  const stockAlreadyDispatched = Boolean(linkedChallan);
 
-  if (company.stockAvailableCheck) {
+  if (company.stockAvailableCheck && !stockAlreadyDispatched) {
     await assertFilledStockAvailable(tx, {
       companyId: input.companyId,
       financialYearId: input.financialYearId,
@@ -279,33 +303,35 @@ async function createSaleInTransaction(tx: Prisma.TransactionClient, input: Sale
   }
 
   for (const line of lines) {
-    const stockEntry = await createStockLedgerEntry(tx, {
-      companyId: input.companyId,
-      financialYearId: input.financialYearId,
-      itemId: line.itemId,
-      cylinderState: CylinderState.FILLED,
-      direction: StockDirection.OUT,
-      sourceType: StockSourceType.SALE_LPG,
-      sourceId: input.issueNo,
-      transactionDate: input.transactionDate,
-      quantity: line.quantity,
-      createdById: input.userId,
-      partyType: PartyType.CUSTOMER,
-      customerId: input.customerId,
-      locationId: input.locationId,
-    });
-    stockEntries.push(stockEntry);
+    if (!stockAlreadyDispatched) {
+      const stockEntry = await createStockLedgerEntry(tx, {
+        companyId: input.companyId,
+        financialYearId: input.financialYearId,
+        itemId: line.itemId,
+        cylinderState: CylinderState.FILLED,
+        direction: StockDirection.OUT,
+        sourceType: StockSourceType.SALE_LPG,
+        sourceId: input.issueNo,
+        transactionDate: input.transactionDate,
+        quantity: line.quantity,
+        createdById: input.userId,
+        partyType: PartyType.CUSTOMER,
+        customerId: input.customerId,
+        locationId: input.locationId,
+      });
+      stockEntries.push(stockEntry);
+    }
 
     await tx.customerCylinderBalance.upsert({
       where: { customerId_itemId: { customerId: input.customerId, itemId: line.itemId } },
       update: {
-        emptyOwed: { increment: line.quantity },
+        ...(stockAlreadyDispatched ? {} : { emptyOwed: { increment: line.quantity } }),
         securityHeld: { increment: line.securityDepositAmount },
       },
       create: {
         customerId: input.customerId,
         itemId: line.itemId,
-        emptyOwed: line.quantity,
+        emptyOwed: stockAlreadyDispatched ? 0 : line.quantity,
         securityHeld: line.securityDepositAmount,
       },
     });
@@ -397,6 +423,9 @@ async function createSaleInTransaction(tx: Prisma.TransactionClient, input: Sale
       receiveMode: input.receiveMode ?? "Credit",
       returnGasKg: String(input.returnGasKg ?? ""),
       gasReturnRate: String(input.gasReturnRate ?? ""),
+      deliveryChallanId: linkedChallan?.id ?? null,
+      deliveryChallanNo: linkedChallan?.documentNo ?? null,
+      stockDispatchedViaChallan: stockAlreadyDispatched,
       lines: lines.map((line) => {
         const item = itemById.get(line.itemId);
         const returnItem = itemById.get(line.emptyReturnItemId);
@@ -464,6 +493,14 @@ async function createSaleInTransaction(tx: Prisma.TransactionClient, input: Sale
         })
       ).voucher;
     }
+  }
+
+  if (linkedChallan) {
+    await markDeliveryChallanInvoiced(tx, {
+      companyId: input.companyId,
+      challanId: linkedChallan.id,
+      saleIssueNo: input.issueNo,
+    });
   }
 
   return {

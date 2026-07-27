@@ -38,6 +38,14 @@ This record locks current architecture decisions for future LPG ERP work. Recons
 - Audit log is required for create, update, reversal, and security-sensitive actions.
 - TODO: introduce a dedicated Reversal table before production if audit/voucher/stock source references are not sufficient as the reversal source of truth.
 
+### Delivery Challan (2026-07-27)
+
+- Drivers: no double stock OUT, keep one-step Sale LPG, stock ledger immutability, optional dispatch-before-invoice.
+- Options: (A) draft Sale LPG then confirm (B) dedicated Delivery Challan stock-only document + optional invoice link (C) print-only challan.
+- Rejected A: breaks daily one-step sale muscle memory. Rejected C: no inventory control.
+- Chosen B. Accepted cost: Sale LPG must skip stock/emptyOwed when linked to a DISPATCHED challan.
+- Revisit if partial challan invoicing becomes a hard requirement (v1 invoices whole challan in one sale).
+
 ## Auth And RBAC
 
 - Authentication is session-backed.

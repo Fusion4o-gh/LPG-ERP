@@ -26,6 +26,7 @@ const modules = [
   "banks",
   "purchase-filled-cylinders",
   "sale-lpg",
+  "delivery-challan",
   "cylinder-conversions",
   "empty-sales",
   "decanting-sales",

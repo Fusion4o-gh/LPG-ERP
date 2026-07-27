@@ -63,6 +63,7 @@ export async function POST(request: Request) {
       chequeDate: optionalStringField(body, "chequeDate"),
       returnGasKg: optionalPositiveNumberField(body, "returnGasKg"),
       gasReturnRate: optionalPositiveNumberField(body, "gasReturnRate"),
+      deliveryChallanId: optionalStringField(body, "deliveryChallanId"),
     });
 
     return ok({

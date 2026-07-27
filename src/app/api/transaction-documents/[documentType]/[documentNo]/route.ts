@@ -18,6 +18,12 @@ const documentConfigs: Record<string, DocumentConfig> = {
     sourceType: "SaleLpg",
     stockSourceType: StockSourceType.SALE_LPG,
   },
+  "delivery-challan": {
+    type: "Delivery Challan",
+    module: "delivery-challan",
+    sourceType: "DeliveryChallan",
+    stockSourceType: StockSourceType.DELIVERY_CHALLAN,
+  },
   "purchase-filled-cylinder": {
     type: "Purchase Filled Cylinder Receipt",
     module: "purchase-filled-cylinders",
@@ -180,6 +186,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ docu
             ? "PurchaseOther"
             : documentType === "sale-lpg"
               ? "SaleLpg"
+            : documentType === "delivery-challan"
+              ? "DeliveryChallan"
             : documentType === "cylinder-return"
               ? "CylinderReturn"
               : documentType === "cylinder-conversion"
