@@ -4,6 +4,22 @@ import { fail, ok, serviceError } from "../../../server/api/responses.ts";
 import { createChartAccount } from "../../../server/services/master-data/master-data.ts";
 import { optionalStringField, readJson, stringField } from "../../../server/api/validation.ts";
 
+function optionalNumber(body: Record<string, unknown>, name: string) {
+  const value = body[name];
+  if (value === undefined || value === null || value === "") return undefined;
+  const number = Number(value);
+  if (!Number.isFinite(number) || number < 0) throw new Error(`${name} must be a non-negative number.`);
+  return number;
+}
+
+function optionalBoolean(body: Record<string, unknown>, name: string) {
+  const value = body[name];
+  if (value === undefined || value === null || value === "") return false;
+  if (value === true || value === "true") return true;
+  if (value === false || value === "false") return false;
+  throw new Error(`${name} must be a boolean.`);
+}
+
 export async function GET(request: Request) {
   try {
     const context = await getRequestContext(request);
@@ -11,7 +27,7 @@ export async function GET(request: Request) {
     const accounts = await prisma.chartAccount.findMany({
       where: { companyId: context.companyId, status: includeAll ? undefined : "ACTIVE" },
       orderBy: { code: "asc" },
-      select: { id: true, code: true, name: true, accountType: true, normalBalance: true, parentId: true, level: true, status: true, isSystem: true },
+      select: { id: true, code: true, name: true, address: true, isSubLedger: true, debitLimit: true, creditLimit: true, openingBalance: true, openingBalanceType: true, isBalanceSheet: true, phone: true, mobile: true, ntn: true, strn: true, email: true, contactPerson: true, accountType: true, normalBalance: true, parentId: true, level: true, status: true, isSystem: true },
       take: 300,
     });
     return ok({ accounts });
@@ -30,6 +46,19 @@ export async function POST(request: Request) {
       parentId: optionalStringField(body, "parentId"),
       accountType: stringField(body, "accountType"),
       normalBalance: stringField(body, "normalBalance"),
+      accountAddress: optionalStringField(body, "address"),
+      isSubLedger: optionalBoolean(body, "isSubLedger"),
+      debitLimit: optionalNumber(body, "debitLimit"),
+      creditLimit: optionalNumber(body, "creditLimit"),
+      accountOpeningBalance: optionalNumber(body, "openingBalance"),
+      accountOpeningBalanceType: optionalStringField(body, "openingBalanceType"),
+      isBalanceSheet: optionalBoolean(body, "isBalanceSheet"),
+      accountPhone: optionalStringField(body, "phone"),
+      accountMobile: optionalStringField(body, "mobile"),
+      accountNtn: optionalStringField(body, "ntn"),
+      accountStrn: optionalStringField(body, "strn"),
+      accountEmail: optionalStringField(body, "email"),
+      accountContactPerson: optionalStringField(body, "contactPerson"),
       status: optionalStringField(body, "status") as never,
     });
     return ok({ account });

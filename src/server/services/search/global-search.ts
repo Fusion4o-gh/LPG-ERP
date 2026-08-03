@@ -2,6 +2,7 @@ import { PermissionAction } from "@prisma/client";
 import { prisma } from "../../../lib/prisma.ts";
 import { purchaseRoutes } from "../../../lib/purchase-routes.ts";
 import { enforcePermission } from "../rbac/enforce.ts";
+import { customerAreaFilter, vendorAreaFilter } from "../user-management/area-access.ts";
 
 type Context = { companyId: string; financialYearId: string; userId: string };
 
@@ -19,10 +20,13 @@ export async function globalSearch(context: Context, query: string, limit = 20):
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "dashboard", PermissionAction.VIEW);
     const results: SearchResult[] = [];
+    const customerArea = await customerAreaFilter(tx, context.userId);
+    const vendorArea = await vendorAreaFilter(tx, context.userId);
 
     const customers = await tx.customer.findMany({
       where: {
         companyId: context.companyId,
+        ...customerArea,
         OR: [{ name: { contains: q, mode: "insensitive" } }, { code: { contains: q, mode: "insensitive" } }],
       },
       select: { id: true, code: true, name: true },
@@ -40,6 +44,7 @@ export async function globalSearch(context: Context, query: string, limit = 20):
     const vendors = await tx.vendor.findMany({
       where: {
         companyId: context.companyId,
+        ...vendorArea,
         OR: [{ name: { contains: q, mode: "insensitive" } }, { code: { contains: q, mode: "insensitive" } }],
       },
       select: { id: true, code: true, name: true },
@@ -52,6 +57,24 @@ export async function globalSearch(context: Context, query: string, limit = 20):
         subtitle: "Vendor master",
         href: `/masters/vendors`,
       });
+    }
+
+    const items = await tx.item.findMany({
+      where: { companyId: context.companyId, OR: [{ name: { contains: q, mode: "insensitive" } }, { code: { contains: q, mode: "insensitive" } }] },
+      select: { id: true, code: true, name: true },
+      take: 5,
+    });
+    for (const item of items) {
+      results.push({ type: "Item", label: `${item.code} ${item.name}`, subtitle: "Cylinder/item master", href: "/masters/items" });
+    }
+
+    const bulkProducts = await tx.bulkProduct.findMany({
+      where: { companyId: context.companyId, OR: [{ name: { contains: q, mode: "insensitive" } }, { code: { contains: q, mode: "insensitive" } }] },
+      select: { id: true, code: true, name: true },
+      take: 5,
+    });
+    for (const product of bulkProducts) {
+      results.push({ type: "Bulk Product", label: `${product.code} ${product.name}`, subtitle: "Bulk product master", href: "/configuration/bulk-products" });
     }
 
     const vouchers = await tx.accountingVoucher.findMany({
@@ -99,6 +122,15 @@ export async function globalSearch(context: Context, query: string, limit = 20):
           href: purchaseRoutes.filled.print(purchase.sourceId),
         });
       }
+
+      const loading = await tx.loading.findFirst({ where: { loadingNo: q, contract: { companyId: context.companyId } }, select: { loadingNo: true } });
+      if (loading) results.unshift({ type: "Loading", label: loading.loadingNo, subtitle: "Import loading", href: `/documents/print/loading/${encodeURIComponent(loading.loadingNo)}` });
+
+      const localPurchase = await tx.localPurchase.findFirst({ where: { documentNo: q, companyId: context.companyId }, select: { documentNo: true } });
+      if (localPurchase) results.unshift({ type: "Local Purchase", label: localPurchase.documentNo, subtitle: "Local purchase", href: `/documents/print/local-purchase/${encodeURIComponent(localPurchase.documentNo)}` });
+
+      const deliveredSale = await tx.saleDelivery.findFirst({ where: { documentNo: q, companyId: context.companyId }, select: { documentNo: true } });
+      if (deliveredSale) results.unshift({ type: "Delivered Sale", label: deliveredSale.documentNo, subtitle: "Delivered sale", href: `/documents/print/delivered-sale/${encodeURIComponent(deliveredSale.documentNo)}` });
     }
 
     return results.slice(0, limit);

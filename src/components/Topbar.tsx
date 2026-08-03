@@ -94,7 +94,7 @@ export function Topbar({ shell, permissions }: { shell: AppShellContext; permiss
           <div className="hidden min-w-0 sm:block">
             <p className="truncate text-sm font-semibold text-gas-700 leading-tight">{shell.userName}</p>
             <p className="truncate text-[11px] text-steel-400">
-              <Link href="/configuration/change-password" className="accent-link">
+              <Link href="/configuration/profile" className="accent-link">
                 {shell.loginId}
               </Link>
             </p>

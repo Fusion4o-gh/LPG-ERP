@@ -154,6 +154,16 @@ test("cash opening creates opening accounting voucher and audit log", async () =
   assert.ok(audit);
 });
 
+test("new opening balances are blocked after a live transaction exists", async () => {
+  const { context, cashAccount, offsetAccount, user } = await fixture();
+  await createAccountingMovement({ companyId: context.companyId, financialYearId: context.financialYearId, userId: user.id, debitAccountId: cashAccount.id, creditAccountId: offsetAccount.id });
+
+  await assert.rejects(
+    opening.createCashOpeningBalance(context, { accountId: cashAccount.id, amount: 100, transactionDate: "2026-01-01", balanceType: "DEBIT" }),
+    /before live transactions/i,
+  );
+});
+
 test("creates customer opening debit", async () => {
   const { company, context, customer, customerAccount } = await fixture();
   const result = await opening.createCustomerOpeningBalance(context, {

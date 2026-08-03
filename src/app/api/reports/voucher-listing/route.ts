@@ -1,0 +1,5 @@
+import { getRequestContext } from "../../../../server/api/request-context.ts";
+import { ok, serviceError } from "../../../../server/api/responses.ts";
+import { getVoucherListingReport, getVoucherListingReportCsv } from "../../../../server/services/reports/accounting-reports.ts";
+function csvResponse(csv: string) { return new Response(csv, { headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": 'attachment; filename="voucher-listing.csv"' } }); }
+export async function GET(request: Request) { try { const context = await getRequestContext(request); const p = new URL(request.url).searchParams; const filters = { from: p.get("from") ?? undefined, to: p.get("to") ?? undefined, voucherType: p.get("voucherType") ?? undefined, userId: p.get("userId") ?? undefined, voucherFrom: p.get("voucherFrom") ?? undefined, voucherTo: p.get("voucherTo") ?? undefined }; return p.get("format") === "csv" ? csvResponse(await getVoucherListingReportCsv(context, filters)) : ok(await getVoucherListingReport(context, filters)); } catch (error) { return serviceError(error); } }

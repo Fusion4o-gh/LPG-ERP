@@ -1,6 +1,7 @@
 import { fail, ok, serviceError } from "../../../../server/api/responses.ts";
 import { getRequestContext } from "../../../../server/api/request-context.ts";
 import { optionalStringField, readJson, stringField } from "../../../../server/api/validation.ts";
+import { optionalStringOrNumberField } from "../../../../server/api/master-body.ts";
 import { updateBank } from "../../../../server/services/master-data/master-data.ts";
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -14,7 +15,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       phone: optionalStringField(body, "phone"),
       address: optionalStringField(body, "address"),
       email: optionalStringField(body, "email"),
-      openingBalance: optionalStringField(body, "openingBalance"),
+      openingBalance: optionalStringOrNumberField(body, "openingBalance"),
       openingBalanceType: optionalStringField(body, "openingBalanceType"),
       status: optionalStringField(body, "status") as never,
     });

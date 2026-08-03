@@ -351,6 +351,7 @@ export async function createCompensatingReversal(context: Context, input: Revers
         kind: input.kind,
         reason: input.reason,
         voucherId: voucher?.id,
+        voucherNo: voucher?.voucherNo,
         stockLedgerEntryIds: stockEntries.map((entry) => entry.id),
       },
     });
@@ -361,6 +362,31 @@ export async function createCompensatingReversal(context: Context, input: Revers
 
 export async function createReversalStub(context: Context, input: ReversalInput) {
   return createCompensatingReversal(context, input);
+}
+
+export async function listReversals(context: Context) {
+  return prisma.$transaction(async (tx) => {
+    await enforcePermission(tx, context.userId, "reports", PermissionAction.VIEW);
+    const rows = await tx.auditLog.findMany({
+      where: { companyId: context.companyId, entityType: { endsWith: "Reversal" } },
+      orderBy: { createdAt: "desc" },
+      take: 200,
+      select: { id: true, entityType: true, entityId: true, after: true, createdAt: true, user: { select: { name: true } } },
+    });
+    return rows.map((row) => {
+      const after = row.after && typeof row.after === "object" && !Array.isArray(row.after) ? row.after as Record<string, unknown> : {};
+      return {
+        id: row.id,
+        kind: row.entityType.replace(/Reversal$/, ""),
+        originalDocumentNo: String(after.originalDocumentNo ?? row.entityId),
+        reversalNo: String(after.reversalNo ?? ""),
+        voucherNo: after.voucherNo ? String(after.voucherNo) : "",
+        reason: String(after.reason ?? ""),
+        createdAt: row.createdAt,
+        createdBy: row.user?.name ?? "",
+      };
+    });
+  });
 }
 
 export function deletionIsNeverAReversal() {

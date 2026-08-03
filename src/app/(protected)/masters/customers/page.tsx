@@ -19,6 +19,7 @@ export default function CustomersPage() {
         { name: "email", label: "Email", type: "text" },
         { name: "address", label: "Address", type: "text" },
         { name: "address2", label: "Address 2", type: "text" },
+        { name: "country", label: "Country", type: "text" },
         { name: "cityId", label: "City", type: "select", optionSource: citySource },
         { name: "areaId", label: "Area", type: "select", optionSource: areaSource },
         { name: "segmentType", label: "Segment", type: "text" },

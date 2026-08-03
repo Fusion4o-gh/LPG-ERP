@@ -104,29 +104,35 @@ enum AuditAction {
 }
 
 model Company {
-  id                    String       @id @default(cuid())
-  legalName             String
-  tradeName             String?
-  ownerName             String?
-  address               String?
-  phone                 String?
-  email                 String?
-  taxRegistrationNumber String?
-  nationalTaxNumber     String?
-  logoUrl               String?
-  baseCurrency          String       @default("PKR")
-  locale                String       @default("en")
-  timeZone              String       @default("Asia/Karachi")
-  stockAvailableCheck   Boolean      @default(true)
-  centralizedPricing    Boolean      @default(false)
-  showDefaultDate       Boolean      @default(true)
-  redirectOnSamePage    Boolean      @default(false)
-  workStartTime         String?
-  workEndTime           String?
-  workingDays           Json?
-  status                RecordStatus @default(ACTIVE)
-  createdAt             DateTime     @default(now())
-  updatedAt             DateTime     @updatedAt
+  id                      String       @id @default(cuid())
+  legalName               String
+  tradeName               String?
+  ownerName               String?
+  address                 String?
+  phone                   String?
+  email                   String?
+  taxRegistrationNumber   String?
+  nationalTaxNumber       String?
+  logoUrl                 String?
+  baseCurrency            String       @default("PKR")
+  locale                  String       @default("en")
+  timeZone                String       @default("Asia/Karachi")
+  stockAvailableCheck     Boolean      @default(true)
+  centralizedPricing      Boolean      @default(false)
+  showDefaultDate         Boolean      @default(true)
+  redirectOnSamePage      Boolean      @default(false)
+  workStartTime           String?
+  workEndTime             String?
+  workingDays             Json?
+  backupScheduleEnabled   Boolean      @default(false)
+  backupScheduleFrequency String       @default("DAILY")
+  backupScheduleTime      String       @default("23:00")
+  backupScheduleDay       Int          @default(0)
+  backupRetentionDays     Int          @default(30)
+  backupLastRunAt         DateTime?
+  status                  RecordStatus @default(ACTIVE)
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
 
   users              User[]
   financialYears     FinancialYear[]
@@ -150,6 +156,8 @@ model FinancialYear {
   isActive  Boolean   @default(false)
   isClosed  Boolean   @default(false)
   closedAt  DateTime?
+  openingBalancesLockedAt   DateTime?
+  openingBalancesLockedById String?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
@@ -352,6 +360,7 @@ model Item {
   brandId          String?
   cylinderWeightKg Decimal?     @db.Decimal(8, 2)
   defaultSecurity  Decimal      @default(0) @db.Decimal(14, 2)
+  imageData        String?      @db.Text
   status           RecordStatus @default(ACTIVE)
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
@@ -389,6 +398,19 @@ model ChartAccount {
   companyId     String
   code          String
   name          String
+  address       String?
+  isSubLedger   Boolean       @default(false)
+  debitLimit    Decimal?      @db.Decimal(14, 2)
+  creditLimit   Decimal?      @db.Decimal(14, 2)
+  openingBalance Decimal?     @db.Decimal(14, 2)
+  openingBalanceType String?
+  isBalanceSheet Boolean       @default(false)
+  phone         String?
+  mobile        String?
+  ntn           String?
+  strn          String?
+  email         String?
+  contactPerson String?
   parentId      String?
   level         Int
   accountType   AccountType
@@ -412,27 +434,28 @@ model ChartAccount {
 }
 
 model Customer {
-  id               String       @id @default(cuid())
-  companyId        String
-  code             String
-  name             String
-  contactPerson    String?
-  phone            String?
-  cell             String?
-  email            String?
-  address          String?
-  address2         String?
-  cityId           String?
-  areaId           String?
-  segmentType      String?
-  registrationDate DateTime?    @db.Date
+  id                String       @id @default(cuid())
+  companyId         String
+  code              String
+  name              String
+  contactPerson     String?
+  phone             String?
+  cell              String?
+  email             String?
+  address           String?
+  address2          String?
+  country           String?
+  cityId            String?
+  areaId            String?
+  segmentType       String?
+  registrationDate  DateTime?    @db.Date
   nationalTaxNumber String?
-  gstNumber        String?
-  creditDays       Int?
-  accountId        String
-  status           RecordStatus @default(ACTIVE)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  gstNumber         String?
+  creditDays        Int?
+  accountId         String
+  status            RecordStatus @default(ACTIVE)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
 
   company            Company                   @relation(fields: [companyId], references: [id])
   city               City?                     @relation(fields: [cityId], references: [id])
@@ -456,6 +479,8 @@ model Vendor {
   cell             String?
   email            String?
   address          String?
+  address2         String?
+  country          String?
   cityId           String?
   areaId           String?
   segmentType      String?
@@ -548,7 +573,7 @@ model StockLedgerEntry {
   vendorId        String?
   locationId      String?
   quantity        Int
-  unitCost        Decimal?  @db.Decimal(12, 2)
+  unitCost        Decimal?        @db.Decimal(12, 2)
   balanceAfter    Int
   sourceType      StockSourceType
   sourceId        String
@@ -557,13 +582,13 @@ model StockLedgerEntry {
   createdById     String
   createdAt       DateTime        @default(now())
 
-  company       Company       @relation(fields: [companyId], references: [id])
-  financialYear FinancialYear @relation(fields: [financialYearId], references: [id])
-  item          Item          @relation(fields: [itemId], references: [id])
-  customer      Customer?     @relation(fields: [customerId], references: [id])
-  vendor        Vendor?       @relation(fields: [vendorId], references: [id])
+  company       Company        @relation(fields: [companyId], references: [id])
+  financialYear FinancialYear  @relation(fields: [financialYearId], references: [id])
+  item          Item           @relation(fields: [itemId], references: [id])
+  customer      Customer?      @relation(fields: [customerId], references: [id])
+  vendor        Vendor?        @relation(fields: [vendorId], references: [id])
   location      StockLocation? @relation(fields: [locationId], references: [id])
-  createdBy     User          @relation("StockEntryCreatedBy", fields: [createdById], references: [id])
+  createdBy     User           @relation("StockEntryCreatedBy", fields: [createdById], references: [id])
 
   @@index([companyId, itemId, cylinderState, transactionDate])
   @@index([customerId, itemId, transactionDate])
@@ -573,18 +598,18 @@ model StockLedgerEntry {
 }
 
 model WarehouseTransfer {
-  id                    String          @id @default(cuid())
+  id                    String         @id @default(cuid())
   companyId             String
   financialYearId       String
-  documentNo            String          @unique
-  transferDate          DateTime        @db.Date
+  documentNo            String         @unique
+  transferDate          DateTime       @db.Date
   sourceLocationId      String
   destinationLocationId String
-  status                TransferStatus  @default(DRAFT)
+  status                TransferStatus @default(DRAFT)
   remarks               String?
   createdById           String
-  createdAt             DateTime        @default(now())
-  updatedAt             DateTime        @updatedAt
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
 
   lines WarehouseTransferLine[]
 
@@ -594,7 +619,7 @@ model WarehouseTransfer {
 }
 
 model WarehouseTransferLine {
-  id            String          @id @default(cuid())
+  id            String        @id @default(cuid())
   transferId    String
   itemId        String
   cylinderState CylinderState
@@ -632,11 +657,11 @@ model DeliveryChallan {
 }
 
 model DeliveryChallanLine {
-  id       String  @id @default(cuid())
+  id        String  @id @default(cuid())
   challanId String
-  itemId   String
-  quantity Int
-  remarks  String?
+  itemId    String
+  quantity  Int
+  remarks   String?
 
   challan DeliveryChallan @relation(fields: [challanId], references: [id], onDelete: Cascade)
 
@@ -645,19 +670,19 @@ model DeliveryChallanLine {
 }
 
 model PhysicalCount {
-  id              String       @id @default(cuid())
+  id              String      @id @default(cuid())
   companyId       String
   financialYearId String
-  documentNo      String       @unique
+  documentNo      String      @unique
   locationId      String
-  countDate       DateTime     @db.Date
-  status          CountStatus  @default(DRAFT)
+  countDate       DateTime    @db.Date
+  status          CountStatus @default(DRAFT)
   notes           String?
   createdById     String
   approvedById    String?
   approvedAt      DateTime?
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
   lines PhysicalCountLine[]
 
@@ -708,13 +733,15 @@ model AccountingVoucher {
 }
 
 model AccountingVoucherLine {
-  id          String  @id @default(cuid())
-  voucherId   String
-  accountId   String
-  description String?
-  debit       Decimal @default(0) @db.Decimal(14, 2)
-  credit      Decimal @default(0) @db.Decimal(14, 2)
-  sortOrder   Int     @default(0)
+  id            String  @id @default(cuid())
+  voucherId     String
+  accountId     String
+  description   String?
+  debit         Decimal @default(0) @db.Decimal(14, 2)
+  credit        Decimal @default(0) @db.Decimal(14, 2)
+  foreignDebit  Decimal @default(0) @db.Decimal(16, 2)
+  foreignCredit Decimal @default(0) @db.Decimal(16, 2)
+  sortOrder     Int     @default(0)
 
   voucher AccountingVoucher @relation(fields: [voucherId], references: [id], onDelete: Restrict)
   account ChartAccount      @relation(fields: [accountId], references: [id])
@@ -809,6 +836,7 @@ enum BulkStockSourceType {
   DELIVERED_SALE
   PLANT_TRANSFER
   PARTIAL_RECEIVING
+  PARTIAL_SALE
   DECANTING
   LOSS_GAIN
   DOLLAR_SALE
@@ -871,6 +899,16 @@ enum PlantSaleType {
   BULK
 }
 
+enum PartialPlantSaleType {
+  DECANTING
+  BULK
+}
+
+enum ContractShiftKind {
+  IMPORT_LOADING
+  LOCAL_PURCHASE
+}
+
 enum LossGainType {
   LOSS
   GAIN
@@ -910,6 +948,9 @@ model Driver {
   cell          String?
   cnic          String?
   licenseNo     String?
+  licenseClass  String?
+  licenseIssued DateTime?    @db.Date
+  licenseExpiry DateTime?    @db.Date
   status        RecordStatus @default(ACTIVE)
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
@@ -968,7 +1009,7 @@ model StockLocation {
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 
-  plant              Plant? @relation(fields: [plantId], references: [id])
+  plant              Plant?             @relation(fields: [plantId], references: [id])
   stockLedgerEntries StockLedgerEntry[]
 
   @@unique([companyId, code])
@@ -1065,29 +1106,29 @@ model ImportContract {
 }
 
 model Loading {
-  id               String         @id @default(cuid())
-  companyId        String
-  financialYearId  String
-  contractId       String
-  loadingType      ImportType
-  loadingNo        String
-  loadingDate      DateTime       @db.Date
-  loadingLocation  String?
-  vehicleId        String?
-  transporterId    String?
-  quantityLoaded   Decimal        @db.Decimal(16, 3)
-  unit             UnitOfMeasure  @default(MT)
-  rate             Decimal        @default(0) @db.Decimal(16, 4)
-  freight          Decimal        @default(0) @db.Decimal(16, 2)
-  finalRate        Decimal        @default(0) @db.Decimal(16, 4)
-  stockLocationId  String?
-  shipmentStatus   ShipmentStatus @default(IN_TRANSIT)
-  arrivalDate      DateTime?      @db.Date
-  arrivedQuantity  Decimal?       @db.Decimal(16, 3)
-  remarks          String?
-  createdById      String
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  id              String         @id @default(cuid())
+  companyId       String
+  financialYearId String
+  contractId      String
+  loadingType     ImportType
+  loadingNo       String
+  loadingDate     DateTime       @db.Date
+  loadingLocation String?
+  vehicleId       String?
+  transporterId   String?
+  quantityLoaded  Decimal        @db.Decimal(16, 3)
+  unit            UnitOfMeasure  @default(MT)
+  rate            Decimal        @default(0) @db.Decimal(16, 4)
+  freight         Decimal        @default(0) @db.Decimal(16, 2)
+  finalRate       Decimal        @default(0) @db.Decimal(16, 4)
+  stockLocationId String?
+  shipmentStatus  ShipmentStatus @default(IN_TRANSIT)
+  arrivalDate     DateTime?      @db.Date
+  arrivedQuantity Decimal?       @db.Decimal(16, 3)
+  remarks         String?
+  createdById     String
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
   contract ImportContract @relation(fields: [contractId], references: [id])
 
@@ -1213,54 +1254,54 @@ model SaleDelivery {
 }
 
 model LossGain {
-  id               String       @id @default(cuid())
+  id               String         @id @default(cuid())
   companyId        String
   financialYearId  String
   documentNo       String
   type             LossGainType
   productId        String
   locationId       String
-  expectedQuantity Decimal      @db.Decimal(16, 3)
-  actualQuantity   Decimal      @db.Decimal(16, 3)
-  difference       Decimal      @db.Decimal(16, 3)
-  rate             Decimal      @default(0) @db.Decimal(16, 4)
-  financialImpact  Decimal      @default(0) @db.Decimal(16, 2)
+  expectedQuantity Decimal        @db.Decimal(16, 3)
+  actualQuantity   Decimal        @db.Decimal(16, 3)
+  difference       Decimal        @db.Decimal(16, 3)
+  rate             Decimal        @default(0) @db.Decimal(16, 4)
+  financialImpact  Decimal        @default(0) @db.Decimal(16, 2)
   reason           String?
   status           ApprovalStatus @default(PENDING)
-  postedToPl       Boolean      @default(false)
+  postedToPl       Boolean        @default(false)
   voucherId        String?
-  transactionDate  DateTime     @db.Date
+  transactionDate  DateTime       @db.Date
   createdById      String
   approvedById     String?
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
   @@unique([companyId, documentNo])
   @@index([companyId, status])
 }
 
 model DollarTransaction {
-  id              String        @id @default(cuid())
-  companyId       String
-  financialYearId String
-  documentNo      String
-  txnType         DollarTxnType
-  partyType       PartyType?
-  customerId      String?
-  vendorId        String?
-  contractId      String?
-  usdAmount       Decimal       @db.Decimal(16, 2)
-  exchangeRate    Decimal       @db.Decimal(12, 4)
-  pkrAmount       Decimal       @db.Decimal(16, 2)
-  exchangeGainLoss Decimal      @default(0) @db.Decimal(16, 2)
-  productId       String?
-  quantity        Decimal?      @db.Decimal(16, 3)
-  locationId      String?
-  voucherId       String?
-  transactionDate DateTime      @db.Date
-  remarks         String?
-  createdById     String
-  createdAt       DateTime      @default(now())
+  id               String        @id @default(cuid())
+  companyId        String
+  financialYearId  String
+  documentNo       String
+  txnType          DollarTxnType
+  partyType        PartyType?
+  customerId       String?
+  vendorId         String?
+  contractId       String?
+  usdAmount        Decimal       @db.Decimal(16, 2)
+  exchangeRate     Decimal       @db.Decimal(12, 4)
+  pkrAmount        Decimal       @db.Decimal(16, 2)
+  exchangeGainLoss Decimal       @default(0) @db.Decimal(16, 2)
+  productId        String?
+  quantity         Decimal?      @db.Decimal(16, 3)
+  locationId       String?
+  voucherId        String?
+  transactionDate  DateTime      @db.Date
+  remarks          String?
+  createdById      String
+  createdAt        DateTime      @default(now())
 
   @@unique([companyId, documentNo])
   @@index([companyId, txnType, transactionDate])
@@ -1295,6 +1336,90 @@ model PlantSale {
   @@index([companyId, saleType, transactionDate])
 }
 
+model PartialPlantSale {
+  id               String               @id @default(cuid())
+  companyId        String
+  financialYearId  String
+  documentNo       String
+  saleType         PartialPlantSaleType
+  plantId          String
+  locationId       String
+  productId        String
+  customerId       String
+  transporterId    String?
+  vehicleNo        String?
+  driverCell       String?
+  loadingFrom      String?
+  loadingDate      DateTime?            @db.Date
+  orderDate        DateTime?            @db.Date
+  tankStock        Decimal              @default(0) @db.Decimal(16, 3)
+  loadWeight       Decimal              @default(0) @db.Decimal(16, 3)
+  decantingWeight  Decimal              @default(0) @db.Decimal(16, 3)
+  contractRate     Decimal              @default(0) @db.Decimal(16, 4)
+  orderAmount      Decimal              @default(0) @db.Decimal(16, 2)
+  freightRate      Decimal              @default(0) @db.Decimal(16, 4)
+  freightAmount    Decimal              @default(0) @db.Decimal(16, 2)
+  weightDifference Decimal              @default(0) @db.Decimal(16, 3)
+  lossGainRate     Decimal              @default(0) @db.Decimal(16, 4)
+  lossGainAmount   Decimal              @default(0) @db.Decimal(16, 2)
+  remarks          String?
+  commissionStatus String?
+  commissionName   String?
+  commissionRate   Decimal              @default(0) @db.Decimal(16, 4)
+  commissionAmount Decimal              @default(0) @db.Decimal(16, 2)
+  saleStatus       String               @default("PENDING")
+  finalStatus      String               @default("IN_PROCESS")
+  postedToLedger   Boolean              @default(false)
+  voucherId        String?
+  transactionDate  DateTime             @db.Date
+  createdById      String
+  approvedById     String?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  @@unique([companyId, documentNo])
+  @@index([companyId, saleStatus, finalStatus])
+  @@index([companyId, transactionDate])
+}
+
+model ContractShift {
+  id                String            @id @default(cuid())
+  companyId         String
+  financialYearId   String
+  kind              ContractShiftKind
+  recordId          String
+  sourceContractId  String
+  targetContractId  String
+  quantity          Decimal           @db.Decimal(16, 3)
+  transactionDate   DateTime          @db.Date
+  remarks           String?
+  createdById       String
+  createdAt         DateTime          @default(now())
+
+  @@index([companyId, transactionDate])
+  @@index([companyId, kind, recordId])
+}
+
+model CylinderReturnApproval {
+  id              String         @id @default(cuid())
+  companyId       String
+  financialYearId String
+  returnNo        String
+  customerId      String
+  transactionDate DateTime       @db.Date
+  totalAmount     Decimal        @db.Decimal(14, 2)
+  payload         Json
+  status          ApprovalStatus @default(PENDING)
+  requestedById   String
+  approvedById    String?
+  approvedAt      DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@unique([companyId, returnNo])
+  @@index([companyId, status, transactionDate])
+}
+
 model PlantTransfer {
   id              String        @id @default(cuid())
   companyId       String
@@ -1313,6 +1438,30 @@ model PlantTransfer {
   remarks         String?
   createdById     String
   createdAt       DateTime      @default(now())
+
+  @@unique([companyId, documentNo])
+  @@index([companyId, transactionDate])
+}
+
+model PlantDecanting {
+  id                    String        @id @default(cuid())
+  companyId             String
+  financialYearId       String
+  documentNo            String
+  plantId               String
+  sourceLocationId      String
+  destinationLocationId String
+  productId             String
+  vehicleId             String?
+  transporterId         String?
+  quantity              Decimal       @db.Decimal(16, 3)
+  unit                  UnitOfMeasure @default(MT)
+  rate                  Decimal       @default(0) @db.Decimal(16, 4)
+  amount                Decimal       @default(0) @db.Decimal(16, 2)
+  transactionDate       DateTime      @db.Date
+  remarks               String?
+  createdById           String
+  createdAt             DateTime      @default(now())
 
   @@unique([companyId, documentNo])
   @@index([companyId, transactionDate])

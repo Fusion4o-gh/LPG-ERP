@@ -38,9 +38,24 @@ export function StockLedgerPageClient() {
     load();
   }
 
+  function reportUrl(format?: string) {
+    const params = new URLSearchParams(Object.entries(filters).filter(([, value]) => value));
+    if (format) params.set("format", format);
+    return `/api/stock-ledger?${params}`;
+  }
+
   return (
     <>
-      <PageHeader title="Stock Ledger" description="Immutable filled and empty cylinder movements by item, date, and source document number." />
+      <PageHeader
+        title="Stock Ledger"
+        description="Immutable filled and empty cylinder movements by item, date, and source document number."
+        actions={
+          <>
+            <a href={reportUrl("csv")} className="btn-secondary" data-print-hidden>Download CSV</a>
+            <button type="button" onClick={() => window.print()} className="btn-secondary" data-print-hidden>Print</button>
+          </>
+        }
+      />
       <form onSubmit={submit} className="mb-4 grid gap-3 rounded-md border border-slate-200 bg-white p-4 md:grid-cols-4">
         <select value={filters.itemId} onChange={(event) => setFilters((current) => ({ ...current, itemId: event.target.value }))} className="rounded-md border border-slate-300 px-3 py-2">
           <option value="">All Items</option>
@@ -55,6 +70,7 @@ export function StockLedgerPageClient() {
         <button className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white">Apply Filters</button>
       </form>
       <ApiError message={error} />
+      <section data-report-print>
       <DataTable
         loading={loading}
         rows={rows}
@@ -68,6 +84,7 @@ export function StockLedgerPageClient() {
           { key: "sourceDocumentNo", label: "Source Document" },
         ]}
       />
+      </section>
     </>
   );
 }

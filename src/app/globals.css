@@ -75,6 +75,11 @@ a, button {
   transition: color 120ms var(--ease-out), background-color 120ms var(--ease-out), border-color 120ms var(--ease-out), opacity 120ms var(--ease-out), transform 100ms var(--ease-out);
 }
 
+:focus-visible {
+  outline: 2px solid var(--flame-orange);
+  outline-offset: 2px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 1ms !important;
@@ -130,6 +135,19 @@ a, button {
     border-color: var(--gas-blue);
     box-shadow: 0 0 0 2px rgba(18, 58, 90, 0.15);
     outline: none;
+  }
+  .form-input:focus-visible,
+  .form-select:focus-visible,
+  .tbl-input:focus-visible,
+  .tbl-select:focus-visible {
+    outline: 2px solid var(--flame-orange);
+    outline-offset: 1px;
+  }
+  .form-select:disabled {
+    background: var(--surface-muted);
+    border-color: var(--surface-border);
+    cursor: not-allowed;
+    color: #8B909D;
   }
 
   .card {
@@ -197,6 +215,11 @@ a, button {
     background: var(--surface-muted);
     border-color: #C5CCD6;
   }
+  .btn-outline:disabled,
+  .btn-ghost:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
   .btn-outline:active {
     transform: scale(0.97);
   }
@@ -260,6 +283,11 @@ a, button {
     border-color: var(--gas-blue);
     box-shadow: 0 0 0 2px rgba(18, 58, 90, 0.15);
     outline: none;
+  }
+  .tbl-select:disabled {
+    background: var(--surface-muted);
+    cursor: not-allowed;
+    color: #8B909D;
   }
 
   /* Flame = location marker only */
@@ -377,6 +405,10 @@ a, button {
 .sidebar-link-active {
   background: rgba(255,255,255,0.12);
   border: 1px solid rgba(255,255,255,0.16);
+}
+
+.table-row-interactive {
+  transition: background-color 120ms var(--ease-out);
 }
 
 .flame-glow {

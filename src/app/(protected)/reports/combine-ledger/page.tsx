@@ -1,0 +1,3 @@
+"use client";
+import { ReportTableClient } from "../ReportTableClient";
+export default function CombineLedgerPage() { return <ReportTableClient title="Combine Ledger" description="Combined ledger movements for up to five selected chart accounts." endpoint="/api/reports/combine-ledger" dataKey="rows" showAccountSlotsFilter columns={[{ key: "accountCode", label: "Account" }, { key: "accountName", label: "Name" }, { key: "transactionDate", label: "Date", render: (row) => String(row.transactionDate ?? "").slice(0, 10) }, { key: "voucherNo", label: "Voucher" }, { key: "debit", label: "Debit" }, { key: "credit", label: "Credit" }, { key: "runningBalance", label: "Balance" }]} />; }

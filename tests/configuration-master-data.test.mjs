@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { PermissionAction, PrismaClient } from "@prisma/client";
 import { baseFixture, doc } from "./helpers/lpg-fixtures.mjs";
+import { optionalStringOrNumberField } from "../src/server/api/master-body.ts";
 
 const prisma = new PrismaClient();
 const masterData = await import("../src/server/services/master-data/master-data.ts");
@@ -16,6 +17,53 @@ async function fixture() {
 
 test.after(async () => {
   await prisma.$disconnect();
+});
+
+test("opening balance parser accepts numeric, string, and empty form values", () => {
+  assert.equal(optionalStringOrNumberField({ openingBalance: 1250 }, "openingBalance"), "1250");
+  assert.equal(optionalStringOrNumberField({ openingBalance: "1250.50" }, "openingBalance"), "1250.50");
+  assert.equal(optionalStringOrNumberField({ openingBalance: "" }, "openingBalance"), undefined);
+});
+
+test("chart accounts preserve reference metadata and parent reassignment", async () => {
+  const { context } = await fixture();
+  const parent = await prisma.chartAccount.findFirstOrThrow({ where: { companyId: context.companyId, parentId: null } });
+  const account = await masterData.createChartAccount(context, {
+    code: doc("ACC-META"),
+    name: "Reference Metadata Account",
+    parentId: parent.id,
+    accountType: "EXPENSE",
+    normalBalance: "DEBIT",
+    accountAddress: "Account address",
+    isSubLedger: true,
+    debitLimit: 1000,
+    creditLimit: 2000,
+    accountOpeningBalance: 300,
+    accountOpeningBalanceType: "DEBIT",
+    isBalanceSheet: true,
+    accountPhone: "111",
+    accountMobile: "222",
+    accountNtn: "NTN-1",
+    accountStrn: "STRN-1",
+    accountEmail: "account@example.test",
+    accountContactPerson: "Contact",
+  });
+  assert.equal(account.isSubLedger, true);
+  assert.equal(String(account.debitLimit), "1000");
+  assert.equal(account.openingBalanceType, "DEBIT");
+  assert.equal(account.isBalanceSheet, true);
+  const updated = await masterData.updateChartAccount(context, account.id, {
+    code: account.code,
+    name: account.name,
+    parentId: null,
+    accountType: "EXPENSE",
+    normalBalance: "DEBIT",
+    isSubLedger: false,
+  });
+  assert.equal(updated.parentId, null);
+  assert.equal(updated.isSubLedger, false);
+  const audit = await prisma.auditLog.findFirstOrThrow({ where: { companyId: context.companyId, entityType: "ChartAccount", entityId: account.id }, orderBy: { createdAt: "desc" } });
+  assert.equal(audit.action, "UPDATE");
 });
 
 test("create/edit city writes audit log and prevents duplicates", async () => {
@@ -78,19 +126,31 @@ test("create/edit expense type with account mapping", async () => {
     code: doc("4999").slice(0, 20),
     name: doc("Expense"),
     parentId: parent.id,
+    openingBalance: 100,
+    openingBalanceType: "DEBIT",
+    transactionDate: "2026-01-01",
   });
 
   assert.equal(expenseType.accountType, "EXPENSE");
   assert.equal(expenseType.normalBalance, "DEBIT");
   assert.equal(expenseType.parentId, parent.id);
+  let opening = await prisma.accountingVoucher.findFirst({ where: { companyId: context.companyId, financialYearId: context.financialYearId, sourceType: "ExpenseOpeningBalance", sourceId: expenseType.id }, include: { lines: true } });
+  assert.equal(opening?.totalDebit.toString(), "100");
+  assert.equal(opening?.lines.find((line) => line.accountId === expenseType.id)?.debit.toString(), "100");
 
   const updated = await masterData.updateExpenseType(context, expenseType.id, {
     code: `${expenseType.code}U`,
     name: `${expenseType.name} Updated`,
     parentId: parent.id,
     status: "INACTIVE",
+    openingBalance: 250,
+    openingBalanceType: "CREDIT",
+    transactionDate: "2026-01-02",
   });
   assert.equal(updated.status, "INACTIVE");
+  opening = await prisma.accountingVoucher.findFirst({ where: { companyId: context.companyId, financialYearId: context.financialYearId, sourceType: "ExpenseOpeningBalance", sourceId: expenseType.id }, include: { lines: true } });
+  assert.equal(opening?.totalCredit.toString(), "250");
+  assert.equal(opening?.lines.find((line) => line.accountId === expenseType.id)?.credit.toString(), "250");
 
   await assert.rejects(
     masterData.createExpenseType(context, { code: updated.code, name: doc("Expense Duplicate"), parentId: parent.id }),

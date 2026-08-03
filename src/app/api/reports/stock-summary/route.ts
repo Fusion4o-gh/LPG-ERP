@@ -17,6 +17,7 @@ export async function GET(request: Request) {
     const params = new URL(request.url).searchParams;
     const filters = {
       itemId: params.get("itemId") ?? undefined,
+      categoryId: params.get("categoryId") ?? undefined,
       from: params.get("from") ?? undefined,
       to: params.get("to") ?? undefined,
     };

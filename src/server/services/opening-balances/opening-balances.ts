@@ -5,6 +5,7 @@ import { nextDocumentNumberInTransaction } from "../accounting/document-numbers.
 import { createStockLedgerEntry } from "../inventory/stock-ledger.ts";
 import { writeAuditLog } from "../audit/audit-log.ts";
 import { enforcePermission } from "../rbac/enforce.ts";
+import { assertOpeningBalancesUnlocked } from "./opening-lock.ts";
 
 type Tx = PrismaTypes.TransactionClient;
 type Context = { companyId: string; financialYearId: string; userId: string };
@@ -87,6 +88,15 @@ async function stockHasTransactions(tx: Tx, companyId: string, financialYearId: 
     },
   });
   return count > 0;
+}
+
+async function assertOpeningWindowOpen(tx: Tx, context: Context) {
+  await assertOpeningBalancesUnlocked(tx, context);
+  const [stockMovement, voucher] = await Promise.all([
+    tx.stockLedgerEntry.findFirst({ where: { companyId: context.companyId, financialYearId: context.financialYearId, sourceType: { not: StockSourceType.OPENING_BALANCE } }, select: { id: true } }),
+    tx.accountingVoucher.findFirst({ where: { companyId: context.companyId, financialYearId: context.financialYearId, voucherType: { not: VoucherType.OPENING } }, select: { id: true } }),
+  ]);
+  if (stockMovement || voucher) throw new Error("Opening balances can only be entered before live transactions exist for this financial year.");
 }
 
 async function cashAccount(tx: Tx, companyId: string, accountId: string) {
@@ -290,6 +300,7 @@ export async function listShopOpeningBalances(context: Context) {
 export async function createShopOpeningBalance(context: Context, input: ShopOpeningInput) {
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "stock-ledger", PermissionAction.CREATE);
+    await assertOpeningWindowOpen(tx, context);
     const item = await ensureItem(tx, context.companyId, input.itemId);
     const cylinderState = openingState(input.cylinderState);
     const existingCount = await stockMovementCount(tx, context.companyId, context.financialYearId, item.id, cylinderState);
@@ -316,6 +327,7 @@ export async function createShopOpeningBalance(context: Context, input: ShopOpen
 export async function updateShopOpeningBalance(context: Context, id: string, input: ShopOpeningInput) {
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "stock-ledger", PermissionAction.UPDATE);
+    await assertOpeningBalancesUnlocked(tx, context);
     const before = await tx.stockLedgerEntry.findFirstOrThrow({ where: { id, companyId: context.companyId, financialYearId: context.financialYearId, sourceType: StockSourceType.OPENING_BALANCE } });
     if (await stockHasTransactions(tx, context.companyId, context.financialYearId, before.itemId, before.cylinderState, id)) throw new Error("Opening stock is locked because transactions exist.");
     const item = await ensureItem(tx, context.companyId, input.itemId);
@@ -334,6 +346,7 @@ export async function updateShopOpeningBalance(context: Context, id: string, inp
 export async function deleteShopOpeningBalance(context: Context, id: string) {
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "stock-ledger", PermissionAction.DELETE);
+    await assertOpeningBalancesUnlocked(tx, context);
     const before = await tx.stockLedgerEntry.findFirstOrThrow({ where: { id, companyId: context.companyId, financialYearId: context.financialYearId, sourceType: StockSourceType.OPENING_BALANCE } });
     if (await stockHasTransactions(tx, context.companyId, context.financialYearId, before.itemId, before.cylinderState, id)) throw new Error("Opening stock is locked because transactions exist.");
     await tx.stockLedgerEntry.delete({ where: { id } });
@@ -370,6 +383,7 @@ export async function listCustomerOpeningCustomers(context: Context) {
 export async function createCustomerOpeningBalance(context: Context, input: CustomerOpeningInput) {
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "customer-ledger", PermissionAction.CREATE);
+    await assertOpeningWindowOpen(tx, context);
     const customer = await customerAccount(tx, context.companyId, input.customerId);
     const existingCount = await tx.accountingVoucherLine.count({
       where: {
@@ -411,6 +425,7 @@ export async function createCustomerOpeningBalance(context: Context, input: Cust
 export async function updateCustomerOpeningBalance(context: Context, id: string, input: CustomerOpeningInput) {
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "customer-ledger", PermissionAction.UPDATE);
+    await assertOpeningBalancesUnlocked(tx, context);
     const before = await tx.accountingVoucher.findFirstOrThrow({
       where: { id, companyId: context.companyId, financialYearId: context.financialYearId, sourceType: "CustomerOpeningBalance" },
       include: { lines: true },
@@ -459,6 +474,7 @@ export async function updateCustomerOpeningBalance(context: Context, id: string,
 export async function deleteCustomerOpeningBalance(context: Context, id: string) {
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "customer-ledger", PermissionAction.DELETE);
+    await assertOpeningBalancesUnlocked(tx, context);
     const before = await tx.accountingVoucher.findFirstOrThrow({
       where: { id, companyId: context.companyId, financialYearId: context.financialYearId, sourceType: "CustomerOpeningBalance" },
       include: { lines: true },
@@ -499,6 +515,7 @@ export async function listCashOpeningAccounts(context: Context) {
 export async function createCashOpeningBalance(context: Context, input: CashOpeningInput) {
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "journal-vouchers", PermissionAction.CREATE);
+    await assertOpeningWindowOpen(tx, context);
     const account = await cashAccount(tx, context.companyId, input.accountId);
     const hasAnyMovement = await tx.accountingVoucherLine.count({ where: { accountId: account.id, voucher: { companyId: context.companyId, financialYearId: context.financialYearId } } });
     if (hasAnyMovement > 0) throw new Error("Cash opening can only be added before accounting movement exists for this account.");
@@ -535,6 +552,7 @@ export async function createCashOpeningBalance(context: Context, input: CashOpen
 export async function updateCashOpeningBalance(context: Context, id: string, input: CashOpeningInput) {
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "journal-vouchers", PermissionAction.UPDATE);
+    await assertOpeningBalancesUnlocked(tx, context);
     const before = await tx.accountingVoucher.findFirstOrThrow({
       where: { id, companyId: context.companyId, financialYearId: context.financialYearId, sourceType: "CashOpening" },
       include: { lines: { include: { account: { select: { name: true } } } } },
@@ -578,6 +596,7 @@ export async function updateCashOpeningBalance(context: Context, id: string, inp
 export async function deleteCashOpeningBalance(context: Context, id: string) {
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "journal-vouchers", PermissionAction.DELETE);
+    await assertOpeningBalancesUnlocked(tx, context);
     const before = await tx.accountingVoucher.findFirstOrThrow({
       where: { id, companyId: context.companyId, financialYearId: context.financialYearId, sourceType: "CashOpening" },
       include: { lines: { include: { account: { select: { name: true } } } } },
@@ -619,6 +638,7 @@ export async function listVendorOpeningVendors(context: Context) {
 export async function createVendorOpeningBalance(context: Context, input: VendorOpeningInput) {
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "vendors", PermissionAction.CREATE);
+    await assertOpeningWindowOpen(tx, context);
     const vendor = await vendorAccount(tx, context.companyId, input.vendorId);
     const existingCount = await tx.accountingVoucherLine.count({
       where: {
@@ -660,6 +680,7 @@ export async function createVendorOpeningBalance(context: Context, input: Vendor
 export async function updateVendorOpeningBalance(context: Context, id: string, input: VendorOpeningInput) {
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "vendors", PermissionAction.UPDATE);
+    await assertOpeningBalancesUnlocked(tx, context);
     const before = await tx.accountingVoucher.findFirstOrThrow({
       where: { id, companyId: context.companyId, financialYearId: context.financialYearId, sourceType: "VendorOpeningBalance" },
       include: { lines: true },
@@ -708,6 +729,7 @@ export async function updateVendorOpeningBalance(context: Context, id: string, i
 export async function deleteVendorOpeningBalance(context: Context, id: string) {
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "vendors", PermissionAction.DELETE);
+    await assertOpeningBalancesUnlocked(tx, context);
     const before = await tx.accountingVoucher.findFirstOrThrow({
       where: { id, companyId: context.companyId, financialYearId: context.financialYearId, sourceType: "VendorOpeningBalance" },
       include: { lines: true },
@@ -729,6 +751,7 @@ type ExpenseOpeningInput = {
 };
 
 export async function createExpenseAccountOpeningBalance(tx: Tx, context: Context, input: ExpenseOpeningInput) {
+  await assertOpeningBalancesUnlocked(tx, context);
   const amount = positiveDecimal(input.amount, "openingBalance");
   const existingCount = await tx.accountingVoucherLine.count({
     where: {
@@ -765,6 +788,51 @@ export async function createExpenseAccountOpeningBalance(tx: Tx, context: Contex
             { accountId: input.accountId, credit: amount },
           ],
   });
+}
+
+export async function updateExpenseAccountOpeningBalance(tx: Tx, context: Context, input: ExpenseOpeningInput & { amount?: string | number }) {
+  await assertOpeningBalancesUnlocked(tx, context);
+  const before = await tx.accountingVoucher.findFirst({
+    where: { companyId: context.companyId, financialYearId: context.financialYearId, sourceType: "ExpenseOpeningBalance", sourceId: input.accountId },
+    include: { lines: true },
+  });
+  if (!before) {
+    if (input.amount === undefined || input.amount === null || input.amount === "") return;
+    return createExpenseAccountOpeningBalance(tx, context, { ...input, amount: input.amount });
+  }
+
+  const movement = await tx.accountingVoucherLine.count({
+    where: { accountId: input.accountId, voucher: { companyId: context.companyId, financialYearId: context.financialYearId, sourceType: { not: "ExpenseOpeningBalance" }, NOT: { id: before.id } } },
+  });
+  if (movement > 0) throw new Error("Expense opening balance is locked because accounting movement exists.");
+  if (input.amount === undefined || input.amount === null || input.amount === "") {
+    await tx.accountingVoucherLine.deleteMany({ where: { voucherId: before.id } });
+    await tx.accountingVoucher.delete({ where: { id: before.id } });
+    await writeAuditLog(tx, { companyId: context.companyId, userId: context.userId, action: AuditAction.DELETE, entityType: "ExpenseOpeningBalance", entityId: before.id, before });
+    return;
+  }
+
+  const amount = positiveDecimal(input.amount, "openingBalance");
+  const equityAccountId = before.lines.find((line) => line.accountId !== input.accountId)?.accountId ?? (await openingEquityAccount(tx, context.companyId));
+  const balanceType = input.balanceType === "CREDIT" ? "CREDIT" : "DEBIT";
+  await tx.accountingVoucherLine.deleteMany({ where: { voucherId: before.id } });
+  const after = await tx.accountingVoucher.update({
+    where: { id: before.id },
+    data: {
+      voucherDate: openingDate(input.transactionDate),
+      totalDebit: amount,
+      totalCredit: amount,
+      lines: {
+        create:
+          balanceType === "DEBIT"
+            ? [{ accountId: input.accountId, debit: amount }, { accountId: equityAccountId, credit: amount }]
+            : [{ accountId: equityAccountId, debit: amount }, { accountId: input.accountId, credit: amount }],
+      },
+    },
+    include: { lines: true },
+  });
+  await writeAuditLog(tx, { companyId: context.companyId, userId: context.userId, action: AuditAction.UPDATE, entityType: "ExpenseOpeningBalance", entityId: before.id, before, after });
+  return after;
 }
 
 export async function loadExpenseOpeningBalances(tx: Tx, context: Context, accountIds: string[]) {

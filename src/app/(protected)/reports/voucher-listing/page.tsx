@@ -1,0 +1,3 @@
+"use client";
+import { ReportTableClient } from "../ReportTableClient";
+export default function VoucherListingPage() { return <ReportTableClient title="Voucher Listings" description="Posted vouchers filtered by date, voucher type, user, or voucher range." endpoint="/api/reports/voucher-listing" dataKey="rows" showVoucherTypeFilter showReportUserFilter showVoucherRangeFilter columns={[{ key: "voucherDate", label: "Date", render: (row) => String(row.voucherDate ?? "").slice(0, 10) }, { key: "voucherNo", label: "Voucher" }, { key: "voucherType", label: "Type" }, { key: "totalDebit", label: "Debit" }, { key: "totalCredit", label: "Credit" }, { key: "lineCount", label: "Lines" }, { key: "sourceType", label: "Source" }]} />; }

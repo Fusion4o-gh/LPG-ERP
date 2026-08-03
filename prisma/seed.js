@@ -63,6 +63,8 @@ const modules = [
   "plant-bulk-sale",
   "plant-transfer",
   "partial-receiving",
+  "partial-plant-sale",
+  "contract-shifts",
   "dollar-transactions",
 ];
 

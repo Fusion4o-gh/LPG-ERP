@@ -126,6 +126,7 @@ async function authedGet(user, url) {
 }
 
 test.after(async () => {
+  if (cleanup.auditEntityIds.size) await prisma.auditLog.deleteMany({ where: { id: { in: [...cleanup.auditEntityIds] } } });
   if (cleanup.stockSourceIds.size) await prisma.stockLedgerEntry.deleteMany({ where: { sourceId: { in: [...cleanup.stockSourceIds] } } });
   if (cleanup.voucherNos.size) await prisma.accountingVoucher.deleteMany({ where: { voucherNo: { in: [...cleanup.voucherNos] } } });
   if (cleanup.customerIds.size) await prisma.customerCylinderBalance.deleteMany({ where: { customerId: { in: [...cleanup.customerIds] } } });
@@ -188,6 +189,42 @@ test("sale between dates type mode groups by sale type", async () => {
   const rows = await salesReports.getSaleBetweenDatesReport(context, { from: date, to: date, mode: "type" });
 
   assert.ok(rows.some((r) => r.saleType && Number(r.invoiceCount) >= 1));
+});
+
+test("sale between dates applies sale type, segment, and brand filters", async () => {
+  const { company, financialYear, user, seedItem, seedCustomer } = await fixture();
+  const item = await createTestItem(company.id, seedItem, "SR-FILTER-ITEM");
+  const customer = await createTestCustomer(company.id, seedCustomer, "SR-FILTER-C");
+  await prisma.customer.update({ where: { id: customer.id }, data: { segmentType: "Distributor" } });
+  const issueNo = source("SR-FILTER");
+  const date = "2027-03-11";
+  await createSaleEntry(company.id, financialYear.id, user.id, issueNo, customer.id, item.id, 7, date);
+  const audit = await prisma.auditLog.create({ data: { companyId: company.id, userId: user.id, action: "CREATE", entityType: "SaleLpg", entityId: issueNo, after: { saleType: "From Gasable" } } });
+  cleanup.auditEntityIds.add(audit.id);
+
+  const context = { companyId: company.id, financialYearId: financialYear.id, userId: user.id };
+  const rows = await salesReports.getSaleBetweenDatesReport(context, { from: date, to: date, saleType: "From Gasable", segmentType: "Distributor", brandId: item.brandId });
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].issueNo, issueNo);
+  const excluded = await salesReports.getSaleBetweenDatesReport(context, { from: date, to: date, saleType: "Direct" });
+  assert.equal(excluded.some((row) => row.issueNo === issueNo), false);
+});
+
+test("sale between dates amount and segment modes group invoice rows", async () => {
+  const { company, financialYear, user, seedItem, seedCustomer } = await fixture();
+  const item = await createTestItem(company.id, seedItem);
+  const customer = await createTestCustomer(company.id, seedCustomer);
+  const issueNo = source("SR-GROUP");
+  const date = "2027-03-12";
+
+  await createSaleEntry(company.id, financialYear.id, user.id, issueNo, customer.id, item.id, 2, date);
+
+  const context = { companyId: company.id, financialYearId: financialYear.id, userId: user.id };
+  const amountRows = await salesReports.getSaleBetweenDatesReport(context, { from: date, to: date, mode: "amount" });
+  const segmentRows = await salesReports.getSaleBetweenDatesReport(context, { from: date, to: date, mode: "segment" });
+
+  assert.ok(amountRows.some((r) => Number(r.invoiceCount) >= 1 && Number(r.totalQty) === 2));
+  assert.ok(segmentRows.some((r) => r.segmentType === "Unsegmented" && Number(r.invoiceCount) >= 1));
 });
 
 test("sale between dates excludes sales outside date range", async () => {
@@ -307,7 +344,7 @@ test("sale between dates CSV uses same filters and has correct headers", async (
 
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /text\/csv/);
-  assert.deepEqual(parsed[0], ["Issue No", "Date", "Customer Code", "Customer Name", "Total Qty", "Sale Amount", "Sale Type"]);
+  assert.deepEqual(parsed[0], ["Issue No", "Date", "Customer Code", "Customer Name", "Total Qty", "Sale Amount", "Sale Type", "Segment"]);
   const dataRow = parsed.find((r) => r[0] === issueNo);
   assert.ok(dataRow, "CSV should contain the sale row");
   assert.equal(dataRow[1], date);

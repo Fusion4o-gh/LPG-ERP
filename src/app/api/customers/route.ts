@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   try {
     const context = await getRequestContext(request);
     const includeAll = new URL(request.url).searchParams.get("all") === "1";
-    const areaFilter = includeAll ? undefined : await prisma.$transaction((tx) => customerAreaFilter(tx, context.userId));
+    const areaFilter = await prisma.$transaction((tx) => customerAreaFilter(tx, context.userId));
     const customers = await prisma.customer.findMany({
       where: {
         companyId: context.companyId,

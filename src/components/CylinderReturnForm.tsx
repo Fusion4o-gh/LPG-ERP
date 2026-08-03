@@ -55,6 +55,7 @@ export function CylinderReturnForm() {
   const [printDocumentNo, setPrintDocumentNo] = useState("");
   const [banks, setBanks] = useState<{ id: string; name: string }[]>([]);
   const [settlement, setSettlement] = useState(emptySettlement());
+  const [approvalRequired, setApprovalRequired] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -94,6 +95,7 @@ export function CylinderReturnForm() {
     setLines([{ ...emptyLine }]);
     setPrintDocumentNo("");
     setSettlement(emptySettlement());
+    setApprovalRequired(false);
   }
 
   function payload() {
@@ -117,6 +119,7 @@ export function CylinderReturnForm() {
       payMode: settlement.receiveMode,
       bankId: settlement.bankId || undefined,
       chequeNo: settlement.chequeNo || undefined,
+      approvalRequired,
       chequeDate: settlement.chequeDate || undefined,
     };
   }
@@ -130,7 +133,7 @@ export function CylinderReturnForm() {
     try {
       const result = await apiPost<Record<string, unknown>>("/api/returns/cylinder", payload());
       const returnNo = String(result.returnNo ?? "saved");
-      setSuccess(`Saved ${returnNo}.`);
+      setSuccess(result.status === "PENDING" ? `Valued return ${returnNo} submitted for approval.` : `Saved ${returnNo}.`);
       if (result.ids && returnNo !== "saved") setPrintDocumentNo(returnNo);
       afterSave(reset);
     } catch (err) {
@@ -250,7 +253,8 @@ export function CylinderReturnForm() {
         ) : null}
 
         <div className="flex flex-wrap gap-2">
-          <SubmitButton loading={loading}>Post Return</SubmitButton>
+          {total > 0 ? <label className="flex items-center gap-2 text-sm text-slate-700"><input type="checkbox" checked={approvalRequired} onChange={(event) => setApprovalRequired(event.target.checked)} /> Require approval before posting valued return</label> : null}
+          <SubmitButton loading={loading}>{approvalRequired ? "Submit for Approval" : "Post Return"}</SubmitButton>
           <button type="button" onClick={reset} className="btn-outline">Reset Form</button>
         </div>
       </form>

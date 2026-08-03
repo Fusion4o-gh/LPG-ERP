@@ -1,0 +1,5 @@
+import { getRequestContext } from "../../../../server/api/request-context.ts";
+import { ok, serviceError } from "../../../../server/api/responses.ts";
+import { getPlantBulkSaleReport, getPlantBulkSaleReportCsv } from "../../../../server/services/reports/transport-reports.ts";
+function csvResponse(csv: string) { return new Response(csv, { headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": 'attachment; filename="plant-bulk-sale-report.csv"' } }); }
+export async function GET(request: Request) { try { const context = await getRequestContext(request); const p = new URL(request.url).searchParams; const filters = { from: p.get("from") ?? undefined, to: p.get("to") ?? undefined, customerId: p.get("customerId") ?? undefined, productId: p.get("productId") ?? undefined, plantId: p.get("plantId") ?? undefined }; return p.get("format") === "csv" ? csvResponse(await getPlantBulkSaleReportCsv(context, filters)) : ok(await getPlantBulkSaleReport(context, filters)); } catch (error) { return serviceError(error); } }

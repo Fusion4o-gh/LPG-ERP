@@ -71,7 +71,9 @@ test("transaction document read API returns printable payload with metadata", as
 
   assert.equal(response.status, 200);
   assert.equal(body.success, true);
-  assert.equal(body.document.heading, "LPG Management System");
+  assert.equal(body.document.heading, body.document.legalName);
+  assert.equal(body.document.companyAddress, null);
+  assert.equal(body.document.logoUrl, null);
   assert.equal(body.document.type, "Sale LPG Invoice");
   assert.equal(body.document.number, issueNo);
   assert.equal(body.document.date, "2026-07-21");
@@ -220,6 +222,44 @@ test("transaction document read API denies unauthenticated access", async () => 
   assert.equal(body.error.code, "UNAUTHORIZED");
 });
 
+test("bulk-backed voucher documents expose printable lines", async () => {
+  const { company, financialYear, user } = await isolatedFixture(prisma, "DOC-BULK-PRINT");
+  const account = await prisma.chartAccount.findFirstOrThrow({ where: { companyId: company.id, accountType: "ASSET", parentId: { not: null }, status: "ACTIVE" } });
+  const voucher = await prisma.accountingVoucher.create({ data: { companyId: company.id, financialYearId: financialYear.id, voucherNo: `OPV-TEST-${Date.now()}`, voucherType: "JV", voucherDate: new Date("2099-01-01"), sourceType: "OpeningVoucher", sourceId: `OPV-TEST-${Date.now()}`, createdById: user.id, totalDebit: 100, totalCredit: 100, lines: { create: [{ accountId: account.id, debit: 100, credit: 0, sortOrder: 1 }, { accountId: account.id, debit: 0, credit: 100, sortOrder: 2 }] } } });
+  const response = await documentRoute.GET(await authedRequest(user), { params: Promise.resolve({ documentType: "opening-voucher", documentNo: voucher.voucherNo }) });
+  const body = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(body.document.type, "Opening Voucher");
+  assert.equal(body.document.voucherLines.length, 2);
+  const wrongTypeResponse = await documentRoute.GET(await authedRequest(user), { params: Promise.resolve({ documentType: "dollar-transaction", documentNo: voucher.voucherNo }) });
+  assert.notEqual(wrongTypeResponse.status, 200);
+});
+
+test("plant transfer print payload resolves non-voucher bulk ledger lines", async () => {
+  const { company, financialYear, user } = await isolatedFixture(prisma, "DOC-TRANSFER-PRINT");
+  const [fromPlant, toPlant] = await Promise.all([
+    prisma.plant.create({ data: { companyId: company.id, code: `PT-F-${Date.now()}`, name: "Print From Plant" } }),
+    prisma.plant.create({ data: { companyId: company.id, code: `PT-T-${Date.now()}`, name: "Print To Plant" } }),
+  ]);
+  const [fromLocation, toLocation] = await Promise.all([
+    prisma.stockLocation.create({ data: { companyId: company.id, plantId: fromPlant.id, code: `PT-FL-${Date.now()}`, name: "Print From Tank", type: "PLANT" } }),
+    prisma.stockLocation.create({ data: { companyId: company.id, plantId: toPlant.id, code: `PT-TL-${Date.now()}`, name: "Print To Tank", type: "PLANT" } }),
+  ]);
+  const product = await prisma.bulkProduct.create({ data: { companyId: company.id, code: `PT-P-${Date.now()}`, name: "Printable Bulk LPG" } });
+  const documentNo = `PT-PRINT-${Date.now()}`;
+  const transfer = await prisma.plantTransfer.create({ data: { companyId: company.id, financialYearId: financialYear.id, documentNo, fromPlantId: fromPlant.id, toPlantId: toPlant.id, fromLocationId: fromLocation.id, toLocationId: toLocation.id, productId: product.id, quantity: 5, unit: "MT", transactionDate: new Date("2099-01-01"), createdById: user.id } });
+  await prisma.bulkStockLedgerEntry.createMany({ data: [
+    { companyId: company.id, financialYearId: financialYear.id, productId: product.id, locationId: fromLocation.id, plantId: fromPlant.id, direction: "OUT", quantity: 5, unit: "MT", balanceAfter: 0, sourceType: "PLANT_TRANSFER", sourceId: transfer.id, transactionDate: new Date("2099-01-01"), createdById: user.id },
+    { companyId: company.id, financialYearId: financialYear.id, productId: product.id, locationId: toLocation.id, plantId: toPlant.id, direction: "IN", quantity: 5, unit: "MT", balanceAfter: 5, sourceType: "PLANT_TRANSFER", sourceId: transfer.id, transactionDate: new Date("2099-01-01"), createdById: user.id },
+  ] });
+  const response = await documentRoute.GET(await authedRequest(user), { params: Promise.resolve({ documentType: "plant-transfer", documentNo }) });
+  const body = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(body.document.type, "Plant Transfer");
+  assert.equal(body.document.lineItems.length, 2);
+  assert.equal(body.document.totals.quantity, 5);
+});
+
 test("printable transaction pages and component render document number and type metadata", async () => {
   const component = await file("src/components/PrintableTransactionDocument.tsx");
   const salePage = await file("src/app/(protected)/operations/sale-lpg/print/[documentNo]/page.tsx");
@@ -228,9 +268,18 @@ test("printable transaction pages and component render document number and type 
   assert.match(component, /Document Number/);
   assert.match(component, /document\.type/);
   assert.match(component, /document\.generatedAt/);
+  assert.match(component, /document\.logoUrl/);
+  assert.match(component, /document\.companyAddress/);
+  assert.match(component, /document\.taxRegistrationNumber/);
   assert.match(component, /window\.print\(\)/);
+  assert.match(component, /Print Language/);
+  assert.match(component, /value="Urdu"/);
   assert.match(component, /data-print-hidden/);
   assert.match(component, /LPG Management System/);
   assert.match(salePage, /documentType="sale-lpg"/);
   assert.match(securityPage, /documentType="security-receipt"/);
+  const genericPrintPage = await file("src/app/(protected)/documents/print/[documentType]/[documentNo]/page.tsx");
+  assert.match(genericPrintPage, /PrintableTransactionDocument/);
+  const loadingManager = await file("src/components/LoadingManager.tsx");
+  assert.match(loadingManager, /documents\/print\/loading/);
 });

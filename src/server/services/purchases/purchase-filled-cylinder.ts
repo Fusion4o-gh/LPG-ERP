@@ -8,6 +8,7 @@ import { assertWritableBusinessDate } from "../inventory/day-closing.ts";
 import { createStockLedgerEntry } from "../inventory/stock-ledger.ts";
 import { enforcePermission } from "../rbac/enforce.ts";
 import { assertCentralizedLinePrices } from "../pricing/kg-pricing.ts";
+import { assertVendorAreaAccess } from "../user-management/area-access.ts";
 
 type PurchaseFilledCylinderInput = {
   companyId: string;
@@ -98,6 +99,7 @@ export async function purchaseFilledCylinder(input: PurchaseFilledCylinderInput)
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, input.userId, "purchase-filled-cylinders", PermissionAction.CREATE);
     await assertWritableBusinessDate(tx, input);
+    await assertVendorAreaAccess(tx, input.userId, input.companyId, input.vendorId);
 
     const vendor = await tx.vendor.findUniqueOrThrow({ where: { id: input.vendorId }, select: { accountId: true } });
     const stockAccountId = await getAccountIdByCode(tx, input.companyId, ACCOUNT_CODES.stock);

@@ -6,6 +6,7 @@ import { createBalancedVoucher } from "../accounting/vouchers.ts";
 import { writeAuditLog } from "../audit/audit-log.ts";
 import { assertWritableBusinessDate } from "../inventory/day-closing.ts";
 import { enforcePermission } from "../rbac/enforce.ts";
+import { assertCustomerAreaAccess, assertVendorAreaAccess } from "../user-management/area-access.ts";
 
 type BasePaymentInput = {
   companyId: string;
@@ -21,12 +22,14 @@ type BasePaymentInput = {
   allowClosedDayOverride?: boolean;
 };
 
-async function customerAccount(tx: Prisma.TransactionClient, customerId: string) {
-  return (await tx.customer.findUniqueOrThrow({ where: { id: customerId }, select: { accountId: true } })).accountId;
+async function customerAccount(tx: Prisma.TransactionClient, input: { customerId: string; userId: string; companyId: string }) {
+  await assertCustomerAreaAccess(tx, input.userId, input.companyId, input.customerId);
+  return (await tx.customer.findUniqueOrThrow({ where: { id: input.customerId }, select: { accountId: true } })).accountId;
 }
 
-async function vendorAccount(tx: Prisma.TransactionClient, vendorId: string) {
-  return (await tx.vendor.findUniqueOrThrow({ where: { id: vendorId }, select: { accountId: true } })).accountId;
+async function vendorAccount(tx: Prisma.TransactionClient, input: { vendorId: string; userId: string; companyId: string }) {
+  await assertVendorAreaAccess(tx, input.userId, input.companyId, input.vendorId);
+  return (await tx.vendor.findUniqueOrThrow({ where: { id: input.vendorId }, select: { accountId: true } })).accountId;
 }
 
 async function createPaymentVoucherInTransaction(
@@ -65,14 +68,14 @@ async function createPaymentVoucherInTransaction(
 export async function cashReceipt(input: BasePaymentInput & { receiptNo: string; customerId: string }) {
   return prisma.$transaction(async (tx) => {
     const cashAccountId = await getCashAccountId(tx, input.companyId);
-    const customerAccountId = await customerAccount(tx, input.customerId);
+    const customerAccountId = await customerAccount(tx, input);
     return createPaymentVoucherInTransaction(tx, { ...input, module: "cash-receipts", entityType: "CashReceipt", documentNo: input.receiptNo, debitAccountId: cashAccountId, creditAccountId: customerAccountId, voucherType: VoucherType.CR });
   });
 }
 
 export async function cashPayment(input: BasePaymentInput & { voucherNo: string; vendorId: string }) {
   return prisma.$transaction(async (tx) => {
-    const vendorAccountId = await vendorAccount(tx, input.vendorId);
+    const vendorAccountId = await vendorAccount(tx, input);
     const cashAccountId = await getCashAccountId(tx, input.companyId);
     return createPaymentVoucherInTransaction(tx, { ...input, module: "cash-payments", entityType: "CashPayment", documentNo: input.voucherNo, debitAccountId: vendorAccountId, creditAccountId: cashAccountId, voucherType: VoucherType.CP });
   });
@@ -81,14 +84,14 @@ export async function cashPayment(input: BasePaymentInput & { voucherNo: string;
 export async function bankReceipt(input: BasePaymentInput & { receiptNo: string; customerId: string; bankId: string }) {
   return prisma.$transaction(async (tx) => {
     const bankAccountId = await getBankAccountId(tx, input.bankId);
-    const customerAccountId = await customerAccount(tx, input.customerId);
+    const customerAccountId = await customerAccount(tx, input);
     return createPaymentVoucherInTransaction(tx, { ...input, module: "bank-receipts", entityType: "BankReceipt", documentNo: input.receiptNo, debitAccountId: bankAccountId, creditAccountId: customerAccountId, voucherType: VoucherType.BR });
   });
 }
 
 export async function bankPayment(input: BasePaymentInput & { voucherNo: string; vendorId: string; bankId: string }) {
   return prisma.$transaction(async (tx) => {
-    const vendorAccountId = await vendorAccount(tx, input.vendorId);
+    const vendorAccountId = await vendorAccount(tx, input);
     const bankAccountId = await getBankAccountId(tx, input.bankId);
     return createPaymentVoucherInTransaction(tx, { ...input, module: "bank-payments", entityType: "BankPayment", documentNo: input.voucherNo, debitAccountId: vendorAccountId, creditAccountId: bankAccountId, voucherType: VoucherType.BP });
   });
@@ -209,6 +212,8 @@ export async function securityReceipt(
     quantity?: number;
     receiveMode?: string;
     chequeNo?: string;
+    chequeDate?: string | Date;
+    remarks?: string;
   },
 ) {
   return prisma.$transaction(async (tx) => {
@@ -227,7 +232,7 @@ export async function securityReceipt(
       voucherNo: input.receiptNo,
       voucherType: useBank ? VoucherType.BR : VoucherType.CR,
       voucherDate: input.transactionDate,
-      narration: input.chequeNo ? `Cheque ${input.chequeNo}` : undefined,
+      narration: [input.remarks?.trim(), input.chequeNo ? `Cheque ${input.chequeNo}` : undefined].filter(Boolean).join(" | ") || undefined,
       sourceType: "SecurityReceipt",
       sourceId: input.receiptNo,
       createdById: input.userId,
@@ -249,7 +254,14 @@ export async function securityReceipt(
       userId: input.userId,
       entityType: "SecurityReceipt",
       entityId: input.receiptNo,
-      after: { ...input, amount: String(input.amount), quantity, receiveMode: input.receiveMode ?? (useBank ? "Bank" : "Cash") },
+      after: {
+        ...input,
+        amount: String(input.amount),
+        quantity,
+        receiveMode: input.receiveMode ?? (useBank ? "Bank" : "Cash"),
+        chequeDate: input.chequeDate ? new Date(input.chequeDate).toISOString().slice(0, 10) : "",
+        remarks: input.remarks?.trim() ?? "",
+      },
     });
 
     return { voucher };

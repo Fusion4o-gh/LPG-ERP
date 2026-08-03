@@ -21,6 +21,7 @@ export async function GET(request: Request) {
         brand: { select: { id: true, name: true } },
         cylinderWeightKg: true,
         defaultSecurity: true,
+        imageData: true,
         status: true,
       },
       take: 100,
@@ -48,6 +49,7 @@ export async function POST(request: Request) {
       brandId: optionalStringField(body, "brandId"),
       cylinderWeightKg: optionalPositiveNumberField(body, "cylinderWeightKg"),
       defaultSecurity: body.defaultSecurity === undefined ? undefined : positiveNumberField(body, "defaultSecurity"),
+      imageData: optionalStringField(body, "imageData"),
       status: optionalStringField(body, "status") as never,
     });
     return ok({ item });

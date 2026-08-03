@@ -11,6 +11,9 @@ const stockRoute = await import("../src/app/api/stock-ledger/route.ts");
 const balancesRoute = await import("../src/app/api/customer-cylinder-balances/route.ts");
 const vouchersRoute = await import("../src/app/api/accounting/vouchers/route.ts");
 const voucherDetailRoute = await import("../src/app/api/accounting/vouchers/[id]/route.ts");
+const loginRoute = await import("../src/app/api/auth/login/route.ts");
+const logoutRoute = await import("../src/app/api/auth/logout/route.ts");
+const profileRoute = await import("../src/app/api/auth/profile/route.ts");
 const formValidation = await import("../src/lib/form-validation.ts");
 
 async function fixture() {
@@ -44,6 +47,23 @@ test("password helper verifies seeded admin password and rejects bad password", 
   assert.equal(await auth.verifyPassword("wrong-password", user.passwordHash), false);
 });
 
+test("successful login and logout write authentication audit events", async () => {
+  const { user, company } = await fixture();
+  const before = await prisma.auditLog.count({ where: { companyId: company.id, userId: user.id, entityType: "Authentication" } });
+  const loginResponse = await loginRoute.POST(new Request("http://localhost/api/auth/login", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ loginId: user.loginId, password: SEED_ADMIN_PASSWORD }),
+  }));
+  assert.equal(loginResponse.status, 200);
+  const cookie = loginResponse.headers.get("set-cookie")?.match(/lpg_erp_session=[^;]+/)?.[0];
+  assert.ok(cookie);
+  const logoutResponse = await logoutRoute.POST(new Request("http://localhost/api/auth/logout", { method: "POST", headers: { cookie } }));
+  assert.equal(logoutResponse.status, 200);
+  const events = await prisma.auditLog.findMany({ where: { companyId: company.id, userId: user.id, entityType: "Authentication" }, orderBy: { createdAt: "asc" }, skip: before, select: { action: true } });
+  assert.deepEqual(events.map((event) => event.action), ["LOGIN", "LOGOUT"]);
+});
+
 test("session helper resolves company, user, and active financial year context", async () => {
   const request = await authedRequest();
   const context = await sessions.getSessionContextFromRequest(request);
@@ -51,6 +71,37 @@ test("session helper resolves company, user, and active financial year context",
   assert.ok(context.userId);
   assert.ok(context.companyId);
   assert.ok(context.financialYearId);
+});
+
+test("authenticated profile API reads and updates the current user's contact details", async () => {
+  const { user } = await fixture();
+  const original = { name: user.name, email: user.email };
+  const session = await sessions.createSession(user.id);
+  const headers = { cookie: `lpg_erp_session=${session.sessionToken}`, "content-type": "application/json" };
+
+  try {
+    const readResponse = await profileRoute.GET(new Request("http://localhost/api/auth/profile", { headers }));
+    const readBody = await readResponse.json();
+    assert.equal(readResponse.status, 200);
+    assert.equal(readBody.profile.loginId, user.loginId);
+    assert.equal(readBody.profile.email, original.email);
+
+    const updateResponse = await profileRoute.PUT(new Request("http://localhost/api/auth/profile", {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({ name: "Updated Test Admin", email: "updated-profile@example.com" }),
+    }));
+    const updateBody = await updateResponse.json();
+    assert.equal(updateResponse.status, 200);
+    assert.equal(updateBody.profile.name, "Updated Test Admin");
+    assert.equal(updateBody.profile.email, "updated-profile@example.com");
+
+    const audit = await prisma.auditLog.findFirst({ where: { companyId: (await fixture()).company.id, userId: user.id, entityType: "UserProfile", entityId: user.id, action: "UPDATE" }, orderBy: { createdAt: "desc" } });
+    assert.ok(audit);
+  } finally {
+    await prisma.user.update({ where: { id: user.id }, data: original });
+    await prisma.session.deleteMany({ where: { userId: user.id } });
+  }
 });
 
 test("stock ledger read API returns ledger rows for authenticated requests", async () => {
@@ -106,6 +157,19 @@ test("voucher list and detail APIs return balanced voucher data", async () => {
   assert.ok(Array.isArray(listBody.vouchers));
 
   assert.ok(listBody.vouchers.some((row) => row.id === voucher.id));
+
+  const filteredResponse = await vouchersRoute.GET(await authedRequest(`http://localhost/api/accounting/vouchers?from=2099-12-31&to=2099-12-31&voucherType=JV&search=${encodeURIComponent(voucher.voucherNo)}`));
+  const filteredBody = await filteredResponse.json();
+  assert.equal(filteredResponse.status, 200);
+  assert.equal(filteredBody.vouchers.length, 1);
+  assert.equal(filteredBody.vouchers[0].id, voucher.id);
+
+  const csvResponse = await vouchersRoute.GET(await authedRequest(`http://localhost/api/accounting/vouchers?from=2099-12-31&to=2099-12-31&voucherType=JV&search=${encodeURIComponent(voucher.voucherNo)}&format=csv`));
+  const csv = await csvResponse.text();
+  assert.equal(csvResponse.status, 200);
+  assert.match(csvResponse.headers.get("content-type") ?? "", /text\/csv/);
+  assert.match(csv, /Voucher No,Type,Date,Total Debit,Total Credit,Status,Source Type,Source Document/);
+  assert.match(csv, new RegExp(voucher.voucherNo));
 
   const detailResponse = await voucherDetailRoute.GET(await authedRequest(`http://localhost/api/accounting/vouchers/${voucher.id}`), { params: Promise.resolve({ id: voucher.id }) });
   const detailBody = await detailResponse.json();

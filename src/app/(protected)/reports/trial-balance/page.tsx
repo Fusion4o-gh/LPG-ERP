@@ -14,6 +14,12 @@ export default function TrialBalanceReportPage() {
       endpoint="/api/reports/trial-balance"
       dataKey="rows"
       showAccountTypeFilter
+      summaryFields={[
+        { key: "totalDebit", label: "Total Debit", format: (value) => money(value) },
+        { key: "totalCredit", label: "Total Credit", format: (value) => money(value) },
+        { key: "balanceDifference", label: "Difference", format: (value) => money(value) },
+        { key: "isBalanced", label: "Status", format: (value) => (value ? "Balanced" : "Review") },
+      ]}
       columns={[
         { key: "accountCode", label: "Account Code" },
         { key: "accountName", label: "Account Name" },

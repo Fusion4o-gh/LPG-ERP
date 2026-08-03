@@ -25,6 +25,15 @@ export async function apiPut<T>(url: string, body: Record<string, unknown>): Pro
   return parseResponse<T>(response);
 }
 
+export async function apiPatch<T>(url: string, body: Record<string, unknown>): Promise<ApiResult<T>> {
+  const response = await fetch(url, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return parseResponse<T>(response);
+}
+
 export async function apiDelete<T>(url: string): Promise<ApiResult<T>> {
   const response = await fetch(url, { method: "DELETE" });
   return parseResponse<T>(response);

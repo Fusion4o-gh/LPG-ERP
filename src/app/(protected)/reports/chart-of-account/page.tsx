@@ -13,6 +13,8 @@ export default function ChartOfAccountReportPage() {
       description="Account-level period debits, credits, and balances from posted vouchers."
       endpoint="/api/reports/chart-of-account"
       dataKey="rows"
+      showAccountLevelFilter
+      showDateFilter={false}
       columns={[
         { key: "accountCode", label: "Account Code" },
         { key: "accountName", label: "Account Name" },

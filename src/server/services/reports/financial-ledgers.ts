@@ -123,6 +123,17 @@ function monthlyTotals(rows: ProfitLossRow[], months: string[], accountType: Acc
   }
   return totals;
 }
+
+function yearlyProfitLoss(monthly: Awaited<ReturnType<typeof loadProfitLossMonthly>>) {
+  const years = [...new Set(monthly.months.map((month) => month.slice(0, 4)))].sort();
+  const rows = monthly.rows.map((row) => {
+    const yearlyAmounts = Object.fromEntries(
+      years.map((year) => [year, monthly.months.filter((month) => month.startsWith(`${year}-`)).reduce((total, month) => total + (row.monthlyAmounts?.[month] ?? 0), 0)]),
+    );
+    return { ...row, amount: years.reduce((total, year) => total + (yearlyAmounts[year] ?? 0), 0), monthlyAmounts: yearlyAmounts };
+  });
+  return { months: years, rows };
+}
 type AccountRef = { id: string; code: string; name: string; normalBalance: NormalBalance };
 type LedgerRow = {
   id: string;
@@ -340,7 +351,10 @@ export async function getTrialBalanceReport(context: Context, input: LedgerFilte
       })
       .sort((a, b) => a.accountCode.localeCompare(b.accountCode));
 
-    return { rows };
+    const totalDebit = rows.reduce((total, row) => total + row.totalDebit, 0);
+    const totalCredit = rows.reduce((total, row) => total + row.totalCredit, 0);
+    const balanceDifference = totalDebit - totalCredit;
+    return { rows, totalDebit, totalCredit, balanceDifference, isBalanced: Math.abs(balanceDifference) < 0.005 };
   });
 }
 
@@ -348,16 +362,19 @@ export async function getProfitLossReport(context: Context, input: ProfitLossFil
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "reports", PermissionAction.VIEW);
     const filters = parseReportFilters(input);
-    const useMonthly = String(input.breakdown ?? "").toLowerCase() === "month";
+    const breakdown = String(input.breakdown ?? "").toLowerCase();
+    const useMonthly = breakdown === "month";
+    const useYearly = breakdown === "year";
 
     let rows: ProfitLossRow[];
     let months: string[] | undefined;
     let monthlyTotalsBlock: { revenue: Record<string, number>; expenses: Record<string, number>; net: Record<string, number> } | undefined;
 
-    if (useMonthly) {
+    if (useMonthly || useYearly) {
       const monthly = await loadProfitLossMonthly(tx, context, filters);
-      rows = monthly.rows;
-      const monthKeys = monthly.months;
+      const periodic = useYearly ? yearlyProfitLoss(monthly) : monthly;
+      rows = periodic.rows;
+      const monthKeys = periodic.months;
       months = monthKeys;
       monthlyTotalsBlock = {
         revenue: monthlyTotals(rows, monthKeys, AccountType.REVENUE),
@@ -599,6 +616,173 @@ export async function getGeneralLedgerReport(context: Context, input: LedgerFilt
 export async function getGeneralLedgerReportCsv(context: Context, input: LedgerFilters = {}) {
   const report = await getGeneralLedgerReport(context, input);
   return ledgerRowsCsv(report.rows);
+}
+
+type AgeingInput = { asOf?: string; to?: string };
+type AgeingParty = { id: string; code: string; name: string; creditDays: number; accountId: string };
+type AgeingRow = AgeingParty & {
+  current: number;
+  days1To30: number;
+  days31To60: number;
+  days61To90: number;
+  over90: number;
+  outstanding: number;
+  creditBalance: number;
+  lastTransactionDate: Date | null;
+};
+type AgeingEntry = { date: Date; amount: number; dueDate: Date; kind: "charge" | "credit" };
+
+function utcDate(value: Date) {
+  return new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate()));
+}
+
+function addDays(value: Date, days: number) {
+  const result = new Date(value);
+  result.setUTCDate(result.getUTCDate() + days);
+  return result;
+}
+
+function ageingBucket(asOf: Date, dueDate: Date) {
+  const daysOverdue = Math.max(0, Math.floor((asOf.getTime() - dueDate.getTime()) / 86_400_000));
+  if (daysOverdue === 0) return "current" as const;
+  if (daysOverdue <= 30) return "days1To30" as const;
+  if (daysOverdue <= 60) return "days31To60" as const;
+  if (daysOverdue <= 90) return "days61To90" as const;
+  return "over90" as const;
+}
+
+function allocateAgeingEntries(asOf: Date, entries: AgeingEntry[], party: AgeingParty): AgeingRow {
+  const charges: Array<AgeingEntry & { remaining: number }> = [];
+  let unappliedCredit = 0;
+  for (const entry of entries.sort((a, b) => a.date.getTime() - b.date.getTime())) {
+    if (entry.kind === "charge") {
+      const applied = Math.min(unappliedCredit, entry.amount);
+      unappliedCredit -= applied;
+      charges.push({ ...entry, remaining: entry.amount - applied });
+      continue;
+    }
+    let remainingCredit = entry.amount;
+    for (const charge of charges) {
+      if (remainingCredit <= 0) break;
+      const applied = Math.min(charge.remaining, remainingCredit);
+      charge.remaining -= applied;
+      remainingCredit -= applied;
+    }
+    unappliedCredit += remainingCredit;
+  }
+
+  const row: AgeingRow = {
+    ...party,
+    current: 0,
+    days1To30: 0,
+    days31To60: 0,
+    days61To90: 0,
+    over90: 0,
+    outstanding: 0,
+    creditBalance: unappliedCredit,
+    lastTransactionDate: entries.length ? entries[entries.length - 1].date : null,
+  };
+  for (const charge of charges) {
+    if (charge.remaining <= 0.005) continue;
+    row[ageingBucket(asOf, charge.dueDate)] += charge.remaining;
+    row.outstanding += charge.remaining;
+  }
+  return row;
+}
+
+async function getAgeingReport(context: Context, input: AgeingInput, partyType: "customer" | "vendor") {
+  return prisma.$transaction(async (tx) => {
+    await enforcePermission(tx, context.userId, "reports", PermissionAction.VIEW);
+    const parsed = parseReportFilters({ to: input.asOf ?? input.to });
+    const asOf = parsed.to ?? utcDate(new Date());
+    const parties = (partyType === "customer"
+      ? await tx.customer.findMany({ where: { companyId: context.companyId }, select: { id: true, code: true, name: true, creditDays: true, accountId: true } })
+      : await tx.vendor.findMany({ where: { companyId: context.companyId }, select: { id: true, code: true, name: true, creditDays: true, accountId: true } })) as AgeingParty[];
+    const accountIds = parties.map((party) => party.accountId);
+    if (!accountIds.length) return { asOf, rows: [], totals: { current: 0, days1To30: 0, days31To60: 0, days61To90: 0, over90: 0, outstanding: 0, creditBalance: 0 } };
+
+    const lines = await tx.accountingVoucherLine.findMany({
+      where: {
+        accountId: { in: accountIds },
+        voucher: {
+          companyId: context.companyId,
+          financialYearId: context.financialYearId,
+          isPosted: true,
+          voucherDate: { lte: asOf },
+        },
+      },
+      select: { accountId: true, debit: true, credit: true, voucher: { select: { voucherDate: true, createdAt: true } } },
+      orderBy: [{ voucher: { voucherDate: "asc" } }, { voucher: { createdAt: "asc" } }],
+    });
+    const partyByAccount = new Map(parties.map((party) => [party.accountId, party]));
+    const entriesByAccount = new Map<string, AgeingEntry[]>();
+    for (const line of lines) {
+      const party = partyByAccount.get(line.accountId);
+      if (!party) continue;
+      const debit = amount(line.debit);
+      const credit = amount(line.credit);
+      const chargeAmount = partyType === "customer" ? debit : credit;
+      const creditAmount = partyType === "customer" ? credit : debit;
+      const date = utcDate(line.voucher.voucherDate);
+      const entries = entriesByAccount.get(line.accountId) ?? [];
+      if (chargeAmount > 0) entries.push({ date, amount: chargeAmount, dueDate: addDays(date, party.creditDays ?? 0), kind: "charge" });
+      if (creditAmount > 0) entries.push({ date, amount: creditAmount, dueDate: date, kind: "credit" });
+      entriesByAccount.set(line.accountId, entries);
+    }
+
+    const rows = parties
+      .map((party) => allocateAgeingEntries(asOf, entriesByAccount.get(party.accountId) ?? [], { ...party, creditDays: party.creditDays ?? 0 }))
+      .filter((row) => row.outstanding > 0.005 || row.creditBalance > 0.005)
+      .sort((a, b) => `${a.name}-${a.code}`.localeCompare(`${b.name}-${b.code}`));
+    const totals = rows.reduce(
+      (total, row) => ({
+        current: total.current + row.current,
+        days1To30: total.days1To30 + row.days1To30,
+        days31To60: total.days31To60 + row.days31To60,
+        days61To90: total.days61To90 + row.days61To90,
+        over90: total.over90 + row.over90,
+        outstanding: total.outstanding + row.outstanding,
+        creditBalance: total.creditBalance + row.creditBalance,
+      }),
+      { current: 0, days1To30: 0, days31To60: 0, days61To90: 0, over90: 0, outstanding: 0, creditBalance: 0 },
+    );
+    return { asOf, rows, totals };
+  });
+}
+
+export async function getDebtorsAgeingReport(context: Context, input: AgeingInput = {}) {
+  return getAgeingReport(context, input, "customer");
+}
+
+export async function getCreditorsAgeingReport(context: Context, input: AgeingInput = {}) {
+  return getAgeingReport(context, input, "vendor");
+}
+
+function ageingCsv(report: Awaited<ReturnType<typeof getAgeingReport>>) {
+  return toCsv(
+    ["Code", "Party", "Credit Days", "Current", "1-30", "31-60", "61-90", "Over 90", "Outstanding", "Credit Balance", "Last Transaction"],
+    report.rows.map((row) => [
+      row.code,
+      row.name,
+      row.creditDays,
+      formatMoney(row.current),
+      formatMoney(row.days1To30),
+      formatMoney(row.days31To60),
+      formatMoney(row.days61To90),
+      formatMoney(row.over90),
+      formatMoney(row.outstanding),
+      formatMoney(row.creditBalance),
+      formatDate(row.lastTransactionDate),
+    ]),
+  );
+}
+
+export async function getDebtorsAgeingReportCsv(context: Context, input: AgeingInput = {}) {
+  return ageingCsv(await getDebtorsAgeingReport(context, input));
+}
+
+export async function getCreditorsAgeingReportCsv(context: Context, input: AgeingInput = {}) {
+  return ageingCsv(await getCreditorsAgeingReport(context, input));
 }
 
 export async function getBalanceSheetReportCsv(context: Context, input: LedgerFilters = {}) {

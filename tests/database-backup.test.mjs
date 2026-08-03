@@ -93,6 +93,12 @@ test("unauthorized user denied for backup list", async () => {
   );
 });
 
+test("unauthorized user denied for backup restore", async () => {
+  const { company, financialYear, noPermUser } = await fixture();
+  const context = { companyId: company.id, financialYearId: financialYear.id, userId: noPermUser.id };
+  await assert.rejects(() => backup.restoreBackup(context, "backup-test.dump", "backup-test.dump"), /permission|forbidden|unauthorized/i);
+});
+
 // ── Endpoint Validation ───────────────────────────────────────────────────────
 
 test("backup list endpoint returns error without authentication", async () => {
@@ -107,12 +113,32 @@ test("backup trigger endpoint returns error without authentication", async () =>
   assert.ok(res.status >= 400, `expected error status, got ${res.status}`);
 });
 
+test("backup restore endpoint returns error without authentication", async () => {
+  const req = new Request("http://localhost/api/database-backup/restore", { method: "POST", body: JSON.stringify({ filename: "backup-test.dump", confirmation: "backup-test.dump" }) });
+  const restoreRoute = await import("../src/app/api/database-backup/restore/route.ts");
+  const res = await restoreRoute.POST(req);
+  assert.ok(res.status >= 400, `expected error status, got ${res.status}`);
+});
+
 // ── Backup List ───────────────────────────────────────────────────────────────
 
 test("backup list returns array for authorized user", async () => {
   const { context } = await fixture();
   const result = await backup.listBackups(context);
   assert.ok(Array.isArray(result), "should return an array");
+});
+
+test("backup schedule can be configured and reports due state", async () => {
+  const { context } = await fixture();
+  const initial = await backup.getBackupSchedule(context);
+  assert.equal(initial.enabled, false);
+  await assert.rejects(() => backup.updateBackupSchedule(context, { enabled: true, frequency: "DAILY", time: "25:00", retentionDays: 30 }), /time/i);
+  const updated = await backup.updateBackupSchedule(context, { enabled: true, frequency: "DAILY", time: "23:00", retentionDays: 14 });
+  assert.equal(updated.enabled, true);
+  assert.equal(updated.retentionDays, 14);
+  const notDue = await backup.runDueBackup(context, new Date("2026-01-01T00:00:00"));
+  assert.equal(typeof notDue.due, "boolean");
+  await backup.updateBackupSchedule(context, { enabled: false, frequency: "DAILY", time: "23:00", retentionDays: 30 });
 });
 
 test("backup list endpoint works via HTTP", async () => {

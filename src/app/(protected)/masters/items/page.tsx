@@ -25,6 +25,7 @@ export default function ItemsPage() {
         },
         { name: "cylinderWeightKg", label: "Weight KG", type: "number", min: 0 },
         { name: "defaultSecurity", label: "Default Security", type: "number", min: 0 },
+        { name: "imageData", label: "Item Image", type: "file" },
         { name: "status", label: "Status", type: "text", required: true, options: ["ACTIVE", "INACTIVE"] },
       ]}
       columns={[
@@ -36,6 +37,7 @@ export default function ItemsPage() {
         { key: "defaultSecurity", label: "Security" },
         { key: "status", label: "Status" },
       ]}
+      actionLinks={[{ label: "Define Prices", hrefTemplate: "/masters/items/[id]/prices" }]}
     />
   );
 }

@@ -1,0 +1,5 @@
+import { getRequestContext } from "../../../../server/api/request-context.ts";
+import { fail, ok, serviceError } from "../../../../server/api/responses.ts";
+import { getDollarLedgerReport, getDollarLedgerReportCsv } from "../../../../server/services/reports/dollar-reports.ts";
+function csvResponse(csv: string) { return new Response(csv, { headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": 'attachment; filename="dollar-ledger.csv"' } }); }
+export async function GET(request: Request) { try { const context = await getRequestContext(request); const params = new URL(request.url).searchParams; const filters = { from: params.get("from") ?? undefined, to: params.get("to") ?? undefined, txnType: params.get("txnType") ?? undefined }; return params.get("format") === "csv" ? csvResponse(await getDollarLedgerReportCsv(context, filters)) : ok(await getDollarLedgerReport(context, filters)); } catch (error) { return error instanceof Error && /invalid/.test(error.message) ? fail(error.message) : serviceError(error); } }

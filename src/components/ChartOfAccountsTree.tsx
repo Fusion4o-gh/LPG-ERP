@@ -36,6 +36,15 @@ function buildTree(rows: AccountRow[]) {
   return roots;
 }
 
+function filterTree(nodes: TreeNode[], query: string): TreeNode[] {
+  if (!query) return nodes;
+  return nodes.flatMap((node) => {
+    const children = filterTree(node.children, query);
+    const matches = `${node.code} ${node.name} ${node.accountType}`.toLowerCase().includes(query);
+    return matches || children.length > 0 ? [{ ...node, children }] : [];
+  });
+}
+
 function TreeRows({ nodes, depth = 0 }: { nodes: TreeNode[]; depth?: number }) {
   return (
     <>
@@ -63,7 +72,9 @@ export function ChartOfAccountsTree() {
   const [rows, setRows] = useState<AccountRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
   const tree = useMemo(() => buildTree(rows), [rows]);
+  const visibleTree = useMemo(() => filterTree(tree, search.trim().toLowerCase()), [tree, search]);
 
   useEffect(() => {
     apiGet<{ accounts: AccountRow[] }>("/api/chart-of-accounts?all=1")
@@ -79,6 +90,17 @@ export function ChartOfAccountsTree() {
         description="Hierarchical account tree used by vouchers and financial transactions."
       />
       <ApiError message={error} />
+      <div className="mb-3 flex items-center gap-2">
+        <label htmlFor="chart-of-accounts-search" className="text-sm font-semibold text-slate-700">Search accounts</label>
+        <input
+          id="chart-of-accounts-search"
+          type="search"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Code, name, or type"
+          className="form-input max-w-sm"
+        />
+      </div>
       <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
         <table className="w-full border-collapse text-sm">
           <thead className="bg-slate-100 text-left">
@@ -99,16 +121,16 @@ export function ChartOfAccountsTree() {
                 </td>
               </tr>
             </tbody>
-          ) : tree.length === 0 ? (
+          ) : visibleTree.length === 0 ? (
             <tbody>
               <tr>
                 <td className="border border-slate-200 px-3 py-4 text-slate-600" colSpan={6}>
-                  No accounts found.
+                  {search ? "No matching accounts found." : "No accounts found."}
                 </td>
               </tr>
             </tbody>
           ) : (
-            <TreeRows nodes={tree} />
+            <TreeRows nodes={visibleTree} />
           )}
         </table>
       </div>

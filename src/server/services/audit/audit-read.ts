@@ -46,3 +46,20 @@ export async function readAuditLogs(
   }));
 }
 
+function csvCell(value: unknown) {
+  const text = value == null ? "" : String(value);
+  return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
+export async function readAuditLogsCsv(
+  context: Context,
+  filters: { module?: string; action?: string; userId?: string; from?: string; to?: string },
+) {
+  const logs = await readAuditLogs(context, filters);
+  const lines = [
+    ["Timestamp", "User", "Module", "Action", "Record", "Before", "After"],
+    ...logs.map((log) => [log.timestamp.toISOString(), log.user, log.module, log.action, log.recordReference, log.beforeSummary, log.afterSummary]),
+  ];
+  return lines.map((line) => line.map(csvCell).join(",")).join("\n");
+}
+

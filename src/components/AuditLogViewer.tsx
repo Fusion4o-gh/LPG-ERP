@@ -38,9 +38,24 @@ export function AuditLogViewer() {
     });
   }
 
+  function reportUrl(format?: string) {
+    const params = new URLSearchParams(Object.entries(filters).filter(([, value]) => value));
+    if (format) params.set("format", format);
+    return `/api/audit-logs?${params}`;
+  }
+
   return (
     <>
-      <PageHeader title="Audit Log" description="Review operational changes without exposing sensitive values." />
+      <PageHeader
+        title="Audit Log"
+        description="Review operational changes without exposing sensitive values."
+        actions={
+          <>
+            <a href={reportUrl("csv")} className="btn-secondary" data-print-hidden>Download CSV</a>
+            <button type="button" onClick={() => window.print()} className="btn-secondary" data-print-hidden>Print</button>
+          </>
+        }
+      />
       <ApiError message={error} />
       <form onSubmit={submit} className="mb-4 grid gap-3 rounded-md border border-slate-200 bg-white p-4 md:grid-cols-5">
         <input placeholder="Module" value={filters.module} onChange={(event) => setFilters((current) => ({ ...current, module: event.target.value }))} className="rounded-md border border-slate-300 px-3 py-2 text-sm" />
@@ -55,9 +70,11 @@ export function AuditLogViewer() {
           <button className="rounded-md bg-slate-950 px-3 py-2 text-sm font-semibold text-white">Filter</button>
         </div>
       </form>
+      <section data-report-print>
       <DataTable
         rows={rows}
         loading={loading}
+        enableControls
         columns={[
           { key: "timestamp", label: "Timestamp" },
           { key: "user", label: "User" },
@@ -68,6 +85,7 @@ export function AuditLogViewer() {
           { key: "afterSummary", label: "After" },
         ]}
       />
+      </section>
     </>
   );
 }

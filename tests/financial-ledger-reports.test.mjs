@@ -12,6 +12,14 @@ const cashBookRoute = await import("../src/app/api/reports/cash-book/route.ts");
 const trialBalanceRoute = await import("../src/app/api/reports/trial-balance/route.ts");
 const profitLossRoute = await import("../src/app/api/reports/profit-loss/route.ts");
 const balanceSheetRoute = await import("../src/app/api/reports/balance-sheet/route.ts");
+const unbalancedVoucherRoute = await import("../src/app/api/reports/unbalanced-vouchers/route.ts");
+const debtorsAgeingRoute = await import("../src/app/api/reports/debtors-ageing/route.ts");
+const creditorsAgeingRoute = await import("../src/app/api/reports/creditors-ageing/route.ts");
+const transactionsListingRoute = await import("../src/app/api/reports/transactions-listing/route.ts");
+const multipleLedgerRoute = await import("../src/app/api/reports/multiple-ledger/route.ts");
+const executiveSummaryRoute = await import("../src/app/api/reports/executive-summary/route.ts");
+const voucherListingRoute = await import("../src/app/api/reports/voucher-listing/route.ts");
+const chartOfAccountReportRoute = await import("../src/app/api/reports/chart-of-account/route.ts");
 
 function doc(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -46,6 +54,10 @@ async function isolatedFinancialYear(companyId) {
 async function authedGet(user, url) {
   const session = await sessions.createSession(user.id);
   return new Request(url, { headers: { cookie: `lpg_erp_session=${session.sessionToken}` } });
+}
+
+function contextGet(user, context, url) {
+  return new Request(url, { headers: { "x-company-id": context.companyId, "x-financial-year-id": context.financialYearId, "x-user-id": user.id } });
 }
 
 async function createAccount(companyId, parentId, prefix, accountType, normalBalance) {
@@ -89,6 +101,140 @@ async function csvFrom(route, user, url) {
 
 test.after(async () => {
   await prisma.$disconnect();
+});
+
+test("accounting parity reports list posted vouchers, ledger lines, and summary totals", async () => {
+  const { company, financialYear, user, cash, revenue } = await fixture();
+  const reportFinancialYear = await isolatedFinancialYear(company.id);
+  const createdListingVoucher = await createVoucher(company.id, reportFinancialYear.id, user.id, "2027-04-04", [
+    { accountId: cash.id, debit: 125, credit: 0, description: "Cash receipt" },
+    { accountId: revenue.id, debit: 0, credit: 125, description: "Sale" },
+  ], "ACCOUNTING-PARITY");
+  const reportContext = { companyId: company.id, financialYearId: reportFinancialYear.id };
+  const listingResponse = await transactionsListingRoute.GET(contextGet(user, reportContext, `http://localhost/api/reports/transactions-listing?from=2027-04-01&to=2027-04-30`));
+  const listing = await listingResponse.json();
+  assert.equal(listing.rows.length, 1);
+  assert.equal(listing.rows[0].totalDebit, 125);
+  const filteredListingResponse = await transactionsListingRoute.GET(contextGet(user, reportContext, `http://localhost/api/reports/transactions-listing?userId=${user.id}&voucherType=JV&voucherFrom=${createdListingVoucher.voucherNo}&voucherTo=${createdListingVoucher.voucherNo}`));
+  const filteredListing = await filteredListingResponse.json();
+  assert.equal(filteredListing.rows.length, 1);
+  assert.equal(filteredListing.rows[0].voucherNo, createdListingVoucher.voucherNo);
+  const ledgerResponse = await multipleLedgerRoute.GET(contextGet(user, reportContext, `http://localhost/api/reports/multiple-ledger?accountIds=${cash.id},${revenue.id}&from=2027-04-01&to=2027-04-30`));
+  const ledger = await ledgerResponse.json();
+  assert.equal(ledger.rows.length, 2);
+  assert.deepEqual(ledger.rows.map((row) => row.accountId).sort(), [cash.id, revenue.id].sort());
+  const summaryResponse = await executiveSummaryRoute.GET(contextGet(user, reportContext, `http://localhost/api/reports/executive-summary?from=2027-04-01&to=2027-04-30`));
+  const summary = await summaryResponse.json();
+  assert.equal(summary.totals.revenue, 125);
+  assert.equal(summary.totals.cashAndBank, 125);
+  const voucherResponse = await voucherListingRoute.GET(contextGet(user, reportContext, `http://localhost/api/reports/voucher-listing?from=2027-04-01&to=2027-04-30&voucherType=JV&userId=${user.id}`));
+  const voucherListing = await voucherResponse.json();
+  assert.equal(voucherListing.rows.length, 1);
+  assert.equal(voucherListing.rows[0].voucherType, "JV");
+});
+
+test("chart of account report applies reference level filter and rejects invalid levels", async () => {
+  const { company, financialYear, user } = await fixture();
+  const context = { companyId: company.id, financialYearId: financialYear.id };
+  const levelResponse = await chartOfAccountReportRoute.GET(contextGet(user, context, "http://localhost/api/reports/chart-of-account?level=1"));
+  assert.equal(levelResponse.status, 200);
+  const levelBody = await levelResponse.json();
+  assert.ok(levelBody.rows.length > 0);
+  assert.ok(levelBody.rows.every((row) => row.level === 1));
+
+  const invalidResponse = await chartOfAccountReportRoute.GET(contextGet(user, context, "http://localhost/api/reports/chart-of-account?level=9"));
+  assert.equal(invalidResponse.status, 400);
+  assert.match((await invalidResponse.json()).error.message, /level must be one of 1, 2, 3, or 4/i);
+});
+
+test("unbalanced voucher report isolates posted vouchers with debit-credit differences", async () => {
+  const { company, financialYear, user, cash, debtors } = await fixture();
+  const reportFinancialYear = await isolatedFinancialYear(company.id);
+  await prisma.accountingVoucher.create({
+    data: {
+      companyId: company.id,
+      financialYearId: reportFinancialYear.id,
+      voucherNo: voucherNo("UNBAL-REPORT"),
+      voucherType: VoucherType.JV,
+      voucherDate: new Date("2027-11-12"),
+      totalDebit: 100,
+      totalCredit: 95,
+      sourceType: "test-unbalanced",
+      sourceId: doc("UNBAL-SOURCE"),
+      createdById: user.id,
+      lines: { create: [{ accountId: cash.id, debit: 100, credit: 0, sortOrder: 1 }, { accountId: debtors.id, debit: 0, credit: 95, sortOrder: 2 }] },
+    },
+  });
+  const context = { companyId: company.id, financialYearId: reportFinancialYear.id, userId: user.id };
+  const accountingReports = await import("../src/server/services/reports/accounting-reports.ts");
+  const report = await accountingReports.getUnbalancedVoucherReport(context, { from: "2027-11-01", to: "2027-11-30" });
+  assert.equal(report.length, 1);
+  assert.equal(report[0].difference, 5);
+
+  const csv = await accountingReports.getUnbalancedVoucherReportCsv(context, { from: "2027-11-01", to: "2027-11-30" });
+  assert.match(csv, /Voucher No,Date,Type,Debit,Credit,Difference/);
+  assert.match(csv, /5\.00/);
+
+  const response = await unbalancedVoucherRoute.GET(new Request("http://localhost/api/reports/unbalanced-vouchers?from=2027-11-01&to=2027-11-30", {
+    headers: { "x-company-id": company.id, "x-financial-year-id": reportFinancialYear.id, "x-user-id": user.id },
+  }));
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).rows.length, 1);
+});
+
+test("ageing reports allocate posted party balances into due-date buckets", async () => {
+  const { company, financialYear, user, cash, debtors, creditors } = await fixture();
+  const reportFinancialYear = await isolatedFinancialYear(company.id);
+  const customerAccount = await createAccount(company.id, debtors.id, "AGE-CUST-ACC", AccountType.ASSET, NormalBalance.DEBIT);
+  const vendorAccount = await createAccount(company.id, creditors.id, "AGE-VEND-ACC", AccountType.LIABILITY, NormalBalance.CREDIT);
+  const customer = await prisma.customer.create({ data: { companyId: company.id, code: doc("AGE-C"), name: "Ageing Customer", creditDays: 15, accountId: customerAccount.id } });
+  const vendor = await prisma.vendor.create({ data: { companyId: company.id, code: doc("AGE-V"), name: "Ageing Vendor", creditDays: 30, accountId: vendorAccount.id } });
+
+  await createVoucher(company.id, reportFinancialYear.id, user.id, "2027-05-01", [
+    { accountId: customerAccount.id, debit: 100, credit: 0, sortOrder: 1 },
+    { accountId: cash.id, debit: 0, credit: 100, sortOrder: 2 },
+  ], "AGE-CINV");
+  await createVoucher(company.id, reportFinancialYear.id, user.id, "2027-07-20", [
+    { accountId: customerAccount.id, debit: 50, credit: 0, sortOrder: 1 },
+    { accountId: cash.id, debit: 0, credit: 50, sortOrder: 2 },
+  ], "AGE-CINV");
+  await createVoucher(company.id, reportFinancialYear.id, user.id, "2027-06-01", [
+    { accountId: cash.id, debit: 60, credit: 0, sortOrder: 1 },
+    { accountId: customerAccount.id, debit: 0, credit: 60, sortOrder: 2 },
+  ], "AGE-CREC");
+  await createVoucher(company.id, reportFinancialYear.id, user.id, "2027-06-01", [
+    { accountId: cash.id, debit: 200, credit: 0, sortOrder: 1 },
+    { accountId: vendorAccount.id, debit: 0, credit: 200, sortOrder: 2 },
+  ], "AGE-VINV");
+  await createVoucher(company.id, reportFinancialYear.id, user.id, "2027-07-10", [
+    { accountId: vendorAccount.id, debit: 75, credit: 0, sortOrder: 1 },
+    { accountId: cash.id, debit: 0, credit: 75, sortOrder: 2 },
+  ], "AGE-VPAY");
+
+  const context = { companyId: company.id, financialYearId: reportFinancialYear.id, userId: user.id };
+  const debtorsReport = await ledgers.getDebtorsAgeingReport(context, { asOf: "2027-08-02" });
+  const debtor = debtorsReport.rows.find((row) => row.id === customer.id);
+  assert.equal(debtor.current, 50);
+  assert.equal(debtor.days61To90, 40);
+  assert.equal(debtor.outstanding, 90);
+  assert.equal(debtorsReport.totals.outstanding, 90);
+
+  const creditorsReport = await ledgers.getCreditorsAgeingReport(context, { asOf: "2027-08-02" });
+  const creditor = creditorsReport.rows.find((row) => row.id === vendor.id);
+  assert.equal(creditor.days31To60, 125);
+  assert.equal(creditor.outstanding, 125);
+
+  const response = await debtorsAgeingRoute.GET(new Request("http://localhost/api/reports/debtors-ageing?asOf=2027-08-02", {
+    headers: { "x-company-id": company.id, "x-financial-year-id": reportFinancialYear.id, "x-user-id": user.id },
+  }));
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).rows.some((row) => row.id === customer.id), true);
+
+  const csvResponse = await creditorsAgeingRoute.GET(new Request("http://localhost/api/reports/creditors-ageing?asOf=2027-08-02&format=csv", {
+    headers: { "x-company-id": company.id, "x-financial-year-id": reportFinancialYear.id, "x-user-id": user.id },
+  }));
+  assert.equal(csvResponse.status, 200);
+  assert.match(await csvResponse.text(), /Code,Party,Credit Days,Current,1-30,31-60,61-90,Over 90/);
 });
 
 test("customer ledger report calculates opening and running balance from voucher lines", async () => {
@@ -541,6 +687,32 @@ test("profit and loss monthly breakdown groups amounts by calendar month", async
   assert.equal(report.monthlyTotals.revenue["2027-09"], 200);
   assert.equal(report.monthlyTotals.expenses["2027-09"], 50);
   assert.equal(report.monthlyTotals.net["2027-09"], 150);
+});
+
+test("profit and loss yearly breakdown aggregates months by calendar year", async () => {
+  const { company, user, cash, revenue } = await fixture();
+  const financialYear = await isolatedFinancialYear(company.id);
+  const salesAccount = await createAccount(company.id, revenue.id, "PL-YEAR-REV", AccountType.REVENUE, NormalBalance.CREDIT);
+  await createVoucher(company.id, financialYear.id, user.id, "2027-08-05", [
+    { accountId: cash.id, debit: 100, credit: 0, sortOrder: 1 },
+    { accountId: salesAccount.id, debit: 0, credit: 100, sortOrder: 2 },
+  ]);
+  await createVoucher(company.id, financialYear.id, user.id, "2028-01-10", [
+    { accountId: cash.id, debit: 200, credit: 0, sortOrder: 1 },
+    { accountId: salesAccount.id, debit: 0, credit: 200, sortOrder: 2 },
+  ]);
+
+  const report = await ledgers.getProfitLossReport(
+    { companyId: company.id, financialYearId: financialYear.id, userId: user.id },
+    { from: "2027-01-01", to: "2028-12-31", breakdown: "year" },
+  );
+
+  assert.deepEqual(report.months, ["2027", "2028"]);
+  const sales = report.revenueRows.find((row) => row.id === salesAccount.id);
+  assert.equal(sales.monthlyAmounts["2027"], 100);
+  assert.equal(sales.monthlyAmounts["2028"], 200);
+  assert.equal(report.monthlyTotals.revenue["2028"], 200);
+  assert.equal(report.totalRevenue, 300);
 });
 
 test("balance sheet CSV outputs account rows and totals", async () => {

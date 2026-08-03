@@ -1,0 +1,3 @@
+"use client";
+import { ReportTableClient } from "../ReportTableClient";
+export default function TaftanContractSummaryPage() { return <ReportTableClient title="Taftan Contract Summary" description="Taftan commitments, loading, arrival, and remaining quantities." endpoint="/api/reports/taftan-contract-summary" dataKey="rows" columns={[{ key: "contractDate", label: "Date" }, { key: "contractNo", label: "Contract" }, { key: "quantity", label: "Contract Qty" }, { key: "loadedQuantity", label: "Loaded" }, { key: "arrivedQuantity", label: "Arrived" }, { key: "remainingQuantity", label: "Remaining" }, { key: "status", label: "Status" }]} />; }

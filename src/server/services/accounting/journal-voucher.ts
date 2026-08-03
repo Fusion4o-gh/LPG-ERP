@@ -115,3 +115,84 @@ export async function listJournalVouchers(context: Context) {
     });
   });
 }
+
+export type DollarJvLineInput = JvLineInput & {
+  foreignDebit: number;
+  foreignCredit: number;
+};
+
+export type CreateDollarJournalVoucherInput = Omit<CreateJournalVoucherInput, "lines"> & {
+  lines: DollarJvLineInput[];
+};
+
+function assertForeignBalanced(lines: DollarJvLineInput[]) {
+  const debit = lines.reduce((sum, line) => sum + line.foreignDebit, 0);
+  const credit = lines.reduce((sum, line) => sum + line.foreignCredit, 0);
+  if (!(debit > 0) || Math.abs(debit - credit) >= 0.005) {
+    throw new Error("Dollar journal voucher must have equal non-zero FC debit and credit totals.");
+  }
+}
+
+export async function createDollarJournalVoucher(input: CreateDollarJournalVoucherInput) {
+  return prisma.$transaction(async (tx) => {
+    await enforcePermission(tx, input.userId, "journal-vouchers", PermissionAction.CREATE);
+    await assertWritableBusinessDate(tx, {
+      companyId: input.companyId,
+      financialYearId: input.financialYearId,
+      userId: input.userId,
+      transactionDate: input.voucherDate,
+      allowClosedDayOverride: input.allowClosedDayOverride,
+    });
+    if (!Array.isArray(input.lines) || input.lines.length === 0) {
+      throw new Error("Dollar journal voucher must have at least one line.");
+    }
+    assertForeignBalanced(input.lines);
+    const voucherLines: VoucherLineInput[] = input.lines.map((line) => ({
+      accountId: line.accountId,
+      description: line.description,
+      debit: line.debit,
+      credit: line.credit,
+      foreignDebit: line.foreignDebit,
+      foreignCredit: line.foreignCredit,
+    }));
+    assertBalancedVoucher(voucherLines);
+    await assertPostingAccountsAllowed(tx, input.companyId, "journal-vouchers", voucherLines.map((line) => line.accountId));
+    const voucherNo = await nextDocumentNumberInTransaction(tx, {
+      companyId: input.companyId,
+      financialYearId: input.financialYearId,
+      prefix: DOCUMENT_PREFIXES.dollarJournalVoucher,
+    });
+    const voucher = await createBalancedVoucher(tx, {
+      companyId: input.companyId,
+      financialYearId: input.financialYearId,
+      voucherNo,
+      voucherType: VoucherType.JV,
+      voucherDate: input.voucherDate,
+      narration: input.narration,
+      sourceType: "DollarJournalVoucher",
+      sourceId: voucherNo,
+      createdById: input.userId,
+      lines: voucherLines,
+    });
+    await writeAuditLog(tx, {
+      companyId: input.companyId,
+      userId: input.userId,
+      entityType: "DollarJournalVoucher",
+      entityId: voucherNo,
+      after: { voucherNo, voucherDate: input.voucherDate, narration: input.narration ?? null, lines: input.lines },
+    });
+    return { voucherNo, voucher };
+  });
+}
+
+export async function listDollarJournalVouchers(context: Context) {
+  return prisma.$transaction(async (tx) => {
+    await enforcePermission(tx, context.userId, "journal-vouchers", PermissionAction.VIEW);
+    return tx.accountingVoucher.findMany({
+      where: { companyId: context.companyId, financialYearId: context.financialYearId, sourceType: "DollarJournalVoucher" },
+      select: { id: true, voucherNo: true, voucherDate: true, narration: true, totalDebit: true, totalCredit: true, lines: { select: { foreignDebit: true, foreignCredit: true } } },
+      orderBy: [{ voucherDate: "desc" }, { createdAt: "desc" }],
+      take: 300,
+    });
+  });
+}

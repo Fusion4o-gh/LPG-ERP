@@ -15,6 +15,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       brandId: optionalStringField(body, "brandId"),
       cylinderWeightKg: optionalPositiveNumberField(body, "cylinderWeightKg"),
       defaultSecurity: optionalPositiveNumberField(body, "defaultSecurity"),
+      imageData: optionalStringField(body, "imageData"),
       status: optionalStringField(body, "status") as never,
     });
     return ok({ item });

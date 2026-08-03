@@ -27,6 +27,11 @@ function money(value: unknown) {
   return Number(value ?? 0).toFixed(2);
 }
 
+function todayIso() {
+  const date = new Date();
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
 function SectionTable({
   title,
   rows,
@@ -39,7 +44,7 @@ function SectionTable({
   loading: boolean;
 }) {
   return (
-    <section className="card rounded-xl overflow-hidden">
+    <section className="card rounded-xl overflow-hidden print:break-inside-avoid">
       <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/70">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">{title}</h2>
       </div>
@@ -50,7 +55,7 @@ function SectionTable({
 
 export function DailyActivityReportClient() {
   const [report, setReport] = useState<DailyActivityReport | null>(null);
-  const [filters, setFilters] = useState({ from: "", to: "" });
+  const [filters, setFilters] = useState({ from: todayIso(), to: todayIso() });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [generatedAt, setGeneratedAt] = useState("");
@@ -135,15 +140,15 @@ export function DailyActivityReportClient() {
           <input type="date" value={filters.to} onChange={(e) => setFilters((f) => ({ ...f, to: e.target.value }))} className="form-input" />
         </div>
         <div>
-          <button type="submit" className="btn-primary w-full justify-center">
-            Apply
+            <button type="submit" className="btn-primary w-full justify-center">
+            View Report
           </button>
         </div>
       </form>
 
       <ApiError message={error} />
 
-      <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6 print:break-inside-avoid">
         {[
           ["Sales", summary?.salesCount],
           ["Purchases", summary?.purchaseCount],

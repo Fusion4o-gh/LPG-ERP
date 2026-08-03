@@ -7,11 +7,21 @@ import { ApiError } from "./ApiError";
 
 type PrintableDocument = {
   heading: string;
+  legalName?: string | null;
+  logoUrl?: string | null;
+  companyAddress?: string | null;
+  companyPhone?: string | null;
+  companyEmail?: string | null;
+  taxRegistrationNumber?: string | null;
+  nationalTaxNumber?: string | null;
   type: string;
   number: string;
   date: string;
   partyLabel: string;
   partyName: string;
+  remarks?: string;
+  chequeNo?: string;
+  chequeDate?: string;
   lineItems: Array<Record<string, unknown>>;
   voucherLines: Array<Record<string, unknown>>;
   totals: Record<string, unknown>;
@@ -25,11 +35,15 @@ function display(value: unknown) {
 
 export function PrintableTransactionDocument({ documentType, documentNo }: { documentType: string; documentNo: string }) {
   const [document, setDocument] = useState<PrintableDocument | null>(null);
+  const [printLanguage, setPrintLanguage] = useState("English");
   const [error, setError] = useState("");
 
   useEffect(() => {
     apiGet<{ document: PrintableDocument }>(`/api/transaction-documents/${documentType}/${encodeURIComponent(documentNo)}`)
-      .then((data) => setDocument(data.document))
+      .then((data) => {
+        setDocument(data.document);
+        setPrintLanguage(data.document.invoiceLanguage === "Urdu" ? "Urdu" : "English");
+      })
       .catch((err: Error) => setError(err.message));
   }, [documentNo, documentType]);
 
@@ -37,8 +51,8 @@ export function PrintableTransactionDocument({ documentType, documentNo }: { doc
   const hasGstBreakdown = document?.lineItems.some((line) => line.exGstAmount !== undefined) ?? false;
   const hasSections = document?.lineItems.some((line) => line.section !== undefined) ?? false;
 
-  const isUrdu = document?.invoiceLanguage === "Urdu";
-  const label = (text: string) => translatePrintLabel(text, document?.invoiceLanguage);
+  const isUrdu = printLanguage === "Urdu";
+  const label = (text: string) => translatePrintLabel(text, printLanguage);
 
   return (
     <section
@@ -47,6 +61,13 @@ export function PrintableTransactionDocument({ documentType, documentNo }: { doc
       dir={isUrdu ? "rtl" : "ltr"}
     >
       <div data-print-hidden className="flex justify-end">
+        <label className="mr-2 flex items-center gap-2 text-sm text-slate-700">
+          <span>{label("Print Language")}</span>
+          <select value={printLanguage} onChange={(event) => setPrintLanguage(event.target.value)} className="rounded-md border border-slate-300 px-2 py-1">
+            <option value="English">English</option>
+            <option value="Urdu">Urdu</option>
+          </select>
+        </label>
         <button type="button" onClick={() => window.print()} className="rounded-md bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
           {label("Print")}
         </button>
@@ -56,7 +77,18 @@ export function PrintableTransactionDocument({ documentType, documentNo }: { doc
       {document ? (
         <>
           <header className="border-b border-slate-200 pb-4">
-            <div className="text-2xl font-semibold text-slate-950">{label(document.heading)}</div>
+            <div className="flex items-start gap-4">
+              {document.logoUrl ? <img src={document.logoUrl} alt={`${document.heading} logo`} className="h-16 w-24 shrink-0 object-contain object-left" /> : null}
+              <div className="min-w-0">
+                <div className="text-2xl font-semibold text-slate-950">{document.heading}</div>
+                {document.legalName && document.legalName !== document.heading ? <div className="mt-0.5 text-sm font-medium text-slate-700">{document.legalName}</div> : null}
+                <div className="mt-1 space-y-0.5 text-xs text-slate-600">
+                  {document.companyAddress ? <div>{document.companyAddress}</div> : null}
+                  {document.companyPhone || document.companyEmail ? <div>{[document.companyPhone, document.companyEmail].filter(Boolean).join(" · ")}</div> : null}
+                  {document.taxRegistrationNumber || document.nationalTaxNumber ? <div>{[document.nationalTaxNumber ? `NTN: ${document.nationalTaxNumber}` : "", document.taxRegistrationNumber ? `GST: ${document.taxRegistrationNumber}` : ""].filter(Boolean).join(" · ")}</div> : null}
+                </div>
+              </div>
+            </div>
             <div className="mt-1 text-lg font-medium text-slate-800">{document.type}</div>
           </header>
 
@@ -81,6 +113,18 @@ export function PrintableTransactionDocument({ documentType, documentNo }: { doc
               <div>
                 <dt className="font-semibold text-slate-600">{label("Invoice Language")}</dt>
                 <dd className="text-slate-950">{document.invoiceLanguage}</dd>
+              </div>
+            ) : null}
+            {document.chequeNo ? (
+              <div>
+                <dt className="font-semibold text-slate-600">{label("Cheque Number")}</dt>
+                <dd className="text-slate-950">{document.chequeNo}</dd>
+              </div>
+            ) : null}
+            {document.chequeDate ? (
+              <div>
+                <dt className="font-semibold text-slate-600">{label("Cheque Date")}</dt>
+                <dd className="text-slate-950">{document.chequeDate}</dd>
               </div>
             ) : null}
           </dl>
@@ -163,6 +207,8 @@ export function PrintableTransactionDocument({ documentType, documentNo }: { doc
               {display(document.totals.totalCredit)}
             </div>
           </div>
+
+          {document.remarks ? <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm"><span className="font-semibold text-slate-600">{label("Remarks")}: </span>{document.remarks}</div> : null}
 
           <footer className="border-t border-slate-200 pt-3 text-center text-[11px] text-slate-500">{label("LPG Management System")}</footer>
         </>

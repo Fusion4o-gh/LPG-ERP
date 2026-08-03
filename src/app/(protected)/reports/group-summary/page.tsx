@@ -51,11 +51,7 @@ export default function GroupSummaryReportPage() {
       <PageHeader
         title="Group Summary"
         description="Roll up debits, credits, and balances for a control account group and its descendants."
-        actions={
-          <a href={reportUrl("csv")} download className="btn-outline">
-            CSV
-          </a>
-        }
+        actions={<div data-print-hidden className="flex gap-2"><a href={reportUrl("csv")} download className="btn-outline">CSV</a><button type="button" onClick={() => window.print()} className="btn-outline">Print</button></div>}
       />
       <form onSubmit={submit} className="card rounded-xl mb-4 p-4 grid gap-3 md:grid-cols-2 lg:grid-cols-4 items-end">
         <div>

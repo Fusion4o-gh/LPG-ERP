@@ -9,6 +9,7 @@ import { writeAuditLog } from "../audit/audit-log.ts";
 import { assertWritableBusinessDate } from "../inventory/day-closing.ts";
 import { enforcePermission } from "../rbac/enforce.ts";
 import { assertCentralizedLinePrices } from "../pricing/kg-pricing.ts";
+import { assertCustomerAreaAccess } from "../user-management/area-access.ts";
 import {
   assertSaleMatchesChallan,
   getDeliveryChallan,
@@ -233,6 +234,7 @@ async function createCashReceiptInTransaction(
 
 async function createSaleInTransaction(tx: Prisma.TransactionClient, input: SaleInput) {
   await assertWritableBusinessDate(tx, input);
+  await assertCustomerAreaAccess(tx, input.userId, input.companyId, input.customerId);
 
   const company = await tx.company.findUniqueOrThrow({
     where: { id: input.companyId },

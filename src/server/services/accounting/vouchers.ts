@@ -7,6 +7,8 @@ export type VoucherLineInput = {
   description?: string;
   debit?: string | number | Prisma.Decimal;
   credit?: string | number | Prisma.Decimal;
+  foreignDebit?: string | number | Prisma.Decimal;
+  foreignCredit?: string | number | Prisma.Decimal;
 };
 
 type CreateVoucherInput = {
@@ -60,6 +62,8 @@ export async function createBalancedVoucher(tx: Tx, input: CreateVoucherInput): 
           description: line.description,
           debit: asDecimal(line.debit),
           credit: asDecimal(line.credit),
+          foreignDebit: asDecimal(line.foreignDebit),
+          foreignCredit: asDecimal(line.foreignCredit),
           sortOrder: index + 1,
         })),
       },

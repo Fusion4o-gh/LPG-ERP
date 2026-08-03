@@ -1,0 +1,3 @@
+ALTER TABLE "AccountingVoucherLine"
+ADD COLUMN "foreignDebit" DECIMAL(16,2) NOT NULL DEFAULT 0,
+ADD COLUMN "foreignCredit" DECIMAL(16,2) NOT NULL DEFAULT 0;

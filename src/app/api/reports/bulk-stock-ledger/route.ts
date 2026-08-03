@@ -1,0 +1,5 @@
+import { getRequestContext } from "../../../../server/api/request-context.ts";
+import { fail, ok, serviceError } from "../../../../server/api/responses.ts";
+import { getBulkStockLedgerReport, getBulkStockLedgerReportCsv } from "../../../../server/services/reports/bulk-reports.ts";
+function csvResponse(csv: string) { return new Response(csv, { headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": 'attachment; filename="bulk-stock-ledger.csv"' } }); }
+export async function GET(request: Request) { try { const context = await getRequestContext(request); const params = new URL(request.url).searchParams; const filters = { from: params.get("from") ?? undefined, to: params.get("to") ?? undefined, productId: params.get("productId") ?? undefined, locationId: params.get("locationId") ?? undefined, inTransit: params.get("inTransit") ?? undefined }; return params.get("format") === "csv" ? csvResponse(await getBulkStockLedgerReportCsv(context, filters)) : ok(await getBulkStockLedgerReport(context, filters)); } catch (error) { return error instanceof Error && /invalid/.test(error.message) ? fail(error.message) : serviceError(error); } }

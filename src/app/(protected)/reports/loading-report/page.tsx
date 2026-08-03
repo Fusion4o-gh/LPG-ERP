@@ -1,0 +1,3 @@
+"use client";
+import { ReportTableClient } from "../ReportTableClient";
+export default function LoadingReportPage() { return <ReportTableClient title="Loading Report" description="All import loading documents with contract, product, location, and shipment status." endpoint="/api/reports/loading-report" dataKey="rows" columns={[{ key: "loadingDate", label: "Date" }, { key: "loadingNo", label: "Loading" }, { key: "contractNo", label: "Contract" }, { key: "productName", label: "Product" }, { key: "quantityLoaded", label: "Loaded" }, { key: "arrivedQuantity", label: "Arrived" }, { key: "shipmentStatus", label: "Status" }]} />; }

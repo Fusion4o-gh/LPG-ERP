@@ -1,9 +1,10 @@
 import { CylinderState, PermissionAction, StockDirection, StockSourceType, VoucherType, type Prisma } from "@prisma/client";
 import { prisma } from "../../../lib/prisma.ts";
 import { enforcePermission } from "../rbac/enforce.ts";
+import { customerAreaFilter, vendorAreaFilter } from "../user-management/area-access.ts";
 
 type Context = { companyId: string; financialYearId: string; userId: string };
-export type ReportFilters = { from?: string; to?: string; itemId?: string; customerId?: string };
+export type ReportFilters = { from?: string; to?: string; itemId?: string; categoryId?: string; customerId?: string };
 
 function formatDate(value: Date | string | null | undefined) {
   if (!value) return "";
@@ -36,7 +37,7 @@ export function parseReportFilters(input: ReportFilters) {
   const from = input.from ? dateOnly(input.from, "from") : undefined;
   const to = input.to ? dateOnly(input.to, "to") : undefined;
   if (from && to && from.getTime() > to.getTime()) throw new Error("from must be before or equal to to.");
-  return { from, to, itemId: input.itemId || undefined, customerId: input.customerId || undefined };
+  return { from, to, itemId: input.itemId || undefined, categoryId: input.categoryId || undefined, customerId: input.customerId || undefined };
 }
 
 function dateWhere(filters: ReturnType<typeof parseReportFilters>) {
@@ -60,6 +61,7 @@ export async function getStockSummaryReport(context: Context, input: ReportFilte
         companyId: context.companyId,
         financialYearId: context.financialYearId,
         itemId: filters.itemId,
+        item: filters.categoryId ? { categoryId: filters.categoryId } : undefined,
         transactionDate: dateWhere(filters),
       },
       _sum: { quantity: true },
@@ -90,15 +92,76 @@ export async function getStockSummaryReport(context: Context, input: ReportFilte
   });
 }
 
+export async function getClosingStockSummaryReport(context: Context, input: ReportFilters = {}) {
+  return prisma.$transaction(async (tx) => {
+    await enforcePermission(tx, context.userId, "reports", PermissionAction.VIEW);
+    const filters = parseReportFilters(input);
+    const baseWhere: Prisma.StockLedgerEntryWhereInput = {
+      companyId: context.companyId,
+      financialYearId: context.financialYearId,
+      itemId: filters.itemId,
+    };
+    const openingRows = filters.from
+      ? await tx.stockLedgerEntry.groupBy({
+          by: ["itemId", "cylinderState", "locationId", "direction"],
+          where: { ...baseWhere, transactionDate: { lt: filters.from } },
+          _sum: { quantity: true },
+        })
+      : [];
+    const movementRows = await tx.stockLedgerEntry.groupBy({
+      by: ["itemId", "cylinderState", "locationId", "direction"],
+      where: { ...baseWhere, transactionDate: { ...(filters.from ? { gte: filters.from } : {}), ...(filters.to ? { lte: filters.to } : {}) } },
+      _sum: { quantity: true },
+    });
+    const allRows = [...openingRows, ...movementRows];
+    const itemIds = [...new Set(allRows.map((row) => row.itemId))];
+    const locationIds = [...new Set(allRows.map((row) => row.locationId).filter((id): id is string => Boolean(id)))];
+    const [items, locations] = await Promise.all([
+      tx.item.findMany({ where: { id: { in: itemIds } }, select: { id: true, code: true, name: true } }),
+      tx.stockLocation.findMany({ where: { id: { in: locationIds } }, select: { id: true, code: true, name: true } }),
+    ]);
+    const itemById = new Map(items.map((item) => [item.id, item]));
+    const locationById = new Map(locations.map((location) => [location.id, location]));
+    const byKey = new Map<string, { itemId: string; cylinderState: CylinderState; locationId: string | null; opening: number; received: number; issued: number }>();
+    for (const row of allRows) {
+      const key = `${row.itemId}|${row.cylinderState}|${row.locationId ?? ""}`;
+      const current = byKey.get(key) ?? { itemId: row.itemId, cylinderState: row.cylinderState, locationId: row.locationId, opening: 0, received: 0, issued: 0 };
+      const quantity = Number(row._sum.quantity ?? 0);
+      if (openingRows.includes(row)) {
+        current.opening += row.direction === StockDirection.IN ? quantity : -quantity;
+      } else if (row.direction === StockDirection.IN) {
+        current.received += quantity;
+      } else {
+        current.issued += quantity;
+      }
+      byKey.set(key, current);
+    }
+    const rows = [...byKey.values()]
+      .map((row) => ({
+        id: `${row.itemId}-${row.cylinderState}-${row.locationId ?? "unassigned"}`,
+        item: itemById.get(row.itemId),
+        cylinderState: row.cylinderState,
+        location: row.locationId ? locationById.get(row.locationId) : null,
+        openingQuantity: row.opening,
+        receivedQuantity: row.received,
+        issuedQuantity: row.issued,
+        closingQuantity: row.opening + row.received - row.issued,
+      }))
+      .sort((a, b) => `${a.item?.code ?? ""}-${a.cylinderState}-${a.location?.code ?? ""}`.localeCompare(`${b.item?.code ?? ""}-${b.cylinderState}-${b.location?.code ?? ""}`));
+    return { rows };
+  });
+}
+
 export async function getCustomerCylinderBalanceReport(context: Context, input: ReportFilters = {}) {
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "reports", PermissionAction.VIEW);
     const filters = parseReportFilters(input);
+    const customerArea = await customerAreaFilter(tx, context.userId);
     const balances = await tx.customerCylinderBalance.findMany({
       where: {
         customerId: filters.customerId,
         itemId: filters.itemId,
-        customer: { companyId: context.companyId },
+        customer: { companyId: context.companyId, ...customerArea },
       },
       include: {
         customer: { select: { id: true, code: true, name: true } },
@@ -137,10 +200,13 @@ export async function getDailyActivityReport(context: Context, input: ReportFilt
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "reports", PermissionAction.VIEW);
     const filters = parseReportFilters(input);
+    const customerArea = await customerAreaFilter(tx, context.userId);
+    const vendorArea = await vendorAreaFilter(tx, context.userId);
     const stockWhere: Prisma.StockLedgerEntryWhereInput = {
       companyId: context.companyId,
       financialYearId: context.financialYearId,
       transactionDate: dateWhere(filters),
+      OR: [{ customer: { ...customerArea } }, { vendor: { ...vendorArea } }, { customerId: null, vendorId: null }],
     };
     const voucherWhere: Prisma.AccountingVoucherWhereInput = {
       companyId: context.companyId,
@@ -252,6 +318,14 @@ export async function getStockSummaryReportCsv(context: Context, input: ReportFi
   return toCsv(
     ["Item Code", "Item Name", "Filled Quantity", "Empty Quantity", "Net Movement"],
     rows.map((row) => [row.item?.code ?? "", row.item?.name ?? "", formatQuantity(row.filledQuantity), formatQuantity(row.emptyQuantity), formatQuantity(row.netMovement)]),
+  );
+}
+
+export async function getClosingStockSummaryReportCsv(context: Context, input: ReportFilters = {}) {
+  const report = await getClosingStockSummaryReport(context, input);
+  return toCsv(
+    ["Item Code", "Item Name", "State", "Location", "Opening", "Received", "Issued", "Closing"],
+    report.rows.map((row) => [row.item?.code ?? "", row.item?.name ?? "", row.cylinderState, row.location?.code ?? "Unassigned", row.openingQuantity, row.receivedQuantity, row.issuedQuantity, row.closingQuantity]),
   );
 }
 

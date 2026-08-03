@@ -36,6 +36,8 @@ export function CylinderConversionForm() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [printDocumentNo, setPrintDocumentNo] = useState("");
+  const [filledStock, setFilledStock] = useState(0);
+  const [emptyStock, setEmptyStock] = useState(0);
 
   useEffect(() => {
     apiGet<{ items: Lookup[] }>("/api/items")
@@ -43,6 +45,20 @@ export function CylinderConversionForm() {
       .catch((err: Error) => setError(err.message))
       .finally(() => setLookupLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!fromItemId) setFilledStock(0);
+    else apiGet<{ available: number }>(`/api/stock-availability?itemId=${encodeURIComponent(fromItemId)}`)
+      .then((data) => setFilledStock(Number(data.available) || 0))
+      .catch(() => setFilledStock(0));
+  }, [fromItemId]);
+
+  useEffect(() => {
+    if (!toItemId) setEmptyStock(0);
+    else apiGet<{ available: number }>(`/api/stock-availability?itemId=${encodeURIComponent(toItemId)}&cylinderState=EMPTY`)
+      .then((data) => setEmptyStock(Number(data.available) || 0))
+      .catch(() => setEmptyStock(0));
+  }, [toItemId]);
 
   function reset() {
     setTransactionDate("");
@@ -153,6 +169,10 @@ export function CylinderConversionForm() {
                 <label className="form-label" htmlFor="fromQuantity">From Quantity *</label>
                 <input id="fromQuantity" type="number" min="1" value={fromQuantity} onChange={(e) => setFromQuantity(e.target.value)} className="form-input text-right" />
               </div>
+              <div>
+                <label className="form-label" htmlFor="fromFilledStock">Filled Stock</label>
+                <input id="fromFilledStock" type="number" value={filledStock} readOnly disabled className="form-input text-right" />
+              </div>
             </div>
           </section>
 
@@ -172,6 +192,10 @@ export function CylinderConversionForm() {
               <div>
                 <label className="form-label" htmlFor="toQuantity">To Quantity *</label>
                 <input id="toQuantity" type="number" min="1" value={toQuantity} onChange={(e) => setToQuantity(e.target.value)} className="form-input text-right" />
+              </div>
+              <div>
+                <label className="form-label" htmlFor="toEmptyStock">Empty Stock</label>
+                <input id="toEmptyStock" type="number" value={emptyStock} readOnly disabled className="form-input text-right" />
               </div>
             </div>
           </section>

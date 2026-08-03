@@ -1,0 +1,3 @@
+"use client";
+import { ReportTableClient } from "../ReportTableClient";
+export default function InTransitPage() { return <ReportTableClient title="In-Transit Report" description="Loaded shipments that are still in transit or partially arrived." endpoint="/api/reports/in-transit" dataKey="rows" columns={[{ key: "loadingDate", label: "Date" }, { key: "loadingNo", label: "Loading" }, { key: "contractNo", label: "Contract" }, { key: "productName", label: "Product" }, { key: "quantityLoaded", label: "Loaded" }, { key: "arrivedQuantity", label: "Arrived" }, { key: "remainingQuantity", label: "Remaining" }, { key: "shipmentStatus", label: "Status" }]} />; }

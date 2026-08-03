@@ -19,6 +19,11 @@ export type StockByLocationRow = {
   emptyQuantity: number;
 };
 
+function csvCell(value: unknown) {
+  const text = String(value ?? "");
+  return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
 export async function getStockByLocation(tx: Tx, input: StockByLocationInput): Promise<StockByLocationRow[]> {
   // Get all stock ledger entries for this company/financial year, grouped by location+item+state+direction
   const rows = await tx.stockLedgerEntry.groupBy({
@@ -124,4 +129,10 @@ export async function getStockByLocation(tx: Tx, input: StockByLocationInput): P
   });
 
   return result;
+}
+
+export async function getStockByLocationCsv(tx: Tx, input: StockByLocationInput) {
+  const rows = await getStockByLocation(tx, input);
+  const header = ["Location Code", "Location", "Item Code", "Item", "Filled Quantity", "Empty Quantity"];
+  return [header.join(","), ...rows.map((row) => [row.locationCode, row.locationName, row.itemCode, row.itemName, row.filledQuantity, row.emptyQuantity].map(csvCell).join(","))].join("\n");
 }

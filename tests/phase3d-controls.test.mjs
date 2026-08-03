@@ -100,6 +100,35 @@ test("day closing requires close-day permission", async () => {
   );
 });
 
+test("day close reconciliation reports voucher balance and blocks unbalanced close", async () => {
+  const { company, financialYear, user, seedCustomer } = await (async () => {
+    const context = await fixture();
+    const master = await (await import("./helpers/lpg-fixtures.mjs")).ensureTestMasterData(prisma, context.company.id);
+    return { ...context, ...master };
+  })();
+  const context = { companyId: company.id, financialYearId: financialYear.id, userId: user.id };
+  const voucher = await prisma.accountingVoucher.create({
+    data: {
+      companyId: company.id,
+      financialYearId: financialYear.id,
+      voucherNo: doc("UNBALANCED"),
+      voucherType: "JV",
+      voucherDate: new Date("2026-12-29"),
+      totalDebit: 100,
+      totalCredit: 40,
+      createdById: user.id,
+      lines: { create: [{ accountId: seedCustomer.accountId, debit: 100 }] },
+    },
+  });
+  const reconciliation = await dayClosing.getDayClosingReconciliation(context, { closedDate: "2026-12-29" });
+  assert.equal(reconciliation.voucherCount, 1);
+  assert.equal(reconciliation.unbalancedVoucherCount, 1);
+  assert.equal(reconciliation.isBalanced, false);
+  await assert.rejects(dayClosing.closeBusinessDay(context, { closedDate: "2026-12-29", cashBalance: 0 }), /unbalanced voucher/i);
+  await prisma.accountingVoucherLine.deleteMany({ where: { voucherId: voucher.id } });
+  await prisma.accountingVoucher.delete({ where: { id: voucher.id } });
+});
+
 test("audit-log read filters by module and action", async () => {
   const { company, user } = await fixture();
   const entityId = doc("AUDIT");
@@ -121,6 +150,11 @@ test("audit-log read filters by module and action", async () => {
   assert.equal(log.module, "Customer");
   assert.equal(log.action, "UPDATE");
   assert.equal(String(log.beforeSummary).includes("passwordHash"), false);
+
+  const csv = await auditRead.readAuditLogsCsv({ companyId: company.id }, { module: "Customer", action: "UPDATE" });
+  assert.match(csv, /Timestamp,User,Module,Action,Record,Before,After/);
+  assert.match(csv, new RegExp(entityId));
+  assert.equal(csv.includes("passwordHash"), false);
 });
 
 test("reversal policy prevents unsafe deletion", () => {
@@ -265,4 +299,49 @@ test("closed-day write guard respects reopened state and preserves history", asy
   assert.equal(trail.some((entry) => entry.after?.status === "closed"), true);
   assert.equal(trail.some((entry) => entry.after?.status === "reopened"), true);
   assert.equal(trail.some((entry) => entry.after?.status === "reclosed"), true);
+});
+
+test("business-day guard rejects transactions on disabled working days", async () => {
+  const { company, financialYear, user } = await isolatedDayClosingFixture();
+  await prisma.company.update({
+    where: { id: company.id },
+    data: { workingDays: { sunday: false, monday: true, tuesday: true, wednesday: true, thursday: true, friday: true, saturday: true } },
+  });
+
+  await assert.rejects(
+    prisma.$transaction((tx) =>
+      dayClosingGuard.assertWritableBusinessDate(tx, {
+        companyId: company.id,
+        financialYearId: financialYear.id,
+        userId: user.id,
+        transactionDate: "2026-08-02",
+      }),
+    ),
+    /not allowed on sunday/i,
+  );
+});
+
+test("business-day guard enforces configured hours for the current business date", async () => {
+  const { company, financialYear, user } = await isolatedDayClosingFixture();
+  const timeZone = "Asia/Karachi";
+  const nowParts = new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date());
+  const values = Object.fromEntries(nowParts.map((part) => [part.type, part.value]));
+  const currentDate = `${values.year}-${values.month}-${values.day}`;
+  const currentMinutes = Number(values.hour) * 60 + Number(values.minute);
+  const startMinutes = (currentMinutes + 2) % (24 * 60);
+  const endMinutes = (currentMinutes + 3) % (24 * 60);
+  const clock = (minutes) => `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+  await prisma.company.update({ where: { id: company.id }, data: { timeZone, workStartTime: clock(startMinutes), workEndTime: clock(endMinutes) } });
+
+  await assert.rejects(
+    prisma.$transaction((tx) =>
+      dayClosingGuard.assertWritableBusinessDate(tx, {
+        companyId: company.id,
+        financialYearId: financialYear.id,
+        userId: user.id,
+        transactionDate: currentDate,
+      }),
+    ),
+    /only allowed between/i,
+  );
 });

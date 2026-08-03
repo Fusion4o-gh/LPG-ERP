@@ -1,0 +1,7 @@
+ALTER TABLE "Company"
+  ADD COLUMN "backupScheduleEnabled" BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN "backupScheduleFrequency" TEXT NOT NULL DEFAULT 'DAILY',
+  ADD COLUMN "backupScheduleTime" TEXT NOT NULL DEFAULT '23:00',
+  ADD COLUMN "backupScheduleDay" INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN "backupRetentionDays" INTEGER NOT NULL DEFAULT 30,
+  ADD COLUMN "backupLastRunAt" TIMESTAMP(3);

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { apiGet } from "@/lib/api-client";
 import { ApiError } from "./ApiError";
 import { DataTable } from "./DataTable";
+import { PageHeader } from "./PageHeader";
 
 type StockRow = {
   locationId: string;
@@ -58,6 +59,14 @@ export function StockByLocationTable() {
     }
   }, [locationId]);
 
+  const reportUrl = (format?: "csv") => {
+    const params = new URLSearchParams();
+    if (locationId) params.set("locationId", locationId);
+    if (format) params.set("format", format);
+    const query = params.toString();
+    return `/api/reports/stock-by-location${query ? `?${query}` : ""}`;
+  };
+
   useEffect(() => {
     loadLocations();
   }, [loadLocations]);
@@ -77,7 +86,13 @@ export function StockByLocationTable() {
   }
 
   return (
-    <section className="card rounded-xl overflow-hidden mb-5">
+    <section data-report-print>
+      <PageHeader
+        title="Stock by Location"
+        description="Filled and empty cylinder quantities per warehouse location."
+        actions={<div data-print-hidden className="flex gap-2"><a href={reportUrl("csv")} download className="btn-outline">CSV</a><button type="button" onClick={() => window.print()} className="btn-outline">Print</button></div>}
+      />
+      <div className="card rounded-xl overflow-hidden mb-5">
       <div className="border-b border-slate-100 bg-slate-50/70 flex flex-wrap items-center justify-between gap-3 px-5 py-3">
         <div>
           <h2 className="text-xs font-semibold uppercase tracking-widest text-slate-500">
@@ -177,6 +192,7 @@ export function StockByLocationTable() {
             );
           })
         )}
+      </div>
       </div>
     </section>
   );

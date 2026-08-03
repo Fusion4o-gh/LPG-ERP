@@ -1,12 +1,22 @@
 import { getRequestContext } from "../../../server/api/request-context.ts";
 import { ok, serviceError } from "../../../server/api/responses.ts";
-import { listBackups, triggerBackup } from "../../../server/services/backup/database-backup.ts";
+import { getBackupSchedule, listBackups, triggerBackup, updateBackupSchedule } from "../../../server/services/backup/database-backup.ts";
 
 export async function GET(request: Request) {
   try {
     const context = await getRequestContext(request);
-    const backups = await listBackups(context);
-    return ok({ backups });
+    const [backups, schedule] = await Promise.all([listBackups(context), getBackupSchedule(context)]);
+    return ok({ backups, schedule });
+  } catch (error) {
+    return serviceError(error);
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const context = await getRequestContext(request);
+    const body = (await request.json()) as { enabled?: boolean; frequency?: string; time?: string; day?: number; retentionDays?: number };
+    return ok({ schedule: await updateBackupSchedule(context, body) });
   } catch (error) {
     return serviceError(error);
   }

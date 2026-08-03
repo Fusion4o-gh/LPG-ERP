@@ -7,6 +7,7 @@ const prisma = new PrismaClient();
 const reports = await import("../src/server/services/reports/operational-reports.ts");
 const sessions = await import("../src/server/auth/session.ts");
 const stockSummaryRoute = await import("../src/app/api/reports/stock-summary/route.ts");
+const closingStockSummaryRoute = await import("../src/app/api/reports/closing-stock-summary/route.ts");
 const customerCylinderBalancesRoute = await import("../src/app/api/reports/customer-cylinder-balances/route.ts");
 const dailyActivityRoute = await import("../src/app/api/reports/daily-activity/route.ts");
 
@@ -134,13 +135,45 @@ test("stock summary report calculates filled, empty, and net movement from ledge
 
   const rows = await reports.getStockSummaryReport(
     { companyId: company.id, financialYearId: financialYear.id, userId: user.id },
-    { from: date, to: date, itemId: item.id },
+    { from: date, to: date, itemId: item.id, categoryId: seedItem.categoryId },
   );
   const row = rows.find((entry) => entry.id === item.id);
   assert.ok(row);
   assert.equal(row.filledQuantity, 7);
   assert.equal(row.emptyQuantity, 2);
   assert.equal(row.netMovement, 9);
+});
+
+test("closing stock summary reconciles opening, movements, and location by item state", async () => {
+  const { company, financialYear, user, item: seedItem } = await fixture();
+  const item = await createReportItem(company.id, seedItem, "RPT-CLOSING");
+  const location = await prisma.stockLocation.create({ data: { companyId: company.id, code: doc("RPT-LOC"), name: "Closing Test Location" } });
+  const sourceDate = source("RPT-CLOSING");
+  await prisma.stockLedgerEntry.createMany({
+    data: [
+      { companyId: company.id, financialYearId: financialYear.id, itemId: item.id, locationId: location.id, cylinderState: CylinderState.FILLED, direction: StockDirection.IN, sourceType: StockSourceType.OPENING_BALANCE, sourceId: sourceDate, transactionDate: new Date("2026-11-01"), quantity: 20, balanceAfter: 20, createdById: user.id },
+      { companyId: company.id, financialYearId: financialYear.id, itemId: item.id, locationId: location.id, cylinderState: CylinderState.FILLED, direction: StockDirection.IN, sourceType: StockSourceType.PURCHASE_FILLED, sourceId: source("RPT-CLOSING-IN"), transactionDate: new Date("2026-12-01"), quantity: 5, balanceAfter: 25, createdById: user.id },
+      { companyId: company.id, financialYearId: financialYear.id, itemId: item.id, locationId: location.id, cylinderState: CylinderState.FILLED, direction: StockDirection.OUT, sourceType: StockSourceType.SALE_LPG, sourceId: source("RPT-CLOSING-OUT"), transactionDate: new Date("2026-12-02"), quantity: 7, balanceAfter: 18, createdById: user.id },
+    ],
+  });
+
+  const report = await reports.getClosingStockSummaryReport(
+    { companyId: company.id, financialYearId: financialYear.id, userId: user.id },
+    { from: "2026-12-01", to: "2026-12-31", itemId: item.id },
+  );
+  const row = report.rows.find((entry) => entry.item?.code === item.code && entry.cylinderState === CylinderState.FILLED);
+  assert.ok(row);
+  assert.equal(row.openingQuantity, 20);
+  assert.equal(row.receivedQuantity, 5);
+  assert.equal(row.issuedQuantity, 7);
+  assert.equal(row.closingQuantity, 18);
+  assert.equal(row.location.code, location.code);
+
+  const response = await closingStockSummaryRoute.GET(new Request("http://localhost/api/reports/closing-stock-summary?from=2026-12-01&to=2026-12-31", {
+    headers: { "x-company-id": company.id, "x-financial-year-id": financialYear.id, "x-user-id": user.id },
+  }));
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).rows.some((entry) => entry.item?.code === item.code), true);
 });
 
 test("customer cylinder balance report returns outstanding empty cylinders and last movement date", async () => {

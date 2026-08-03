@@ -35,10 +35,6 @@ const emptyLine: SaleLine = {
   emptyReturnQuantity: "0",
 };
 
-function today() {
-  return new Date().toISOString().slice(0, 10);
-}
-
 function optionLabel(row: Lookup) {
   return [row.code, row.name].filter(Boolean).join(" - ");
 }
@@ -699,4 +695,3 @@ export function SaleLpgForm() {
     </>
   );
 }
-

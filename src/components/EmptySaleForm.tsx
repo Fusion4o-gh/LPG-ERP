@@ -56,6 +56,7 @@ export function EmptySaleForm() {
   const [previewIssueNo, setPreviewIssueNo] = useState("");
   const [banks, setBanks] = useState<{ id: string; name: string }[]>([]);
   const [settlement, setSettlement] = useState(emptySettlement());
+  const [emptyStockByItem, setEmptyStockByItem] = useState<Record<string, number>>({});
 
   useEffect(() => {
     Promise.all([
@@ -73,6 +74,20 @@ export function EmptySaleForm() {
       .catch((err: Error) => setError(err.message))
       .finally(() => setLookupLoading(false));
   }, []);
+
+  useEffect(() => {
+    const itemIds = [...new Set(lines.map((line) => line.itemId).filter(Boolean))];
+    if (itemIds.length === 0) {
+      setEmptyStockByItem({});
+      return;
+    }
+    Promise.all(itemIds.map(async (itemId) => {
+      const data = await apiGet<{ available: number }>(`/api/stock-availability?itemId=${encodeURIComponent(itemId)}&cylinderState=EMPTY`);
+      return [itemId, Number(data.available) || 0] as const;
+    }))
+      .then((entries) => setEmptyStockByItem(Object.fromEntries(entries)))
+      .catch(() => setEmptyStockByItem({}));
+  }, [lines]);
 
   useEffect(() => {
     if (companySettingsLoaded && showDefaultDate && !transactionDate) {
@@ -106,6 +121,7 @@ export function EmptySaleForm() {
     setRemarks("");
     setInvoiceLanguage("English");
     setLines([{ ...blankLine }]);
+    setEmptyStockByItem({});
     setPrintDocumentNo("");
     setSettlement(emptySettlement());
   }
@@ -234,7 +250,7 @@ export function EmptySaleForm() {
             <table className="min-w-[760px] border-collapse text-sm">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200">
-                  {["Item", "Quantity", "Unit Price", "Amount", ""].map((h, i) => (
+                  {["Item", "Quantity", "Unit Price", "Empty Stock", "Amount", ""].map((h, i) => (
                     <th key={i} className={`whitespace-nowrap px-2.5 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 ${[1, 2, 3].includes(i) ? "text-right" : "text-left"}`}>{h}</th>
                   ))}
                 </tr>
@@ -252,6 +268,7 @@ export function EmptySaleForm() {
                       </td>
                       <td className="px-2.5 py-2"><input type="number" min="1" value={line.quantity} onChange={(e) => updateLine(index, { quantity: e.target.value })} className="tbl-input w-20 text-right" /></td>
                       <td className="px-2.5 py-2"><input type="number" min="0" value={line.unitPrice} onChange={(e) => updateLine(index, { unitPrice: e.target.value })} className="tbl-input w-24 text-right" /></td>
+                      <td className="px-2.5 py-2"><input type="number" value={emptyStockByItem[line.itemId] ?? 0} readOnly disabled className="tbl-input w-24 text-right" aria-label="Empty Stock" /></td>
                       <td className="px-2.5 py-2 text-right tabular-nums font-medium text-slate-800">{money(current.amount)}</td>
                       <td className="px-2.5 py-2">
                         <button type="button" onClick={() => removeLine(index)} disabled={lines.length === 1} className="rounded px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50 disabled:opacity-40 transition-colors">Remove</button>

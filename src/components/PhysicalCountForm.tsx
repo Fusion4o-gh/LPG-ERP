@@ -6,6 +6,7 @@ import { ApiError } from "./ApiError";
 import { SubmitButton } from "./SubmitButton";
 import { SuccessMessage } from "./SuccessMessage";
 import { WarehouseSelector } from "./WarehouseSelector";
+import { todayDateInputValue } from "@/lib/use-company-form-settings";
 import { CylinderState } from "@prisma/client";
 
 type Lookup = Record<string, unknown>;
@@ -36,10 +37,7 @@ export function PhysicalCountForm({ onSuccess }: { onSuccess?: () => void }) {
 
   // Create mode state
   const [locationId, setLocationId] = useState("");
-  const [countDate, setCountDate] = useState(() => {
-    const d = new Date();
-    return d.toISOString().split("T")[0];
-  });
+  const [countDate, setCountDate] = useState(todayDateInputValue);
   const [notes, setNotes] = useState("");
 
   // Lines mode state
@@ -79,7 +77,7 @@ export function PhysicalCountForm({ onSuccess }: { onSuccess?: () => void }) {
     setCountId("");
     setDocumentNo("");
     setLocationId("");
-    setCountDate(new Date().toISOString().split("T")[0]);
+    setCountDate(todayDateInputValue());
     setNotes("");
     setLines([{ ...emptyLine }]);
     setSuccess("");

@@ -1,4 +1,4 @@
-import { PermissionAction, StockSourceType } from "@prisma/client";
+import { BulkStockSourceType, PermissionAction, StockSourceType } from "@prisma/client";
 import { prisma } from "../../../../../lib/prisma.ts";
 import { getRequestContext } from "../../../../../server/api/request-context.ts";
 import { fail, ok, serviceError } from "../../../../../server/api/responses.ts";
@@ -7,8 +7,10 @@ import { enforcePermission } from "../../../../../server/services/rbac/enforce.t
 type DocumentConfig = {
   type: string;
   module: string;
-  sourceType: string;
+  sourceType?: string;
   stockSourceType?: StockSourceType;
+  bulkSourceType?: BulkStockSourceType;
+  voucherByDocumentNo?: boolean;
 };
 
 const documentConfigs: Record<string, DocumentConfig> = {
@@ -107,6 +109,58 @@ const documentConfigs: Record<string, DocumentConfig> = {
     module: "journal-vouchers",
     sourceType: "JournalVoucher",
   },
+  "opening-voucher": {
+    type: "Opening Voucher",
+    module: "opening-voucher",
+    sourceType: "OpeningVoucher",
+    voucherByDocumentNo: true,
+  },
+  "local-purchase": {
+    type: "Local Bulk Purchase",
+    module: "local-purchase",
+    sourceType: "LocalPurchase",
+    bulkSourceType: BulkStockSourceType.LOCAL_PURCHASE,
+    voucherByDocumentNo: true,
+  },
+  "delivered-sale": {
+    type: "Delivered Bulk Sale",
+    module: "delivered-sale",
+    sourceType: "DeliveredSale",
+    bulkSourceType: BulkStockSourceType.DELIVERED_SALE,
+    voucherByDocumentNo: true,
+  },
+  "plant-bulk-sale": {
+    type: "Plant Bulk Sale",
+    module: "plant-bulk-sale",
+    sourceType: "PlantBulkSale",
+    bulkSourceType: BulkStockSourceType.PLANT_SALE,
+    voucherByDocumentNo: true,
+  },
+  "filling-sale": {
+    type: "Filling Sale",
+    module: "filling-sale",
+    sourceType: "FillingSale",
+    bulkSourceType: BulkStockSourceType.PLANT_SALE,
+    voucherByDocumentNo: true,
+  },
+  "dollar-transaction": {
+    type: "Dollar Transaction",
+    module: "dollar-transactions",
+    sourceType: "DollarTransaction",
+    bulkSourceType: BulkStockSourceType.DOLLAR_SALE,
+    voucherByDocumentNo: true,
+  },
+  "dollar-settlement": {
+    type: "Dollar Settlement",
+    module: "dollar-transactions",
+    sourceType: "DollarSettlement",
+    voucherByDocumentNo: true,
+  },
+  "loading": { type: "Import Loading", module: "loadings", bulkSourceType: BulkStockSourceType.LOADING },
+  "plant-transfer": { type: "Plant Transfer", module: "plant-transfer", bulkSourceType: BulkStockSourceType.PLANT_TRANSFER },
+  "plant-decanting": { type: "Plant Decanting", module: "plant-decanting", bulkSourceType: BulkStockSourceType.DECANTING },
+  "partial-receiving": { type: "Partial Receiving", module: "partial-receiving", bulkSourceType: BulkStockSourceType.PARTIAL_RECEIVING },
+  "partial-plant-sale": { type: "Partial Plant Sale", module: "partial-plant-sale", sourceType: "PartialPlantSale", bulkSourceType: BulkStockSourceType.PARTIAL_SALE, voucherByDocumentNo: true },
 };
 
 function isDocumentType(value: string) {
@@ -125,6 +179,32 @@ function auditObject(value: unknown) {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
 }
 
+async function resolveBulkSourceIds(documentType: string, companyId: string, documentNo: string) {
+  if (documentType === "loading") {
+    const row = await prisma.loading.findFirst({ where: { companyId, loadingNo: documentNo }, select: { id: true } });
+    return row ? [row.id] : [];
+  }
+  if (documentType === "plant-transfer") {
+    const row = await prisma.plantTransfer.findFirst({ where: { companyId, documentNo }, select: { id: true } });
+    return row ? [row.id] : [];
+  }
+  if (documentType === "plant-decanting") {
+    const row = await prisma.plantDecanting.findFirst({ where: { companyId, documentNo }, select: { id: true } });
+    return row ? [row.id] : [];
+  }
+  if (documentType === "partial-receiving") {
+    const row = await prisma.partialReceiving.findFirst({ where: { companyId, documentNo }, select: { id: true } });
+    if (!row) return [];
+    const events = await prisma.partialReceivingEvent.findMany({ where: { partialReceivingId: row.id }, select: { id: true } });
+    return events.map((event) => event.id);
+  }
+  if (documentType === "partial-plant-sale") {
+    const row = await prisma.partialPlantSale.findFirst({ where: { companyId, documentNo }, select: { id: true } });
+    return row ? [row.id] : [];
+  }
+  return [];
+}
+
 export async function GET(request: Request, { params }: { params: Promise<{ documentType: string; documentNo: string }> }) {
   try {
     const context = await getRequestContext(request);
@@ -136,13 +216,25 @@ export async function GET(request: Request, { params }: { params: Promise<{ docu
     const config = documentConfigs[documentType];
     await enforcePermission(prisma, context.userId, config.module, PermissionAction.PRINT);
 
-    const [voucher, stockEntries] = await Promise.all([
-      prisma.accountingVoucher.findFirst({
+    const [company, voucher, stockEntries] = await Promise.all([
+      prisma.company.findUniqueOrThrow({
+        where: { id: context.companyId },
+        select: {
+          legalName: true,
+          tradeName: true,
+          logoUrl: true,
+          address: true,
+          phone: true,
+          email: true,
+          taxRegistrationNumber: true,
+          nationalTaxNumber: true,
+        },
+      }),
+      config.sourceType ? prisma.accountingVoucher.findFirst({
         where: {
           companyId: context.companyId,
           financialYearId: context.financialYearId,
-          sourceType: config.sourceType,
-          sourceId: documentNo,
+          ...(config.voucherByDocumentNo ? { voucherNo: documentNo, sourceType: config.sourceType } : { sourceType: config.sourceType, sourceId: documentNo }),
         },
         include: {
           lines: {
@@ -150,7 +242,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ docu
             include: { account: { select: { code: true, name: true } } },
           },
         },
-      }),
+      }) : Promise.resolve(null),
       config.stockSourceType
         ? prisma.stockLedgerEntry.findMany({
             where: {
@@ -169,14 +261,29 @@ export async function GET(request: Request, { params }: { params: Promise<{ docu
         : Promise.resolve([]),
     ]);
 
-    if (!voucher && stockEntries.length === 0) {
+    const bulkSourceIds = config.bulkSourceType
+      ? voucher?.sourceId ? [voucher.sourceId] : await resolveBulkSourceIds(documentType, context.companyId, documentNo)
+      : [];
+    const bulkStockEntries = config.bulkSourceType && bulkSourceIds.length > 0
+      ? await prisma.bulkStockLedgerEntry.findMany({
+          where: { companyId: context.companyId, financialYearId: context.financialYearId, sourceType: config.bulkSourceType, sourceId: { in: bulkSourceIds } },
+          orderBy: { createdAt: "asc" },
+          select: { id: true, productId: true, direction: true, quantity: true, unit: true, transactionDate: true },
+        })
+      : [];
+    const bulkProducts = bulkStockEntries.length > 0
+      ? await prisma.bulkProduct.findMany({ where: { companyId: context.companyId, id: { in: [...new Set(bulkStockEntries.map((entry) => entry.productId))] } }, select: { id: true, code: true, name: true } })
+      : [];
+    const bulkProductMap = new Map(bulkProducts.map((product) => [product.id, product]));
+
+    if (!voucher && stockEntries.length === 0 && bulkStockEntries.length === 0) {
       throw new Error("Transaction document was not found.");
     }
 
     const party = stockEntries[0]?.customer ?? stockEntries[0]?.vendor;
     const voucherPartyLine = voucher?.lines.find((line) => line.account && !line.debit.equals(0)) ?? voucher?.lines[0];
     const partyName = party ? [party.code, party.name].filter(Boolean).join(" - ") : voucherPartyLine?.account ? [voucherPartyLine.account.code, voucherPartyLine.account.name].filter(Boolean).join(" - ") : "";
-    const date = dateText(voucher?.voucherDate ?? stockEntries[0]?.transactionDate);
+    const date = dateText(voucher?.voucherDate ?? stockEntries[0]?.transactionDate ?? bulkStockEntries[0]?.transactionDate);
     const auditLineEntityType =
       documentType === "purchase-filled-cylinder"
         ? "PurchaseFilledCylinder"
@@ -199,7 +306,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ docu
                     : documentType === "purchase-return-cylinder"
                       ? "PurchaseReturnCylinder"
                       : documentType === "purchase-return-other"
-                        ? "PurchaseReturnOther"
+                      ? "PurchaseReturnOther"
+                        : documentType === "security-receipt"
+                          ? "SecurityReceipt"
                         : null;
     const lineAudit =
       auditLineEntityType
@@ -216,7 +325,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ docu
 
     return ok({
       document: {
-        heading: "LPG Management System",
+        heading: company.tradeName || company.legalName || "LPG Management System",
+        legalName: company.legalName,
+        logoUrl: company.logoUrl,
+        companyAddress: company.address,
+        companyPhone: company.phone,
+        companyEmail: company.email,
+        taxRegistrationNumber: company.taxRegistrationNumber,
+        nationalTaxNumber: company.nationalTaxNumber,
         type: config.type,
         number: documentNo,
         date,
@@ -226,15 +342,27 @@ export async function GET(request: Request, { params }: { params: Promise<{ docu
             : undefined,
         partyLabel: isPurchaseVendorDocument ? "Vendor" : party ? (stockEntries[0]?.customer ? "Customer" : "Vendor") : "Account",
         partyName: auditPartyName || partyName,
+        remarks: typeof lineAuditAfter.remarks === "string" ? lineAuditAfter.remarks : "",
+        chequeNo: typeof lineAuditAfter.chequeNo === "string" ? lineAuditAfter.chequeNo : "",
+        chequeDate: typeof lineAuditAfter.chequeDate === "string" ? lineAuditAfter.chequeDate : "",
         lineItems:
-          auditLines ??
-          stockEntries.map((entry) => ({
-            id: entry.id,
-            item: [entry.item.code, entry.item.name].filter(Boolean).join(" - "),
-            cylinderState: entry.cylinderState,
-            direction: entry.direction,
-            quantity: entry.quantity,
-          })),
+          auditLines ?? [
+            ...stockEntries.map((entry) => ({
+              id: entry.id,
+              item: [entry.item.code, entry.item.name].filter(Boolean).join(" - "),
+              cylinderState: entry.cylinderState,
+              direction: entry.direction,
+              quantity: entry.quantity,
+            })),
+            ...bulkStockEntries.map((entry) => ({
+              id: entry.id,
+              item: [bulkProductMap.get(entry.productId)?.code, bulkProductMap.get(entry.productId)?.name].filter(Boolean).join(" - "),
+              cylinderState: "BULK",
+              direction: entry.direction,
+              quantity: entry.quantity,
+              unit: entry.unit,
+            })),
+          ],
         voucherLines:
           voucher?.lines.map((line) => ({
             id: line.id,
@@ -246,7 +374,14 @@ export async function GET(request: Request, { params }: { params: Promise<{ docu
         totals: {
           totalDebit: money(voucher?.totalDebit),
           totalCredit: money(voucher?.totalCredit),
-          quantity: stockEntries.reduce((sum, entry) => sum + entry.quantity, 0),
+          quantity: (() => {
+            const quantities = [
+              ...stockEntries.map((entry) => ({ direction: entry.direction, quantity: entry.quantity })),
+              ...bulkStockEntries.map((entry) => ({ direction: entry.direction, quantity: Number(entry.quantity) })),
+            ];
+            const inbound = quantities.filter((entry) => entry.direction === "IN").reduce((sum, entry) => sum + entry.quantity, 0);
+            return inbound > 0 ? inbound : quantities.reduce((sum, entry) => sum + entry.quantity, 0);
+          })(),
         },
         generatedAt: new Date().toISOString(),
       },

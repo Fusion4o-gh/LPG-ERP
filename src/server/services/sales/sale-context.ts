@@ -4,6 +4,7 @@ import { enforcePermission } from "../rbac/enforce.ts";
 import { getFilledStockByItem } from "../inventory/stock-availability.ts";
 import { getWeightedAverageCost } from "../inventory/stock-ledger.ts";
 import { resolveKgPricingMap } from "../pricing/kg-pricing.ts";
+import { assertCustomerAreaAccess } from "../user-management/area-access.ts";
 
 type Context = { companyId: string; financialYearId: string; userId: string };
 
@@ -19,6 +20,7 @@ export async function getSaleLpgContext(context: Context, input: { customerId?: 
 
     let customerBalance: { receivableBalance: number; emptyOwed: number; filledOutstanding: number } | null = null;
     if (input.customerId) {
+      await assertCustomerAreaAccess(tx, context.userId, context.companyId, input.customerId);
       const customer = await tx.customer.findFirst({
         where: { id: input.customerId, companyId: context.companyId },
         include: { account: { select: { id: true, normalBalance: true } } },

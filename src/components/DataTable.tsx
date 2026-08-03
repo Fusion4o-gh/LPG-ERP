@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+
 type Column<T> = {
   key: keyof T | string;
   label: string;
@@ -13,16 +17,66 @@ export function DataTable<T extends Record<string, unknown>>({
   rows,
   loading,
   stickyHeader,
+  enableControls = false,
+  searchPlaceholder = "Search...",
 }: {
   columns: Column<T>[];
   rows: T[];
   loading: boolean;
   stickyHeader?: boolean;
+  enableControls?: boolean;
+  searchPlaceholder?: string;
 }) {
+  const [search, setSearch] = useState("");
+  const [pageSize, setPageSize] = useState(10);
+  const [page, setPage] = useState(1);
+  const filteredRows = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return rows;
+    return rows.filter((row) => Object.values(row).some((value) => typeof value !== "object" && String(value ?? "").toLowerCase().includes(term)));
+  }, [rows, search]);
+  const pageCount = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+  const visibleRows = enableControls ? filteredRows.slice((page - 1) * pageSize, page * pageSize) : rows;
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, pageSize, rows.length]);
+
+  useEffect(() => {
+    if (page > pageCount) setPage(pageCount);
+  }, [page, pageCount]);
+
+  function controls() {
+    if (!enableControls) return null;
+    const first = filteredRows.length === 0 ? 0 : (page - 1) * pageSize + 1;
+    const last = Math.min(page * pageSize, filteredRows.length);
+    return (
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--surface-border)] bg-slate-50 px-3 py-2 text-xs text-steel-500">
+        <label className="flex items-center gap-2">
+          <span>Search:</span>
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={searchPlaceholder} className="form-input !h-8 !w-48 !py-1 text-xs" />
+        </label>
+        <label className="flex items-center gap-2">
+          <span>Display</span>
+          <select value={pageSize} onChange={(event) => setPageSize(Number(event.target.value))} className="form-select !h-8 !w-20 !py-1 text-xs">
+            {[10, 25, 50, 100].map((size) => <option key={size} value={size}>{size}</option>)}
+          </select>
+          <span>records</span>
+        </label>
+        <span>Showing {first} to {last} of {filteredRows.length} entries</span>
+        <div className="flex items-center gap-1">
+          <button type="button" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={page <= 1} className="btn-outline !px-2 !py-1 !text-xs">Previous</button>
+          <span className="px-1">{page} / {pageCount}</span>
+          <button type="button" onClick={() => setPage((current) => Math.min(pageCount, current + 1))} disabled={page >= pageCount} className="btn-outline !px-2 !py-1 !text-xs">Next</button>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="card overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto overscroll-x-contain">
           <table className="min-w-full border-collapse text-sm">
             <thead>
               <tr className="report-table-head">
@@ -63,7 +117,8 @@ export function DataTable<T extends Record<string, unknown>>({
 
   return (
     <div className="card overflow-hidden">
-      <div className="overflow-x-auto">
+      {controls()}
+      <div className="overflow-x-auto overscroll-x-contain">
         <table className="min-w-full border-collapse text-sm">
           <thead className={stickyHeader ? "sticky top-0 z-10" : undefined}>
             <tr className="report-table-head">
@@ -93,10 +148,10 @@ export function DataTable<T extends Record<string, unknown>>({
                 </td>
               </tr>
             ) : (
-              rows.map((row, index) => (
+              visibleRows.map((row, index) => (
                 <tr
                   key={String(row.id ?? index)}
-                  className="accent-row-hover"
+                  className="accent-row-hover table-row-interactive"
                   style={index % 2 === 0 ? { background: "#ffffff" } : { background: "#F8F9FB" }}
                 >
                   {columns.map((column, columnIndex) => (

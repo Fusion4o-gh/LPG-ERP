@@ -14,6 +14,23 @@ export function GlobalSearch() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    function onShortcut(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      }
+      if (event.key === "Escape") {
+        setOpen(false);
+        inputRef.current?.blur();
+      }
+    }
+    document.addEventListener("keydown", onShortcut);
+    return () => document.removeEventListener("keydown", onShortcut);
+  }, []);
 
   useEffect(() => {
     if (query.trim().length < 2) {
@@ -27,7 +44,7 @@ export function GlobalSearch() {
       try {
         const data = await apiGet<{ results: SearchResult[] }>(`/api/search?q=${encodeURIComponent(query.trim())}`);
         setResults(data.results);
-        setOpen(data.results.length > 0);
+        setOpen(true);
       } catch {
         setResults([]);
         setOpen(false);
@@ -62,6 +79,7 @@ export function GlobalSearch() {
         <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z" />
       </svg>
       <input
+        ref={inputRef}
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
@@ -69,18 +87,23 @@ export function GlobalSearch() {
         placeholder={t("Search customers, vouchers…")}
         className="form-input !mt-0 h-8 w-full !rounded-md pl-8 text-sm"
         aria-label="Global search"
+        aria-describedby="global-search-hint"
+        role="combobox"
         aria-expanded={open}
         aria-controls="global-search-results"
       />
+      <span id="global-search-hint" className="sr-only">Press Control K or Command K to focus search. Press Escape to close results.</span>
       {open ? (
         <div
           id="global-search-results"
+          role="listbox"
           className="absolute left-0 right-0 top-[calc(100%+4px)] z-50 overflow-hidden rounded-md border border-[var(--surface-border)] bg-white shadow-soft-md"
         >
           {loading ? <p className="px-3 py-2 text-xs text-steel-500">Searching…</p> : null}
+          {!loading && results.length === 0 ? <p className="px-3 py-2 text-xs text-steel-500">No matching records.</p> : null}
           <ul className="max-h-72 overflow-y-auto py-1">
             {results.map((result) => (
-              <li key={`${result.type}-${result.href}-${result.label}`}>
+              <li key={`${result.type}-${result.href}-${result.label}`} role="option">
                 <Link
                   href={result.href}
                   onClick={() => setOpen(false)}

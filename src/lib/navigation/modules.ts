@@ -27,6 +27,7 @@ export type NavModule = {
 
 const configurationSetup: NavTab[] = [
   { label: "Company Information", href: "/configuration/company-information", module: "company" },
+  { label: "Financial Years", href: "/financial-years", module: "financial-years" },
   { label: "User Management", href: "/configuration/user-management", module: "rbac", action: "MANAGE_RBAC" },
   { label: "Change Password", href: "/configuration/change-password", module: "dashboard" },
   { label: "Appearance", href: "/configuration/appearance", module: "dashboard" },
@@ -58,7 +59,7 @@ const configurationOpening: NavTab[] = [
   { label: "Customer Opening Balance", href: "/configuration/customer-opening-balance", module: "customer-ledger" },
   { label: "Vendor Opening Balance", href: "/configuration/vendor-opening-balance", module: "vendors" },
   { label: "Opening Stock (Bulk)", href: "/configuration/opening-stock-bulk", module: "bulk-opening-stock" },
-  // Opening Voucher tab is wired in once its page is built (Phase 2 wrap-up).
+  { label: "Opening Voucher", href: "/configuration/opening-voucher", module: "opening-voucher" },
 ];
 
 const configurationSystem: NavTab[] = [
@@ -99,7 +100,10 @@ const paymentTabs: NavTab[] = [
   { label: "Security Receipt", href: "/payments/security-receipt", module: "cash-receipts" },
   { label: "Chart of Account", href: "/accounting/chart-of-accounts", module: "chart-of-accounts" },
   { label: "Journal Vouchers", href: "/payments/journal-vouchers", module: "journal-vouchers" },
+  { label: "Journal Voucher Madni", href: "/payments/journal-vouchers-madni", module: "journal-vouchers" },
+  { label: "Dollar Journal Voucher", href: "/payments/dollar-journal-vouchers", module: "journal-vouchers" },
   { label: "Bank Payments / Receipt", href: "/payments/bank-payments-receipts", module: "bank-payments" },
+  { label: "Dollar Payments", href: "/dollar/settlements", module: "dollar-transactions" },
   { label: "Voucher List", href: "/accounting/vouchers", module: "journal-vouchers" },
 ];
 
@@ -108,6 +112,8 @@ const reportsSales: NavTab[] = [
   { label: "One Customer Sale History", href: "/reports/one-customer-sale-history", module: "reports" },
   { label: "Sale Return Report", href: "/reports/sale-return", module: "reports" },
   { label: "Salewise Profit", href: "/reports/salewise-profit", module: "reports" },
+  { label: "Delivered Sale Report", href: "/reports/delivered-sale-report", module: "reports" },
+  { label: "Vehicle Report", href: "/reports/vehicle-report", module: "reports" },
 ];
 
 const reportsPurchases: NavTab[] = [
@@ -116,6 +122,11 @@ const reportsPurchases: NavTab[] = [
 ];
 
 const reportsLedgers: NavTab[] = [
+  { label: "Voucher Listings", href: "/reports/voucher-listing", module: "reports" },
+  { label: "RS / Dollar Ledger", href: "/reports/rupees-dollar-ledger", module: "reports" },
+  { label: "Transactions Listing", href: "/reports/transactions-listing", module: "reports" },
+  { label: "Multiple Ledger", href: "/reports/multiple-ledger", module: "reports" },
+  { label: "Combine Ledger", href: "/reports/combine-ledger", module: "reports" },
   { label: "Cash Book", href: "/reports/cash-book", module: "reports" },
   { label: "Bank Book", href: "/reports/bank-book", module: "reports" },
   { label: "General Ledger", href: "/reports/general-ledger", module: "reports" },
@@ -124,17 +135,42 @@ const reportsLedgers: NavTab[] = [
 ];
 
 const reportsStock: NavTab[] = [
+  { label: "Plant Bulk Sale Report", href: "/reports/plant-bulk-sale-report", module: "reports" },
+  { label: "Taftan Purchase Sale", href: "/reports/taftan-purchase-sale", module: "reports" },
+  { label: "Sale Contract Summary", href: "/reports/sale-contract-summary", module: "reports" },
+  { label: "Taftan Import Register", href: "/reports/taftan-import-register", module: "reports" },
   { label: "Stock Report", href: "/reports/stock-summary", module: "reports" },
   { label: "Stock by Location", href: "/reports/stock-by-location", module: "reports" },
   { label: "Cylinder Conversion B/W Date", href: "/reports/cylinder-conversion-between-dates", module: "reports" },
   { label: "Access Cylinders", href: "/reports/customer-cylinder-balances", module: "reports" },
+  { label: "Closing Stock Summary", href: "/reports/closing-stock-summary", module: "reports" },
   { label: "Daily Activity Report", href: "/reports/daily-activity", module: "reports" },
+  { label: "Consumption Report", href: "/reports/consumption", module: "reports" },
+  { label: "Quantitative Reconciliation", href: "/reports/quantitative-reconciliation", module: "reports" },
+  { label: "CMR Difference Report", href: "/reports/cmr-difference", module: "reports" },
+  { label: "Import Cost Sheet", href: "/reports/import-cost-sheet", module: "reports" },
+  { label: "Retail Sale Register", href: "/reports/retail-sale-register", module: "reports" },
+  { label: "Stock Transit Reconcile", href: "/reports/stock-transit-reconcile", module: "reports" },
+  { label: "Transport & Bowser Wise", href: "/reports/vehicle-bowser", module: "reports" },
+  { label: "Stock Adjustment Report", href: "/reports/stock-adjustment", module: "reports" },
+  { label: "Plant Decant Report", href: "/reports/plant-decant", module: "reports" },
+  { label: "Partial Sale Status", href: "/reports/partial-sale-status", module: "reports" },
+  { label: "Local Purchase Detail", href: "/reports/local-purchase-detail", module: "reports" },
+  { label: "Local Purchase Summary", href: "/reports/local-purchase-summary", module: "reports" },
+  { label: "Contract Purchase Sale", href: "/reports/contract-purchase-sale", module: "reports" },
 ];
 
 const reportsFinancial: NavTab[] = [
+  { label: "License Detail Report", href: "/reports/license-detail", module: "reports" },
+  { label: "Executive Summary", href: "/reports/executive-summary", module: "reports" },
   { label: "Chart Of Account", href: "/reports/chart-of-account", module: "reports" },
   { label: "Group Summary", href: "/reports/group-summary", module: "reports" },
+  { label: "Unbalance Voucher", href: "/reports/unbalanced-vouchers", module: "reports" },
+  { label: "Debtors Ageing", href: "/reports/debtors-ageing", module: "reports" },
+  { label: "Creditors Ageing", href: "/reports/creditors-ageing", module: "reports" },
+  { label: "Trial Balance", href: "/reports/trial-balance", module: "reports" },
   { label: "Profit / Loss Report", href: "/reports/profit-loss", module: "reports" },
+  { label: "Balance Sheet", href: "/reports/balance-sheet", module: "reports" },
 ];
 
 const reportsImport: NavTab[] = [
@@ -147,6 +183,7 @@ const reportsImport: NavTab[] = [
 
 const reportsDollar: NavTab[] = [
   { label: "Dollar Ledger", href: "/reports/dollar-ledger", module: "reports" },
+  { label: "Sale Contract Summary (Dollar)", href: "/reports/sale-contract-dollar-summary", module: "reports" },
   { label: "Delivered Sale (Dollar)", href: "/reports/delivered-sale-dollar", module: "reports" },
   { label: "Plant Bulk Sale (Dollar)", href: "/reports/plant-bulk-sale-dollar", module: "reports" },
 ];
@@ -157,15 +194,34 @@ const importContractsTabs: NavTab[] = [
   { label: "All Contracts", href: "/import/import-contracts", module: "import-contracts" },
   { label: "Loading", href: "/import/loadings", module: "loadings" },
   { label: "All Shipments", href: "/import/shipments", module: "loadings" },
+  { label: "Shift Contract", href: "/import/shift-contract", module: "contract-shifts" },
 ];
 
 const importLocalTabs: NavTab[] = [
   { label: "Purchase Contract", href: "/import/purchase-contracts", module: "purchase-contracts" },
+  { label: "Change Rate & Supplier", href: "/import/change-rate-supplier", module: "purchase-contracts" },
   { label: "Local Purchase", href: "/import/local-purchase", module: "local-purchase" },
+  { label: "Shift Contract", href: "/import/shift-contract", module: "contract-shifts" },
 ];
 
 const importSaleTabs: NavTab[] = [
   { label: "Sale Contract", href: "/import/sale-contracts", module: "sale-contracts" },
+  { label: "Delivered Sale", href: "/import/delivered-sale", module: "delivered-sale" },
+];
+
+const implementedReportsImport: NavTab[] = [
+  { label: "All Contract Summary", href: "/reports/all-contract-summary", module: "reports" },
+  { label: "Taftan Contract Summary", href: "/reports/taftan-contract-summary", module: "reports" },
+  { label: "In-Transit Report", href: "/reports/in-transit", module: "reports" },
+  { label: "Loading Report", href: "/reports/loading-report", module: "reports" },
+  { label: "Bulk Stock Ledger", href: "/reports/bulk-stock-ledger", module: "reports" },
+];
+
+const implementedReportsDollar: NavTab[] = [
+  { label: "Dollar Ledger", href: "/reports/dollar-ledger", module: "reports" },
+  { label: "Sale Contract Summary (Dollar)", href: "/reports/sale-contract-dollar-summary", module: "reports" },
+  { label: "Delivered Sale (Dollar)", href: "/reports/delivered-sale-dollar", module: "reports" },
+  { label: "Plant Bulk Sale (Dollar)", href: "/reports/plant-bulk-sale-dollar", module: "reports" },
 ];
 
 const plantTabs: NavTab[] = [
@@ -178,17 +234,36 @@ const plantTabs: NavTab[] = [
   { label: "Loss / Gain", href: "/plant/loss-gain", module: "loss-gain" },
 ];
 
+const implementedPlantTabs: NavTab[] = [
+  { label: "Delivered Sale", href: "/plant/delivered-sale", module: "delivered-sale" },
+  { label: "Plant Transfer", href: "/plant/plant-transfer", module: "plant-transfer" },
+  { label: "Partial Receiving", href: "/plant/partial-receiving", module: "partial-receiving" },
+  { label: "Plant Bulk Sale", href: "/plant/plant-bulk-sale", module: "plant-bulk-sale" },
+  { label: "Filling Sale", href: "/plant/filling-sale", module: "filling-sale" },
+  { label: "Plant Decanting", href: "/plant/plant-decanting", module: "plant-decanting" },
+  { label: "Loss / Gain", href: "/plant/loss-gain", module: "loss-gain" },
+  { label: "Partial Decanting Sale", href: "/plant/partial-decanting-sale", module: "partial-plant-sale" },
+  { label: "Partial Plant Bulk Sale", href: "/plant/partial-plant-sale", module: "partial-plant-sale" },
+];
+
 const dollarTabs: NavTab[] = [
   { label: "Dollar Purchase", href: "/dollar/dollar-purchase", module: "dollar-transactions" },
   { label: "Dollar Sale", href: "/dollar/dollar-sale", module: "dollar-transactions" },
   { label: "All Dollar Transactions", href: "/dollar/transactions", module: "dollar-transactions" },
 ];
 
+const implementedDollarTabs: NavTab[] = [
+  { label: "Dollar Purchase", href: "/dollar/dollar-purchase", module: "dollar-transactions" },
+  { label: "Dollar Sale", href: "/dollar/dollar-sale", module: "dollar-transactions" },
+  { label: "Dollar Transactions", href: "/dollar/transactions", module: "dollar-transactions" },
+  { label: "Dollar Payments / Receipts", href: "/dollar/settlements", module: "dollar-transactions" },
+];
+
 /**
- * Navigation tab groups for modules whose pages are still being built
- * (Import, Plant/Bulk, Dollar, and their report groups). Kept here, ready to be
- * spliced into NAV_MODULES as each phase lands so re-wiring stays a one-line
- * change and these definitions don't drift.
+ * Navigation tab groups retained for reference-only menu variants that are not
+ * yet separate local screens. Implemented counterparts are wired into
+ * NAV_MODULES below; keeping these definitions here prevents the live menu
+ * inventory from being lost while the remaining variants are built.
  */
 export const PENDING_NAV = {
   importContractsTabs,
@@ -267,10 +342,34 @@ export const NAV_MODULES: NavModule[] = [
     matchPrefixes: ["/payments", "/accounting/chart-of-accounts", "/accounting/vouchers"],
     tabs: paymentTabs,
   },
-  // NOTE: Import, Plant/Bulk, and Dollar modules (and their report groups) are
-  // defined above and wired into NAV_MODULES as each module's pages are built
-  // (Phases 3-6). Tab definitions are kept ready so re-attaching is a one-line
-  // change. They are intentionally not exposed yet to avoid dead navigation.
+  {
+    id: "import",
+    label: "Import",
+    icon: "purchases",
+    defaultHref: "/import/import-contracts",
+    matchPrefixes: ["/import"],
+    tabGroups: [
+      { id: "contracts", label: "Import Contracts", tabs: importContractsTabs },
+      { id: "local", label: "Local Purchase", tabs: importLocalTabs },
+      { id: "sales", label: "Sale Contracts", tabs: importSaleTabs },
+    ],
+  },
+  {
+    id: "plant",
+    label: "Plant",
+    icon: "warehouse",
+    defaultHref: "/plant/plant-transfer",
+    matchPrefixes: ["/plant"],
+    tabs: implementedPlantTabs,
+  },
+  {
+    id: "dollar",
+    label: "Dollar",
+    icon: "money",
+    defaultHref: "/dollar/transactions",
+    matchPrefixes: ["/dollar"],
+    tabs: implementedDollarTabs,
+  },
   {
     id: "reports",
     label: "Reports",
@@ -283,6 +382,8 @@ export const NAV_MODULES: NavModule[] = [
       { id: "ledgers", label: "Ledgers", tabs: reportsLedgers },
       { id: "stock", label: "Stock", tabs: reportsStock },
       { id: "financial", label: "Financial", tabs: reportsFinancial },
+      { id: "import", label: "Import", tabs: implementedReportsImport },
+      { id: "dollar", label: "Dollar", tabs: implementedReportsDollar },
     ],
   },
   {

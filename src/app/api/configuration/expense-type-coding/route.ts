@@ -1,6 +1,7 @@
 import { fail, ok, serviceError } from "../../../../server/api/responses.ts";
 import { getRequestContext } from "../../../../server/api/request-context.ts";
 import { optionalStringField, readJson, stringField } from "../../../../server/api/validation.ts";
+import { optionalStringOrNumberField } from "../../../../server/api/master-body.ts";
 import { createExpenseType, listExpenseTypes } from "../../../../server/services/master-data/master-data.ts";
 
 export async function GET(request: Request) {
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
       code: stringField(body, "code"),
       name: stringField(body, "name"),
       parentId: optionalStringField(body, "parentId"),
-      openingBalance: optionalStringField(body, "openingBalance"),
+      openingBalance: optionalStringOrNumberField(body, "openingBalance"),
       openingBalanceType: optionalStringField(body, "openingBalanceType"),
       transactionDate: optionalStringField(body, "openingDate"),
       status: optionalStringField(body, "status") as never,

@@ -80,6 +80,7 @@ export function PurchaseFilledCylinderForm() {
   const [draft, setDraft] = useState<PurchaseLine>({ ...emptyLine });
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [draftError, setDraftError] = useState("");
+  const [emptyStock, setEmptyStock] = useState(0);
   const [loading, setLoading] = useState(false);
   const [lookupLoading, setLookupLoading] = useState(true);
   const [error, setError] = useState("");
@@ -168,6 +169,16 @@ export function PurchaseFilledCylinderForm() {
         setCentralizedPricing(false);
       });
   }, [vendorId, lines, draft.itemId]);
+
+  useEffect(() => {
+    if (!draft.itemId) {
+      setEmptyStock(0);
+      return;
+    }
+    apiGet<{ available: number }>(`/api/stock-availability?itemId=${encodeURIComponent(draft.itemId)}&cylinderState=EMPTY`)
+      .then((data) => setEmptyStock(Number(data.available) || 0))
+      .catch(() => setEmptyStock(0));
+  }, [draft.itemId]);
 
   const totals = useMemo(
     () =>
@@ -492,6 +503,10 @@ export function PurchaseFilledCylinderForm() {
                 <label className="form-label">Empty Return</label>
                 <input type="number" min="0" value={draft.emptyReturnQuantity} onChange={(e) => updateDraft({ emptyReturnQuantity: e.target.value })} className="form-input text-right" />
               </div>
+              <div>
+                <label className="form-label">Empty Stock</label>
+                <input type="number" value={emptyStock} readOnly disabled className="form-input text-right" aria-label="Empty Stock" />
+              </div>
               <div className="flex gap-1.5">
                 <button type="button" onClick={addOrUpdateLine} className="btn-primary-sm w-full">
                   {editingIndex === null ? "+ Add" : "Update"}
@@ -616,4 +631,3 @@ export function PurchaseFilledCylinderForm() {
     </>
   );
 }
-

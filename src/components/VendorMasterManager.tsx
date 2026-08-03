@@ -23,6 +23,8 @@ const fields: Field[] = [
   { name: "cell", label: "Cell", type: "text" },
   { name: "email", label: "Email", type: "text" },
   { name: "address", label: "Address", type: "text" },
+  { name: "address2", label: "Address 2", type: "text" },
+  { name: "country", label: "Country", type: "text" },
   { name: "cityId", label: "City", type: "select", optionSource: { endpoint: "/api/configuration/cities", dataKey: "cities" } },
   { name: "areaId", label: "Area", type: "select", optionSource: { endpoint: "/api/configuration/area", dataKey: "areas", labelKey: "cityName" } },
   { name: "segmentType", label: "Segment", type: "text" },
@@ -205,6 +207,7 @@ export function VendorMasterManager() {
         <DataTable
           rows={rows}
           loading={loading}
+          enableControls
           columns={[
             { key: "code", label: "Code" },
             { key: "name", label: "Name" },

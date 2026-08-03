@@ -12,6 +12,9 @@ export default function DriversPage() {
         { name: "cell", label: "Cell", type: "text" },
         { name: "cnic", label: "CNIC", type: "text" },
         { name: "licenseNo", label: "License No", type: "text" },
+        { name: "licenseClass", label: "License Class", type: "text" },
+        { name: "licenseIssued", label: "License Issued", type: "date" },
+        { name: "licenseExpiry", label: "License Expiry", type: "date" },
         {
           name: "transporterId",
           label: "Transporter",
@@ -25,6 +28,7 @@ export default function DriversPage() {
         { key: "cell", label: "Cell" },
         { key: "cnic", label: "CNIC" },
         { key: "transporterName", label: "Transporter" },
+        { key: "licenseExpiry", label: "License Expiry" },
         { key: "status", label: "Status" },
       ]}
     />

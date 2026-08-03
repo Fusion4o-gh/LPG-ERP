@@ -6,6 +6,7 @@ import { ApiError } from "./ApiError";
 import { SubmitButton } from "./SubmitButton";
 import { SuccessMessage } from "./SuccessMessage";
 import { WarehouseSelector } from "./WarehouseSelector";
+import { todayDateInputValue } from "@/lib/use-company-form-settings";
 import { CylinderState } from "@prisma/client";
 
 type Lookup = Record<string, unknown>;
@@ -36,10 +37,7 @@ export function WarehouseTransferForm({
   const [companyId, setCompanyId] = useState("");
   const [sourceLocationId, setSourceLocationId] = useState("");
   const [destinationLocationId, setDestinationLocationId] = useState("");
-  const [transferDate, setTransferDate] = useState(() => {
-    const d = new Date();
-    return d.toISOString().split("T")[0];
-  });
+  const [transferDate, setTransferDate] = useState(todayDateInputValue);
   const [lines, setLines] = useState<TransferLine[]>([{ ...emptyLine }]);
   const [items, setItems] = useState<Lookup[]>([]);
   const [itemsLoading, setItemsLoading] = useState(true);
@@ -72,7 +70,7 @@ export function WarehouseTransferForm({
   function reset() {
     setSourceLocationId("");
     setDestinationLocationId("");
-    setTransferDate(new Date().toISOString().split("T")[0]);
+    setTransferDate(todayDateInputValue());
     setLines([{ ...emptyLine }]);
     setSuccess("");
     setError("");

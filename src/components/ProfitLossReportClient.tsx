@@ -31,7 +31,13 @@ function money(value: unknown) {
   return Number(value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function monthLabel(key: string) {
+function todayIso() {
+  const date = new Date();
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function periodLabel(key: string) {
+  if (/^\d{4}$/.test(key)) return key;
   const [year, month] = key.split("-");
   const date = new Date(Number(year), Number(month) - 1, 1);
   return date.toLocaleString(undefined, { month: "short", year: "numeric" });
@@ -146,7 +152,7 @@ function MonthlyGrid({
               <th className="sticky left-0 z-10 bg-slate-50 px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Account</th>
               {months.map((month) => (
                 <th key={month} className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap">
-                  {monthLabel(month)}
+                  {periodLabel(month)}
                 </th>
               ))}
               <th className="px-4 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Period Total</th>
@@ -199,8 +205,8 @@ function MonthlyGrid({
 
 export function ProfitLossReportClient() {
   const [report, setReport] = useState<ProfitLossReport | null>(null);
-  const [filters, setFilters] = useState({ from: "", to: "" });
-  const [breakdown, setBreakdown] = useState<"statement" | "month">("statement");
+  const [filters, setFilters] = useState({ from: todayIso(), to: todayIso() });
+  const [breakdown, setBreakdown] = useState<"statement" | "month" | "year">("statement");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [generatedAt, setGeneratedAt] = useState("");
@@ -239,7 +245,7 @@ export function ProfitLossReportClient() {
   }
 
   const months = report?.months ?? [];
-  const monthlyView = breakdown === "month" && months.length > 0;
+  const monthlyView = (breakdown === "month" || breakdown === "year") && months.length > 0;
   const periodLabel = useMemo(() => {
     if (filters.from && filters.to) return `${filters.from} to ${filters.to}`;
     if (filters.from) return `From ${filters.from}`;
@@ -294,9 +300,10 @@ export function ProfitLossReportClient() {
         </div>
         <div>
           <label className="form-label mb-1">Layout</label>
-          <select value={breakdown} onChange={(e) => setBreakdown(e.target.value as "statement" | "month")} className="form-input">
+          <select value={breakdown} onChange={(e) => setBreakdown(e.target.value as "statement" | "month" | "year")} className="form-input">
             <option value="statement">Statement (totals)</option>
-            <option value="month">Month / year columns</option>
+            <option value="month">Month-wise columns</option>
+            <option value="year">Year-wise columns</option>
           </select>
         </div>
         <div className="flex flex-wrap gap-2 xl:col-span-2">

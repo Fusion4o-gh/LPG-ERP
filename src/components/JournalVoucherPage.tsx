@@ -9,20 +9,20 @@ import { PageHeader } from "./PageHeader";
 import { SuccessMessage } from "./SuccessMessage";
 
 type Account = { id: string; code: string; name: string };
-type JvLine = { uid: number; accountId: string; description: string; debit: string; credit: string };
-type VoucherRow = { id: string; voucherNo: string; voucherDate: string; narration: string | null; totalDebit: string; totalCredit: string };
+type JvLine = { uid: number; accountId: string; description: string; debit: string; credit: string; foreignDebit: string; foreignCredit: string };
+type VoucherRow = { id: string; voucherNo: string; voucherDate: string; narration: string | null; totalDebit: string; totalCredit: string; foreignDebit?: string; foreignCredit?: string };
 
 let lineCounter = 1;
 
 function emptyLine(): JvLine {
-  return { uid: lineCounter++, accountId: "", description: "", debit: "", credit: "" };
+  return { uid: lineCounter++, accountId: "", description: "", debit: "", credit: "", foreignDebit: "", foreignCredit: "" };
 }
 
 function money(value: string | undefined) {
   return Number(value ?? 0).toFixed(2);
 }
 
-export function JournalVoucherPage() {
+export function JournalVoucherPage({ variant = "standard" }: { variant?: "standard" | "madni" | "dollar" } = {}) {
   const formId = useId();
 
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -39,7 +39,7 @@ export function JournalVoucherPage() {
   const [postedNo, setPostedNo] = useState("");
 
   function reloadVouchers() {
-    apiGet<{ vouchers: VoucherRow[] }>("/api/accounting/journal-vouchers")
+    apiGet<{ vouchers: VoucherRow[] }>(variant === "dollar" ? "/api/accounting/dollar-journal-vouchers" : "/api/accounting/journal-vouchers")
       .then((data) => setVouchers(data.vouchers))
       .catch((err: Error) => setLoadError(err.message));
   }
@@ -47,7 +47,7 @@ export function JournalVoucherPage() {
   useEffect(() => {
     Promise.all([
       apiGet<{ accounts: Account[] }>("/api/chart-of-accounts"),
-      apiGet<{ vouchers: VoucherRow[] }>("/api/accounting/journal-vouchers"),
+      apiGet<{ vouchers: VoucherRow[] }>(variant === "dollar" ? "/api/accounting/dollar-journal-vouchers" : "/api/accounting/journal-vouchers"),
     ])
       .then(([acctData, jvData]) => {
         setAccounts(acctData.accounts);
@@ -71,8 +71,11 @@ export function JournalVoucherPage() {
 
   const totalDebit = lines.reduce((sum, l) => sum + (parseFloat(l.debit) || 0), 0);
   const totalCredit = lines.reduce((sum, l) => sum + (parseFloat(l.credit) || 0), 0);
+  const totalForeignDebit = lines.reduce((sum, l) => sum + (parseFloat(l.foreignDebit) || 0), 0);
+  const totalForeignCredit = lines.reduce((sum, l) => sum + (parseFloat(l.foreignCredit) || 0), 0);
   const diff = Math.abs(totalDebit - totalCredit);
-  const isBalanced = diff < 0.005 && totalDebit > 0;
+  const foreignDiff = Math.abs(totalForeignDebit - totalForeignCredit);
+  const isBalanced = diff < 0.005 && totalDebit > 0 && (variant !== "dollar" || (foreignDiff < 0.005 && totalForeignDebit > 0));
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -81,7 +84,7 @@ export function JournalVoucherPage() {
     setFormError("");
     setPostedNo("");
     try {
-      const result = await apiPost<{ voucherNo: string }>("/api/accounting/journal-vouchers", {
+      const result = await apiPost<{ voucherNo: string }>(variant === "dollar" ? "/api/accounting/dollar-journal-vouchers" : "/api/accounting/journal-vouchers", {
         voucherDate,
         narration: narration || undefined,
         lines: lines.map((l) => ({
@@ -89,6 +92,7 @@ export function JournalVoucherPage() {
           description: l.description || undefined,
           debit: parseFloat(l.debit) || 0,
           credit: parseFloat(l.credit) || 0,
+          ...(variant === "dollar" ? { foreignDebit: parseFloat(l.foreignDebit) || 0, foreignCredit: parseFloat(l.foreignCredit) || 0 } : {}),
         })),
       });
       setPostedNo(result.voucherNo);
@@ -105,12 +109,12 @@ export function JournalVoucherPage() {
 
   return (
     <section>
-      <PageHeader title="Journal Vouchers" description="Create and view manual journal vouchers." />
+      <PageHeader title={variant === "madni" ? "Journal Voucher Madni" : variant === "dollar" ? "Dollar Journal Voucher" : "Journal Vouchers"} description={variant === "madni" ? "Create and view Madni journal vouchers using the same balanced accounting controls." : variant === "dollar" ? "Create balanced journal vouchers with PKR and foreign-currency values." : "Create and view manual journal vouchers."} />
 
       <ApiError message={loadError} />
 
       <div className="mb-6 rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
-        <h2 className="mb-3 text-base font-semibold text-blue-700">Create Journal Voucher</h2>
+        <h2 className="mb-3 text-base font-semibold text-blue-700">{variant === "madni" ? "Add Journal Voucher Madni" : variant === "dollar" ? "Add Dollar Journal Voucher" : "Create Journal Voucher"}</h2>
 
         <form id={formId} onSubmit={handleSubmit}>
           <div className="mb-4 grid gap-3 md:grid-cols-2">
@@ -144,6 +148,7 @@ export function JournalVoucherPage() {
                   <th className="border border-blue-100 px-3 py-2">Description</th>
                   <th className="border border-blue-100 px-3 py-2 text-right">Debit</th>
                   <th className="border border-blue-100 px-3 py-2 text-right">Credit</th>
+                  {variant === "dollar" ? <><th className="border border-blue-100 px-3 py-2 text-right">FC Debit</th><th className="border border-blue-100 px-3 py-2 text-right">FC Credit</th></> : null}
                   <th className="border border-blue-100 px-3 py-2"></th>
                 </tr>
               </thead>
@@ -165,6 +170,10 @@ export function JournalVoucherPage() {
                         ))}
                       </select>
                     </td>
+                    {variant === "dollar" ? <>
+                      <td className="border border-slate-200 px-2 py-1"><input type="number" min="0" step="0.01" value={line.foreignDebit} onChange={(e) => updateLine(line.uid, "foreignDebit", e.target.value)} className="w-full rounded border border-slate-300 px-2 py-1 text-right text-sm" /></td>
+                      <td className="border border-slate-200 px-2 py-1"><input type="number" min="0" step="0.01" value={line.foreignCredit} onChange={(e) => updateLine(line.uid, "foreignCredit", e.target.value)} className="w-full rounded border border-slate-300 px-2 py-1 text-right text-sm" /></td>
+                    </> : null}
                     <td className="border border-slate-200 px-2 py-1">
                       <input
                         type="text"
@@ -208,7 +217,7 @@ export function JournalVoucherPage() {
               </tbody>
               <tfoot className="bg-slate-50 font-medium text-sm">
                 <tr>
-                  <td className="border border-slate-200 px-3 py-2" colSpan={2}>
+                  <td className="border border-slate-200 px-3 py-2" colSpan={variant === "dollar" ? 2 : 2}>
                     <button
                       type="button"
                       onClick={addLine}
@@ -219,6 +228,7 @@ export function JournalVoucherPage() {
                   </td>
                   <td className="border border-slate-200 px-3 py-2 text-right">{totalDebit.toFixed(2)}</td>
                   <td className="border border-slate-200 px-3 py-2 text-right">{totalCredit.toFixed(2)}</td>
+                  {variant === "dollar" ? <><td className="border border-slate-200 px-3 py-2 text-right">{totalForeignDebit.toFixed(2)}</td><td className="border border-slate-200 px-3 py-2 text-right">{totalForeignCredit.toFixed(2)}</td></> : null}
                   <td className="border border-slate-200 px-3 py-2"></td>
                 </tr>
               </tfoot>
@@ -226,7 +236,7 @@ export function JournalVoucherPage() {
           </div>
 
           <div className={`mt-2 text-sm font-medium ${isBalanced ? "text-green-600" : "text-red-600"}`}>
-            {isBalanced ? "Balanced" : totalDebit === 0 && totalCredit === 0 ? "Enter amounts" : `Difference: ${diff.toFixed(2)}`}
+            {isBalanced ? "Balanced" : totalDebit === 0 && totalCredit === 0 ? "Enter amounts" : variant === "dollar" && foreignDiff >= 0.005 ? `FC Difference: ${foreignDiff.toFixed(2)}` : `Difference: ${diff.toFixed(2)}`}
           </div>
 
           <div className="mt-4 flex items-center gap-3">
@@ -235,7 +245,7 @@ export function JournalVoucherPage() {
               disabled={!isBalanced || submitting}
               className="rounded-md bg-blue-700 px-5 py-2 text-sm font-semibold text-white disabled:opacity-40"
             >
-              {submitting ? "Posting..." : "Post Journal Voucher"}
+              {submitting ? "Posting..." : variant === "dollar" ? "Post Dollar Journal Voucher" : "Post Journal Voucher"}
             </button>
             {postedNo ? (
               <Link href={`/payments/journal-vouchers/print/${encodeURIComponent(postedNo)}`} className="text-sm text-blue-700 underline">
@@ -266,6 +276,7 @@ export function JournalVoucherPage() {
           { key: "narration", label: "Narration" },
           { key: "totalDebit", label: "Total Debit", render: (row) => money(row.totalDebit as string) },
           { key: "totalCredit", label: "Total Credit", render: (row) => money(row.totalCredit as string) },
+          ...(variant === "dollar" ? [{ key: "foreignDebit", label: "FC Debit", render: (row: Record<string, unknown>) => money(row.foreignDebit as string) }, { key: "foreignCredit", label: "FC Credit", render: (row: Record<string, unknown>) => money(row.foreignCredit as string) }] : []),
         ]}
       />
     </section>

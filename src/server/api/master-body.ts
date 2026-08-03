@@ -1,6 +1,6 @@
 import { optionalStringField, stringField, type Body } from "./validation.ts";
 
-function optionalStringOrNumberField(body: Body, name: string) {
+export function optionalStringOrNumberField(body: Body, name: string) {
   const value = body[name];
   if (value === undefined || value === null || value === "") return undefined;
   if (typeof value === "number" && Number.isFinite(value)) return String(value);
@@ -24,6 +24,7 @@ export function customerBody(body: Body) {
     email: optionalStringField(body, "email"),
     address: optionalStringField(body, "address"),
     address2: optionalStringField(body, "address2"),
+    country: optionalStringField(body, "country"),
     cityId: optionalStringField(body, "cityId"),
     areaId: optionalStringField(body, "areaId"),
     segmentType: optionalStringField(body, "segmentType"),
@@ -44,6 +45,8 @@ export function vendorBody(body: Body) {
     cell: optionalStringField(body, "cell"),
     email: optionalStringField(body, "email"),
     address: optionalStringField(body, "address"),
+    address2: optionalStringField(body, "address2"),
+    country: optionalStringField(body, "country"),
     cityId: optionalStringField(body, "cityId"),
     areaId: optionalStringField(body, "areaId"),
     segmentType: optionalStringField(body, "segmentType"),
@@ -66,6 +69,7 @@ export const customerListSelect = {
   email: true,
   address: true,
   address2: true,
+  country: true,
   cityId: true,
   areaId: true,
   segmentType: true,
@@ -87,6 +91,8 @@ export const vendorListSelect = {
   cell: true,
   email: true,
   address: true,
+  address2: true,
+  country: true,
   cityId: true,
   areaId: true,
   segmentType: true,

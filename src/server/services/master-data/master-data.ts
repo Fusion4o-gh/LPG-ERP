@@ -1,7 +1,7 @@
 import { AccountType, AuditAction, NormalBalance, PermissionAction, RecordStatus, Prisma } from "@prisma/client";
 import { prisma } from "../../../lib/prisma.ts";
 import { writeAuditLog } from "../audit/audit-log.ts";
-import { createExpenseAccountOpeningBalance, loadExpenseOpeningBalances } from "../opening-balances/opening-balances.ts";
+import { createExpenseAccountOpeningBalance, loadExpenseOpeningBalances, updateExpenseAccountOpeningBalance } from "../opening-balances/opening-balances.ts";
 import { enforcePermission } from "../rbac/enforce.ts";
 
 type Tx = Prisma.TransactionClient;
@@ -18,6 +18,7 @@ type MasterInput = {
   cell?: string;
   address?: string;
   address2?: string;
+  country?: string;
   email?: string;
   contactPerson?: string;
   segmentType?: string;
@@ -34,17 +35,41 @@ type MasterInput = {
   status?: Status;
   cylinderWeightKg?: number;
   defaultSecurity?: number;
+  imageData?: string;
   categoryId?: string;
   brandId?: string;
   brandIds?: string[];
-  parentId?: string;
+  parentId?: string | null;
   accountType?: string;
   normalBalance?: string;
+  accountAddress?: string;
+  isSubLedger?: boolean;
+  debitLimit?: string | number;
+  creditLimit?: string | number;
+  accountOpeningBalance?: string | number;
+  accountOpeningBalanceType?: string;
+  isBalanceSheet?: boolean;
+  accountPhone?: string;
+  accountMobile?: string;
+  accountNtn?: string;
+  accountStrn?: string;
+  accountEmail?: string;
+  accountContactPerson?: string;
 };
 
 function optionalString(value?: string) {
   const trimmed = value?.trim();
   return trimmed ? trimmed : null;
+}
+
+function optionalImageData(value?: string) {
+  const image = optionalString(value);
+  if (!image) return null;
+  if (!/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(image)) {
+    throw new Error("imageData must be a PNG, JPEG, WEBP, or GIF image.");
+  }
+  if (image.length > 1_500_000) throw new Error("imageData must be smaller than 1 MB.");
+  return image;
 }
 
 function optionalInt(value?: string | number) {
@@ -161,6 +186,7 @@ export async function createCustomer(context: Context, input: MasterInput) {
         email: optionalString(input.email),
         address: optionalString(input.address),
         address2: optionalString(input.address2),
+        country: optionalString(input.country),
         cityId: optionalString(input.cityId),
         areaId: optionalString(input.areaId),
         segmentType: optionalString(input.segmentType),
@@ -194,6 +220,7 @@ export async function updateCustomer(context: Context, id: string, input: Master
         email: optionalString(input.email),
         address: optionalString(input.address),
         address2: optionalString(input.address2),
+        country: optionalString(input.country),
         cityId: optionalString(input.cityId),
         areaId: optionalString(input.areaId),
         segmentType: optionalString(input.segmentType),
@@ -238,6 +265,8 @@ export async function createVendor(context: Context, input: MasterInput) {
         cell: optionalString(input.cell),
         email: optionalString(input.email),
         address: optionalString(input.address),
+        address2: optionalString(input.address2),
+        country: optionalString(input.country),
         cityId: optionalString(input.cityId),
         areaId: optionalString(input.areaId),
         segmentType: optionalString(input.segmentType),
@@ -271,6 +300,8 @@ export async function updateVendor(context: Context, id: string, input: MasterIn
         cell: optionalString(input.cell),
         email: optionalString(input.email),
         address: optionalString(input.address),
+        address2: optionalString(input.address2),
+        country: optionalString(input.country),
         cityId: optionalString(input.cityId),
         areaId: optionalString(input.areaId),
         segmentType: optionalString(input.segmentType),
@@ -303,6 +334,7 @@ export async function createItem(context: Context, input: MasterInput) {
         brandId,
         cylinderWeightKg: input.cylinderWeightKg,
         defaultSecurity: input.defaultSecurity ?? 0,
+        imageData: optionalImageData(input.imageData),
         status: cleanStatus(input.status),
       },
     });
@@ -328,6 +360,7 @@ export async function updateItem(context: Context, id: string, input: MasterInpu
         brandId,
         cylinderWeightKg: input.cylinderWeightKg,
         defaultSecurity: input.defaultSecurity ?? 0,
+        imageData: input.imageData === undefined ? before.imageData : optionalImageData(input.imageData),
         status: cleanStatus(input.status),
       },
     });
@@ -392,6 +425,31 @@ function normalBalance(value?: string) {
   return value as NormalBalance;
 }
 
+function accountLimit(value: string | number | undefined, field: string) {
+  if (value === undefined || value === null || value === "") return null;
+  const amount = new Prisma.Decimal(value);
+  if (amount.isNegative()) throw new Error(`${field} cannot be negative.`);
+  return amount;
+}
+
+function chartAccountMetadata(input: MasterInput) {
+  return {
+    address: optionalString(input.accountAddress),
+    isSubLedger: input.isSubLedger === true,
+    debitLimit: accountLimit(input.debitLimit, "debitLimit"),
+    creditLimit: accountLimit(input.creditLimit, "creditLimit"),
+    openingBalance: accountLimit(input.accountOpeningBalance, "openingBalance"),
+    openingBalanceType: optionalString(input.accountOpeningBalanceType),
+    isBalanceSheet: input.isBalanceSheet === true,
+    phone: optionalString(input.accountPhone),
+    mobile: optionalString(input.accountMobile),
+    ntn: optionalString(input.accountNtn),
+    strn: optionalString(input.accountStrn),
+    email: optionalString(input.accountEmail),
+    contactPerson: optionalString(input.accountContactPerson),
+  };
+}
+
 export async function createChartAccount(context: Context, input: MasterInput) {
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "chart-of-accounts", PermissionAction.CREATE);
@@ -404,10 +462,11 @@ export async function createChartAccount(context: Context, input: MasterInput) {
         companyId: context.companyId,
         code: accountCode,
         name: name(input.name),
-        parentId: parent?.id,
+        parentId: parent?.id ?? null,
         level: parent ? parent.level + 1 : 1,
         accountType: accountType(input.accountType),
         normalBalance: normalBalance(input.normalBalance),
+        ...chartAccountMetadata(input),
         status: cleanStatus(input.status),
       },
     });
@@ -423,13 +482,17 @@ export async function updateChartAccount(context: Context, id: string, input: Ma
     const accountCode = code(input.code);
     const duplicate = await tx.chartAccount.findFirst({ where: { companyId: context.companyId, code: accountCode, NOT: { id } }, select: { id: true } });
     if (duplicate) throw new Error("code already exists.");
+    const parent = input.parentId ? await tx.chartAccount.findFirst({ where: { id: input.parentId, companyId: context.companyId } }) : null;
     const account = await tx.chartAccount.update({
       where: { id },
       data: {
         code: accountCode,
         name: name(input.name),
+        parentId: parent?.id ?? null,
+        level: parent ? parent.level + 1 : 1,
         accountType: accountType(input.accountType),
         normalBalance: normalBalance(input.normalBalance),
+        ...chartAccountMetadata(input),
         status: cleanStatus(input.status),
       },
     });
@@ -587,7 +650,7 @@ export async function updateCategory(context: Context, id: string, input: Master
   });
 }
 
-async function findExpenseParent(tx: Tx, companyId: string, parentId?: string) {
+async function findExpenseParent(tx: Tx, companyId: string, parentId?: string | null) {
   if (parentId?.trim()) {
     const parent = await tx.chartAccount.findFirst({ where: { id: parentId, companyId, accountType: AccountType.EXPENSE } });
     if (!parent) throw new Error("parentId is invalid.");
@@ -671,6 +734,14 @@ export async function updateExpenseType(context: Context, id: string, input: Mas
       where: { id },
       data: { code: accountCode, name: accountName, parentId: parent.id, level: parent.level + 1, status: cleanStatus(input.status) },
     });
+    if (input.openingBalance !== undefined) {
+      await updateExpenseAccountOpeningBalance(tx, context, {
+        accountId: account.id,
+        amount: input.openingBalance,
+        balanceType: input.openingBalanceType,
+        transactionDate: input.transactionDate ?? new Date(),
+      });
+    }
     await writeAuditLog(tx, { companyId: context.companyId, userId: context.userId, action: AuditAction.UPDATE, entityType: "ExpenseType", entityId: id, before, after: account });
     return account;
   });

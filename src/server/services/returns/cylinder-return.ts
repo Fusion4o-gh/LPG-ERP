@@ -1,4 +1,4 @@
-import { CylinderState, PartyType, PermissionAction, Prisma, StockDirection, StockSourceType, VoucherType } from "@prisma/client";
+import { ApprovalStatus, AuditAction, CylinderState, PartyType, PermissionAction, Prisma, StockDirection, StockSourceType, VoucherType } from "@prisma/client";
 import { prisma } from "../../../lib/prisma.ts";
 import { ACCOUNT_CODES, getAccountIdByCode } from "../accounting/accounts.ts";
 import { capDiscount, postCustomerRefund } from "../accounting/settlement-vouchers.ts";
@@ -214,5 +214,70 @@ export async function cylinderReturn(input: CylinderReturnInput) {
       netReturnAmount,
       amountPaid,
     };
+  });
+}
+
+export async function requestValuedCylinderReturn(input: CylinderReturnInput) {
+  return prisma.$transaction(async (tx) => {
+    await enforcePermission(tx, input.userId, "cylinder-returns", PermissionAction.CREATE);
+    await assertWritableBusinessDate(tx, input);
+    const lines = normalizeLines(input);
+    const totalAmount = lines.reduce((sum, line) => sum.plus(line.amount), new Prisma.Decimal(0));
+    if (totalAmount.lte(0)) throw new Error("Approval is only required for valued cylinder returns.");
+    const customer = await tx.customer.findFirst({ where: { id: input.customerId, companyId: input.companyId }, select: { id: true } });
+    if (!customer) throw new Error("customerId is invalid.");
+    const itemIds = [...new Set(lines.map((line) => line.itemId))];
+    const itemCount = await tx.item.count({ where: { companyId: input.companyId, id: { in: itemIds } } });
+    if (itemCount !== itemIds.length) throw new Error("One or more return items are invalid.");
+    const payload = {
+      returnNo: input.returnNo,
+      customerId: input.customerId,
+      transactionDate: new Date(input.transactionDate).toISOString(),
+      remarks: input.remarks ?? null,
+      lines: lines.map((line) => ({ itemId: line.itemId, returnType: line.returnType, quantity: line.quantity, unitPrice: line.unitPrice.toString() })),
+      discount: input.discount ?? 0,
+      amountPaid: input.amountPaid ?? 0,
+      payMode: input.payMode ?? null,
+      bankId: input.bankId ?? null,
+      chequeNo: input.chequeNo ?? null,
+    };
+    const approval = await tx.cylinderReturnApproval.create({ data: { companyId: input.companyId, financialYearId: input.financialYearId, returnNo: input.returnNo, customerId: input.customerId, transactionDate: new Date(input.transactionDate), totalAmount, payload, requestedById: input.userId } });
+    await writeAuditLog(tx, { companyId: input.companyId, userId: input.userId, entityType: "CylinderReturnApproval", entityId: approval.id, after: approval });
+    return { approvalId: approval.id, returnNo: input.returnNo, status: approval.status, totalAmount };
+  });
+}
+
+export async function listValuedCylinderReturnApprovals(context: { companyId: string; financialYearId: string; userId: string }) {
+  return prisma.$transaction(async (tx) => {
+    await enforcePermission(tx, context.userId, "cylinder-returns", PermissionAction.VIEW);
+    const rows = await tx.cylinderReturnApproval.findMany({ where: { companyId: context.companyId, financialYearId: context.financialYearId }, orderBy: [{ status: "asc" }, { transactionDate: "desc" }], take: 300 });
+    const customers = await tx.customer.findMany({ where: { companyId: context.companyId, id: { in: rows.map((row) => row.customerId) } }, select: { id: true, name: true, code: true } });
+    const customerById = new Map(customers.map((customer) => [customer.id, customer]));
+    return rows.map((row) => ({ id: row.id, returnNo: row.returnNo, transactionDate: row.transactionDate.toISOString().slice(0, 10), customer: customerById.get(row.customerId) ? [customerById.get(row.customerId)?.code, customerById.get(row.customerId)?.name].filter(Boolean).join(" - ") : row.customerId, totalAmount: row.totalAmount.toString(), status: row.status }));
+  });
+}
+
+export async function approveValuedCylinderReturn(context: { companyId: string; financialYearId: string; userId: string }, id: string) {
+  const approval = await prisma.cylinderReturnApproval.findFirst({ where: { id, companyId: context.companyId, financialYearId: context.financialYearId } });
+  if (!approval) throw new Error("Valued cylinder return approval was not found.");
+  if (approval.status !== ApprovalStatus.PENDING) throw new Error("Only pending valued cylinder returns can be approved.");
+  const payload = approval.payload as Record<string, any>;
+  const result = await cylinderReturn({ ...payload, ...context, returnNo: approval.returnNo, transactionDate: String(payload.transactionDate), lines: payload.lines, discount: payload.discount, amountPaid: payload.amountPaid, payMode: payload.payMode ?? undefined, bankId: payload.bankId ?? undefined, chequeNo: payload.chequeNo ?? undefined } as CylinderReturnInput);
+  await prisma.$transaction(async (tx) => {
+    const row = await tx.cylinderReturnApproval.update({ where: { id }, data: { status: ApprovalStatus.APPROVED, approvedById: context.userId, approvedAt: new Date() } });
+    await writeAuditLog(tx, { companyId: context.companyId, userId: context.userId, action: AuditAction.UPDATE, entityType: "CylinderReturnApproval", entityId: id, before: approval, after: row });
+  });
+  return { ...result, approvalId: id, status: ApprovalStatus.APPROVED };
+}
+
+export async function rejectValuedCylinderReturn(context: { companyId: string; financialYearId: string; userId: string }, id: string) {
+  return prisma.$transaction(async (tx) => {
+    await enforcePermission(tx, context.userId, "cylinder-returns", PermissionAction.APPROVE);
+    const before = await tx.cylinderReturnApproval.findFirst({ where: { id, companyId: context.companyId, financialYearId: context.financialYearId } });
+    if (!before) throw new Error("Valued cylinder return approval was not found.");
+    if (before.status !== ApprovalStatus.PENDING) throw new Error("Only pending valued cylinder returns can be rejected.");
+    const row = await tx.cylinderReturnApproval.update({ where: { id }, data: { status: ApprovalStatus.DISAPPROVED, approvedById: context.userId, approvedAt: new Date() } });
+    await writeAuditLog(tx, { companyId: context.companyId, userId: context.userId, action: AuditAction.UPDATE, entityType: "CylinderReturnApproval", entityId: id, before, after: row });
+    return { approvalId: id, returnNo: row.returnNo, status: row.status };
   });
 }

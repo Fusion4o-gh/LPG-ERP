@@ -46,7 +46,7 @@ Acceptance checklist:
 - Add company logo upload/storage and use it on printable documents.
 - Add brand/category fields to the Item master UI; the schema already has `categoryId` and `brandId`.
 - Model or intentionally omit Vendor brand mapping. The legacy form has multiple brand fields, so the decision should be explicit.
-- Enforce Map Area restrictions in customer/vendor lookups and transaction/report filters.
+- Map Area restrictions are enforced in customer/vendor lookups, core party writes, and customer-facing operational reports; users without mappings remain unrestricted.
 - Add Expense Type opening balance support if this remains a legacy-required setup path.
 
 ### P2 - Shell, dashboard, and operator ergonomics
@@ -54,7 +54,7 @@ Acceptance checklist:
 - Make Bank Position rows drill into the relevant GL/account ledger.
 - Finish collapsible dashboard stock/sales panels and persist the operator's preference.
 - Surface stale-backup warning based on the latest backup timestamp.
-- Implement global search for vouchers, customers, vendors, items, and document numbers.
+- Global search now covers vouchers, customers, vendors, items, bulk products, and supported operational document numbers; party results honor Map Area restrictions.
 - Add voucher history/list navigation in the sidebar.
 - Add next voucher-number previews on standalone cash/bank payment and receipt forms.
 - Complete Urdu UI/print support only if it is required for production use; otherwise document it as a deliberate later phase.
@@ -69,16 +69,18 @@ Acceptance checklist:
 ### P4 - Accounting and operations depth
 
 - Replace flat chart-of-accounts management with a tree UI that exposes hierarchy, group type, and account metadata.
-- Add day-close reconciliation so closing a day proves cash, bank, stock, sales, purchases, and vouchers first.
-- Add database restore and scheduled backup controls around the existing manual backup flow.
+- Day-close reconciliation now previews posted vouchers, stock movement totals, cash movement, and bank movement, and blocks close when posted vouchers are unbalanced. Historical close list and approval queue remain open.
+- Guarded database restore and persisted daily/weekly scheduled backups are now available. The deployment scheduler must invoke the documented due-run endpoint or runner script.
+- Legacy migration safety gate is available at `scripts/import-legacy-backup.mjs` and `scripts/verify-legacy-migration.mjs`. It is intentionally read-only until a real reference MySQL dump is inspected and its table/column meanings are reviewed.
 - Add reversal list/status management so adjusted transactions are discoverable, not only posted.
 
 ## Concrete next sprint
 
-1. Build a P0 UAT/regression script from `docs/uat-legacy-parity-checklist.md` and seed enough sample data to exercise cash, bank, credit, discount, gas return, filled/empty cylinder, and partial-payment scenarios.
-2. Add focused automated tests around settlement voucher creation and stock ledger side effects for Sale LPG, Purchase Filled, Empty Sale, Cylinder Return, Complete Day Sale, and Security Receipt.
-3. Fix any verification failures before starting new UI breadth.
-4. Then implement the P1 gaps in this order: item brand/category UI, company settings behavior wiring, map-area lookup enforcement, logo upload, expense type opening balances, and vendor brand mapping decision.
+1. Obtain and inspect the real reference MySQL dump using `docs/legacy-migration.md`; do not use the HTML backup-page download.
+2. Build a P0 UAT/regression script from `docs/uat-legacy-parity-checklist.md` and seed enough sample data to exercise cash, bank, credit, discount, gas return, filled/empty cylinder, and partial-payment scenarios.
+3. Add focused automated tests around settlement voucher creation and stock ledger side effects for Sale LPG, Purchase Filled, Empty Sale, Cylinder Return, Complete Day Sale, and Security Receipt.
+4. Fix any verification failures before starting new UI breadth.
+5. Then implement the P1 gaps in this order: item brand/category UI, company settings behavior wiring, map-area lookup enforcement, logo upload, expense type opening balances, and vendor brand mapping decision.
 
 ## Notes for the next developer
 

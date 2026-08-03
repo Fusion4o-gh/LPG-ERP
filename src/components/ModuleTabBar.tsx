@@ -43,7 +43,7 @@ function TabRow({
       : "whitespace-nowrap rounded px-2.5 py-1 text-[12px] font-medium";
 
   return (
-    <div ref={scrollRef} className="flex gap-0.5 overflow-x-auto pb-0.5 [scrollbar-width:thin]">
+    <div ref={scrollRef} className="flex gap-0.5 overflow-x-auto overscroll-x-contain pb-0.5 [scrollbar-width:thin]">
       {tabs.map((tab) => {
         const isActive = pathname === tab.href || pathname.startsWith(`${tab.href}/`);
         return (
@@ -86,7 +86,7 @@ function GroupTabs({
 
   return (
     <div className="space-y-1.5">
-      <div className="sticky top-0 z-[1] flex gap-0.5 overflow-x-auto bg-[var(--surface-muted)] pb-0.5 [scrollbar-width:thin]">
+      <div className="sticky top-0 z-[1] flex gap-0.5 overflow-x-auto overscroll-x-contain bg-[var(--surface-muted)] pb-0.5 [scrollbar-width:thin]">
         {groups.map((group) => {
           const isActive = group.id === activeGroup?.id;
           const href = group.tabs[0]?.href ?? "#";

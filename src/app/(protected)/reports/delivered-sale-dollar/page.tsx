@@ -1,0 +1,3 @@
+"use client";
+import { ReportTableClient } from "../ReportTableClient";
+export default function DeliveredSaleDollarPage() { return <ReportTableClient title="Delivered Sale (Dollar)" description="Dollar sale deliveries recorded against sale contracts." endpoint="/api/reports/delivered-sale-dollar" dataKey="rows" columns={[{ key: "transactionDate", label: "Date" }, { key: "documentNo", label: "Document" }, { key: "txnType", label: "Type" }, { key: "usdAmount", label: "USD" }, { key: "exchangeRate", label: "Rate" }, { key: "pkrAmount", label: "PKR" }, { key: "exchangeGainLoss", label: "Gain/Loss" }]} />; }

@@ -1,0 +1,3 @@
+"use client";
+import { ReportTableClient } from "../ReportTableClient";
+export default function LicenseDetailPage() { return <ReportTableClient title="License Detail Report" description="Driver and transporter license details for fleet operations." endpoint="/api/reports/license-detail" dataKey="rows" columns={[{ key: "party", label: "License Party" }, { key: "cell", label: "Cell" }, { key: "cnic", label: "CNIC" }, { key: "licenseNo", label: "License No" }, { key: "licenseClass", label: "License Class" }, { key: "licenseIssued", label: "Issued" }, { key: "licenseExpiry", label: "Expiry" }, { key: "transporter", label: "Transporter" }, { key: "status", label: "Status" }, { key: "registeredDate", label: "Registered" }]} />; }

@@ -95,6 +95,168 @@ test("dashboard and navigation use LPG operational terminology", async () => {
   }
 });
 
+test("security receipt exposes the reference stock-issued preview", async () => {
+  const form = await file("src/components/SecurityReceiptForm.tsx");
+
+  assert.match(form, /\/api\/stock-availability\?itemId=/);
+  assert.match(form, /Stock Issued/);
+  assert.match(form, /Remarks/);
+  assert.match(form, /chequeDate/);
+  assert.match(form, /readOnly/);
+});
+
+test("filled purchase exposes the reference empty-stock preview", async () => {
+  const form = await file("src/components/PurchaseFilledCylinderForm.tsx");
+  assert.match(form, /cylinderState=EMPTY/);
+  assert.match(form, /Empty Stock/);
+  assert.match(form, /readOnly disabled/);
+});
+
+test("empty sale exposes the reference empty-stock preview", async () => {
+  const form = await file("src/components/EmptySaleForm.tsx");
+  assert.match(form, /cylinderState=EMPTY/);
+  assert.match(form, /Empty Stock/);
+  assert.match(form, /emptyStockByItem/);
+  assert.match(form, /readOnly disabled/);
+});
+
+test("Access Cylinders exposes both reference balance views", async () => {
+  const client = await file("src/app/(protected)/reports/customer-cylinder-balances/AccessCylindersReportClient.tsx");
+
+  assert.match(client, /LPG Access Cylinders \(Customers\)/);
+  assert.match(client, /LPG Access Cylinders \(Own Business\)/);
+  assert.match(client, /\/api\/reports\/customer-cylinder-balances/);
+  assert.match(client, /\/api\/reports\/stock-summary/);
+});
+
+test("cylinder conversion exposes state-specific stock previews", async () => {
+  const form = await file("src/components/CylinderConversionForm.tsx");
+  assert.match(form, /fromFilledStock/);
+  assert.match(form, /toEmptyStock/);
+  assert.match(form, /Filled Stock/);
+  assert.match(form, /Empty Stock/);
+  assert.match(form, /cylinderState=EMPTY/);
+  assert.match(form, /readOnly disabled/);
+});
+
+test("driver and license screens expose license metadata", async () => {
+  const page = await file("src/app/(protected)/configuration/drivers/page.tsx");
+  const report = await file("src/app/(protected)/reports/license-detail/page.tsx");
+  assert.match(page, /License Class/);
+  assert.match(page, /License Issued/);
+  assert.match(page, /License Expiry/);
+  assert.match(report, /licenseClass/);
+  assert.match(report, /licenseExpiry/);
+});
+
+test("self-service profile editing is exposed from the authenticated shell", async () => {
+  const page = await file("src/app/(protected)/configuration/profile/page.tsx");
+  const route = await file("src/app/api/auth/profile/route.ts");
+  const topbar = await file("src/components/Topbar.tsx");
+  assert.match(page, /Save Profile/);
+  assert.match(route, /UserProfile/);
+  assert.match(topbar, /\/configuration\/profile/);
+});
+
+test("bulk product navigation has a working master-data page", async () => {
+  const page = await file("src/app/(protected)/configuration/bulk-products/page.tsx");
+  const route = await file("src/app/api/configuration/bulk-products/route.ts");
+  const updateRoute = await file("src/app/api/configuration/bulk-products/[id]/route.ts");
+  assert.match(page, /Bulk Products/);
+  assert.match(page, /\/api\/configuration\/bulk-products/);
+  assert.match(route, /listBulkProducts/);
+  assert.match(updateRoute, /updateBulkProduct/);
+});
+
+test("global search exposes keyboard focus and accessible result behavior", async () => {
+  const search = await file("src/components/GlobalSearch.tsx");
+  assert.match(search, /metaKey \|\| event\.ctrlKey/);
+  assert.match(search, /event\.key === "Escape"/);
+  assert.match(search, /role="combobox"/);
+  assert.match(search, /No matching records/);
+  assert.match(search, /setOpen\(true\)/);
+});
+
+test("shared master-data forms initialize required option fields", async () => {
+  const manager = await file("src/components/MasterDataManager.tsx");
+  assert.match(manager, /field\.required && field\.options\?\.\[0\]/);
+  assert.match(manager, /field\.name === "status" \? "ACTIVE"/);
+});
+
+test("chart of accounts exposes captured reference metadata fields", async () => {
+  const page = await file("src/app/(protected)/accounting/chart-of-accounts/page.tsx");
+  const route = await file("src/app/api/chart-of-accounts/route.ts");
+  assert.match(page, /Debit Limit/);
+  assert.match(page, /Balance Sheet Account/);
+  assert.match(page, /Opening Type/);
+  assert.match(route, /isBalanceSheet/);
+  assert.match(route, /openingBalanceType/);
+});
+
+test("item coding exposes the reference Define Prices workflow", async () => {
+  const page = await file("src/app/(protected)/masters/items/page.tsx");
+  const manager = await file("src/components/ItemPriceManager.tsx");
+  const route = await file("src/app/api/items/[id]/price/route.ts");
+
+  assert.match(page, /Define Prices/);
+  assert.match(page, /\/masters\/items\/\[id\]\/prices/);
+  assert.match(manager, /Price History/);
+  assert.match(manager, /Price Per KG/);
+  assert.match(route, /export async function GET/);
+  assert.match(route, /validTo cannot be before validFrom/);
+});
+
+test("master-data tables expose reference search and pagination controls", async () => {
+  const table = await file("src/components/DataTable.tsx");
+  const manager = await file("src/components/MasterDataManager.tsx");
+
+  assert.match(table, /enableControls/);
+  assert.match(table, /Search:/);
+  assert.match(table, /Display/);
+  assert.match(table, /Previous/);
+  assert.match(table, /Next/);
+  assert.match(table, /\[10, 25, 50, 100\]/);
+  assert.match(manager, /enableControls/);
+});
+
+test("operator list screens opt into the shared reference list controls", async () => {
+  const listScreens = [
+    "src/components/VendorMasterManager.tsx",
+    "src/components/VoucherListPageClient.tsx",
+    "src/components/AuditLogViewer.tsx",
+    "src/app/(protected)/configuration/user-management/UserManagementClient.tsx",
+  ];
+  for (const screen of listScreens) assert.match(await file(screen), /enableControls/);
+});
+
+test("Sale B/W Date starts on the current working date like the reference", async () => {
+  const page = await file("src/app/(protected)/reports/sale-between-dates/page.tsx");
+
+  assert.match(page, /function today\(\)/);
+  assert.match(page, /from: date, to: date/);
+  assert.match(page, /Sale Detail Report/);
+  assert.match(page, /Sale Report/);
+});
+
+test("Stock Report exposes the reference category filter", async () => {
+  const page = await file("src/app/(protected)/reports/stock-summary/page.tsx");
+  const shared = await file("src/app/(protected)/reports/ReportTableClient.tsx");
+  assert.match(page, /showCategoryFilter/);
+  assert.match(shared, /showCategoryFilter/);
+  assert.match(shared, /All Categories/);
+});
+
+test("Chart Of Account Report exposes the reference level filter", async () => {
+  const page = await file("src/app/(protected)/reports/chart-of-account/page.tsx");
+  const shared = await file("src/app/(protected)/reports/ReportTableClient.tsx");
+  assert.match(page, /showAccountLevelFilter/);
+  assert.match(page, /showDateFilter=\{false\}/);
+  assert.match(shared, /All Levels/);
+  assert.match(shared, /Level A/);
+  assert.match(shared, /Level D/);
+  assert.match(shared, /showDateFilter \|\|/);
+});
+
 test("Fusion4o branding assets and shell copy are present", async () => {
   const rootLayout = await file("src/app/layout.tsx");
   const loginPage = await file("src/app/(auth)/login/page.tsx");
@@ -162,6 +324,8 @@ test("report pages include shared print action and print metadata", async () => 
     "src/app/(protected)/reports/trial-balance/page.tsx",
     "src/app/(protected)/reports/profit-loss/page.tsx",
     "src/app/(protected)/reports/balance-sheet/page.tsx",
+    "src/app/(protected)/reports/group-summary/page.tsx",
+    "src/app/(protected)/reports/stock-by-location/page.tsx",
   ];
 
   assert.match(reportClient, /window\.print\(\)/);
@@ -181,6 +345,13 @@ test("report pages include shared print action and print metadata", async () => 
       assert.match(page, /ProfitLossReportClient/);
     } else if (route.endsWith("customer-cylinder-balances/page.tsx")) {
       assert.match(page, /AccessCylindersReportClient/);
+    } else if (route.endsWith("group-summary/page.tsx")) {
+      assert.match(page, /window\.print\(\)/);
+      assert.match(page, /format\?\: "csv"/);
+    } else if (route.endsWith("stock-by-location/page.tsx")) {
+      const stockByLocation = await file("src/components/StockByLocationTable.tsx");
+      assert.match(stockByLocation, /window\.print\(\)/);
+      assert.match(stockByLocation, /reportUrl\("csv"\)/);
     } else {
       assert.match(page, /ReportTableClient/);
     }
@@ -208,4 +379,26 @@ test("print work does not modify report calculation services", async () => {
   const financialReports = await file("src/server/services/reports/financial-ledgers.ts");
 
   assert.doesNotMatch(operationalReports + financialReports, /window\.print|data-report-print|data-print-hidden|@media print/);
+});
+
+test("accounting reports expose reconciliation summaries", async () => {
+  const reportClient = await file("src/app/(protected)/reports/ReportTableClient.tsx");
+  const trialBalance = await file("src/app/(protected)/reports/trial-balance/page.tsx");
+  const balanceSheet = await file("src/app/(protected)/reports/balance-sheet/page.tsx");
+
+  assert.match(reportClient, /summaryFields/);
+  assert.match(reportClient, /summaryFields\.map/);
+  assert.match(reportClient, /print:break-inside-avoid/);
+  assert.match(trialBalance, /Total Debit/);
+  assert.match(trialBalance, /isBalanced/);
+  assert.match(balanceSheet, /Total Assets/);
+  assert.match(balanceSheet, /balanceDifference/);
+});
+
+test("reversal deep links prefill the selected kind and document", async () => {
+  const panel = await file("src/components/ReversalPanel.tsx");
+  assert.match(panel, /searchParams\.get\("documentNo"\)/);
+  assert.match(panel, /searchParams\.get\("kind"\)/);
+  assert.match(panel, /todayDateInputValue\(\)/);
+  assert.doesNotMatch(panel, /new Date\(\)\.toISOString\(\)\.slice\(0, 10\)/);
 });

@@ -10,6 +10,7 @@
     "start": "next start",
     "test:prepare": "node scripts/prepare-test-db.mjs",
     "test": "node scripts/prepare-test-db.mjs && node --import ./tests/helpers/test-env.mjs --test tests/*.test.mjs",
+    "smoke:local": "node scripts/smoke-local-routes.mjs",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "node prisma/seed.js"

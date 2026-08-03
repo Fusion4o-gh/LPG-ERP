@@ -14,6 +14,12 @@ export default function BalanceSheetReportPage() {
       endpoint="/api/reports/balance-sheet"
       dataKey="rows"
       showAsOfFilter
+      summaryFields={[
+        { key: "totalAssets", label: "Total Assets", format: (value) => money(value) },
+        { key: "totalLiabilities", label: "Total Liabilities", format: (value) => money(value) },
+        { key: "totalEquity", label: "Total Equity", format: (value) => money(value) },
+        { key: "balanceDifference", label: "Difference", format: (value) => money(value) },
+      ]}
       columns={[
         { key: "accountType", label: "Category" },
         { key: "accountCode", label: "Account Code" },

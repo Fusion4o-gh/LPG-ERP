@@ -1,0 +1,3 @@
+"use client";
+import { ReportTableClient } from "../ReportTableClient";
+export default function MultipleLedgerPage() { return <ReportTableClient title="Multiple Ledger" description="Ledger movements for up to five selected chart accounts." endpoint="/api/reports/multiple-ledger" dataKey="rows" showAccountSlotsFilter columns={[{ key: "accountCode", label: "Account" }, { key: "transactionDate", label: "Date", render: (row) => String(row.transactionDate ?? "").slice(0, 10) }, { key: "voucherNo", label: "Voucher" }, { key: "debit", label: "Debit" }, { key: "credit", label: "Credit" }, { key: "runningBalance", label: "Balance" }]} />; }

@@ -1,0 +1,3 @@
+"use client";
+import { ReportTableClient } from "../ReportTableClient";
+export default function RupeesDollarLedgerPage() { return <ReportTableClient title="RS / Dollar Ledger" description="Rupee and dollar-account voucher movements with opening and running balance." endpoint="/api/reports/rupees-dollar-ledger" dataKey="rows" showAccountFilter accountFilterLabel="Select Account" columns={[{ key: "transactionDate", label: "Date", render: (row) => String(row.transactionDate ?? "").slice(0, 10) }, { key: "voucherNo", label: "Voucher" }, { key: "description", label: "Narration" }, { key: "debit", label: "Debit" }, { key: "credit", label: "Credit" }, { key: "runningBalance", label: "Balance" }]} />; }

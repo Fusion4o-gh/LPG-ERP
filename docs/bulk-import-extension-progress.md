@@ -41,9 +41,8 @@ of the existing cylinder-distribution ERP. Started 2026-06-12.
 - Document prefixes added in `accounting/document-numbers.ts` (IMC, LOAD, PUC, SLC, LP,
   DSL, PDC, FS, PBS, PT, PRC, LG, DP, DSALE, OPV).
 - Navigation (`src/lib/navigation/modules.ts`): "Fleet & Plants" master group live.
-  Import / Plant / Dollar modules + import/dollar report groups are DEFINED but gated
-  out of `NAV_MODULES` (exported as `PENDING_NAV`) until their pages exist — re-attach
-  is a one-line change per module. Sidebar icons/themes added for import/plant/dollar.
+  Import / Plant / Dollar tab definitions remain centralized in `PENDING_NAV`; the
+  Import module is now exposed because its first contract workflow exists.
 
 ## Phase 2 — Master data ⏳ IN PROGRESS
 DONE (service + API + page + RBAC + audit, smoke-tested on Neon):
@@ -62,12 +61,90 @@ REMAINING:
   Opening Voucher should post the GL opening balances (cash/bank/customer/vendor/asset/
   liability + bulk stock value) as a balanced `OPENING` voucher.
 
-## Phases 3–7 — NOT STARTED
+## Phases 3–7 — IN PROGRESS
 - 3: Import contracts (Taftan/Ship) + Loading/Shipments + Purchase/Sale contracts.
+  **Started:** Import Contract CRUD is live in the local solution:
+  `src/server/services/import/import-contracts.ts`, API routes under
+  `src/app/api/import/import-contracts/`, and the protected page under
+  `src/app/(protected)/import/import-contracts/`. It validates vendor and bulk
+  product references, generates IMC numbers, derives USD/PKR totals, enforces
+  closed-day/RBAC/audit rules, and intentionally does not post stock until loading.
+  Regression coverage is in `tests/import-contracts.test.mjs`.
+  **Loading/Shipment Receiving added:** `src/server/services/import/loadings.ts`,
+  API routes under `src/app/api/import/loadings/`, and the protected Loading and
+  Shipments pages now create `LOAD` documents, post in-transit ledger movements,
+  support cumulative partial receipts, and move received quantities into stock.
+  Coverage is in `tests/loadings.test.mjs`.
+  **Purchase Contracts added:** local purchase commitments now have CRUD APIs and
+  a protected master-data screen with generated `PUC` numbers, vendor/product
+  validation, derived PKR amounts, closed-day protection, RBAC, and audit coverage
+  in `tests/purchase-contracts.test.mjs`.
+  **Local Purchase added:** local receipts now generate `LP` documents, post
+  bulk stock IN, create a balanced bulk-stock/vendor-payable voucher, update
+  contract delivered quantity/status, and reject over-delivery. Coverage is in
+  `tests/local-purchases.test.mjs`.
+  **Sale Contracts added:** bulk sale commitments now have CRUD APIs and a
+  protected screen with generated `SLC` numbers, customer/product validation,
+  amount calculation, status tracking, RBAC, date protection, and audit coverage
+  in `tests/sale-contracts.test.mjs`.
+  **Delivered Sale added:** deliveries now generate `DSL` documents, enforce
+  available bulk stock, post stock OUT and balanced customer-receivable/sales
+  vouchers, update contract delivery status, and expose a protected UI screen.
+  Coverage is in `tests/delivered-sales.test.mjs`.
 - 4: Local purchase, delivered sale (with/without contract), plant decanting, filling
   sale, plant bulk sale, plant transfer, partial receiving, dollar purchase/sale.
+  **Plant Transfer added:** `PT` documents now validate plant/location ownership,
+  post paired bulk stock OUT/IN ledger entries, enforce stock availability and
+  date/RBAC rules, and expose a protected screen. Coverage is in
+  `tests/plant-transfers.test.mjs`.
+  **Partial Receiving added:** header/event APIs now generate `PRC` documents,
+  accumulate receipt events, enforce remaining quantity, post each receipt to
+  plant bulk stock, and transition `IN_TRANSIT` → `ARRIVED` → `RECEIVED`.
+  Coverage is in `tests/partial-receiving.test.mjs`.
+  **Plant Decanting added:** a dedicated `PlantDecanting` model and migration
+  now represent source/in-transit-to-plant-tank movement with `PDC` documents,
+  paired DECANTING ledger entries, and plant/vehicle traceability. Coverage is in
+  `tests/plant-decanting.test.mjs`.
+  **Plant Bulk/Filling Sales added:** PlantSale `BULK` and `FILLING` flows now
+  generate `PBS`/`FS` documents, validate plant-owned locations, post bulk stock
+  OUT, create balanced customer receivable/sales vouchers, and expose protected
+  UI screens. Coverage is in `tests/plant-sales.test.mjs`.
 - 5: Dollar ledger, exchange gain/loss, voucher print, P&L posting for loss/gain.
-- 6: Import/contract/dollar/in-transit reports, contract summaries, dashboard widgets.
+  **Dollar Purchase/Sale added:** shared dollar transaction APIs now derive PKR
+  from USD and exchange rate, generate `DP`/`DSALE` documents, validate parties,
+  post stock IN/OUT and balanced vouchers, and expose the Dollar Transactions UI.
+  Coverage is in `tests/dollar-transactions.test.mjs`.
+  **Dollar Settlements added:** `DPAY`/`DREC` Payment and Receipt workflows now
+  settle vendor/customer balances against a counter account, calculate exchange
+  gain/loss from reference versus settlement rates, and post balanced vouchers.
+  Coverage is in `tests/dollar-settlements.test.mjs`.
+  **Dollar Ledger report added:** filtered JSON and CSV reporting now covers
+  Dollar purchases, sales, payments, receipts, exchange rates, and gain/loss.
+  Coverage is in `tests/dollar-reports.test.mjs`.
+  **Bulk reports added:** Bulk Stock Ledger and All Contract Summary now expose
+  movement balances, transit/source details, and combined import/purchase/sale
+  commitments. Coverage is in `tests/bulk-reports.test.mjs`.
+  **Import reports expanded:** Taftan Contract Summary, In-Transit Report, and
+  Loading Report now reconcile contract quantity, loaded quantity, arrived
+  quantity, remaining quantity, and shipment status.
+  **Dollar report variants added:** Delivered Sale (Dollar) and Plant Bulk Sale
+  (Dollar) now have separate filtered report routes and protected screens.
+-  **Opening Voucher added:** the configuration workflow now posts balanced `OPV`
+   accounting vouchers with account validation, date/RBAC guards, audit logging,
+   and a protected entry/list screen. Coverage is in
+   `tests/opening-vouchers.test.mjs`.
+-  **Printable documents expanded:** voucher-backed bulk, plant, dollar, settlement,
+   and opening-voucher rows now expose a shared protected print view with voucher
+   lines and bulk stock lines where applicable. Coverage is in
+   `tests/transaction-documents.test.mjs`.
+   The same API resolves non-voucher Loading, Plant Transfer, Plant Decanting, and
+   Partial Receiving documents from bulk-ledger sources, preserving paired movement
+   lines while reporting physical quantity once.
+-  **Map Area enforcement expanded:** assigned-area restrictions now apply to customer/vendor
+   lookup queries (including `all=1`), core sale/purchase/payment party validation, import
+   contract workflows, and customer-facing operational report rows. Users without mappings
+   remain unrestricted for backward compatibility.
+- 6: Dashboard widgets and remaining report refinements.
 - 7: QA, smoke tests, role checks, final checklist.
 
 ## Reusable patterns to follow

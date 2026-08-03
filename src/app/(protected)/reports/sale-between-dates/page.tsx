@@ -6,9 +6,16 @@ import { DataTable } from "@/components/DataTable";
 import { PageHeader } from "@/components/PageHeader";
 import { apiGet } from "@/lib/api-client";
 
-type Mode = "invoice" | "item" | "type";
+type Mode = "invoice" | "item" | "type" | "amount" | "segment";
 type Lookup = { id: string; code?: string; name: string };
 type Column = { key: string; label: string };
+
+function today() {
+  const date = new Date();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
 
 const MODE_COLUMNS: Record<Mode, Column[]> = {
   invoice: [
@@ -36,14 +43,29 @@ const MODE_COLUMNS: Record<Mode, Column[]> = {
     { key: "totalQty", label: "Qty" },
     { key: "saleAmount", label: "Amount" },
   ],
+  amount: [
+    { key: "saleAmount", label: "Sale Amount" },
+    { key: "invoiceCount", label: "Invoices" },
+    { key: "totalQty", label: "Qty" },
+  ],
+  segment: [
+    { key: "segmentType", label: "Segment" },
+    { key: "invoiceCount", label: "Invoices" },
+    { key: "totalQty", label: "Qty" },
+    { key: "saleAmount", label: "Amount" },
+  ],
 };
 
 export default function SaleBetweenDatesReportPage() {
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
   const [items, setItems] = useState<Lookup[]>([]);
   const [customers, setCustomers] = useState<Lookup[]>([]);
+  const [brands, setBrands] = useState<Lookup[]>([]);
   const [mode, setMode] = useState<Mode>("invoice");
-  const [filters, setFilters] = useState({ from: "", to: "", itemId: "", customerId: "" });
+  const [filters, setFilters] = useState(() => {
+    const date = today();
+    return { from: date, to: date, itemId: "", customerId: "", saleType: "Both", segmentType: "All", brandId: "" };
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -72,10 +94,12 @@ export default function SaleBetweenDatesReportPage() {
     Promise.all([
       apiGet<{ items: Lookup[] }>("/api/items"),
       apiGet<{ customers: Lookup[] }>("/api/customers"),
+      apiGet<{ brands: Lookup[] }>("/api/configuration/brand-coding"),
     ])
-      .then(([itemData, customerData]) => {
+      .then(([itemData, customerData, brandData]) => {
         setItems(itemData.items);
         setCustomers(customerData.customers);
+        setBrands(brandData.brands);
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => load());
@@ -99,6 +123,12 @@ export default function SaleBetweenDatesReportPage() {
         description="Sales between dates — invoice-wise, item-wise, or grouped by sale type."
         actions={
           <>
+            <button type="button" onClick={() => setMode("item")} className={`btn-outline ${mode === "item" ? "ring-2 ring-gas-400" : ""}`}>
+              Sale Detail Report
+            </button>
+            <button type="button" onClick={() => setMode("invoice")} className={`btn-outline ${mode === "invoice" ? "ring-2 ring-gas-400" : ""}`}>
+              Sale Report
+            </button>
             <a href={reportUrl("csv")} download className="btn-outline">
               CSV
             </a>
@@ -111,11 +141,39 @@ export default function SaleBetweenDatesReportPage() {
 
       <form onSubmit={submit} className="card rounded-xl mb-4 p-4 grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 items-end">
         <div>
+          <label className="form-label mb-1">Sale Type</label>
+          <select value={filters.saleType} onChange={(e) => setFilters((f) => ({ ...f, saleType: e.target.value }))} className="form-input">
+            <option value="Both">Both</option>
+            <option value="Direct">Direct</option>
+            <option value="From Gasable">From Gasable</option>
+          </select>
+        </div>
+        <div>
+          <label className="form-label mb-1">Segment Type</label>
+          <select value={filters.segmentType} onChange={(e) => setFilters((f) => ({ ...f, segmentType: e.target.value }))} className="form-input">
+            <option value="All">All</option>
+            <option value="Home">Home</option>
+            <option value="Walk In">Walk In</option>
+            <option value="Auto">Auto</option>
+            <option value="Distributor">Distributor</option>
+            <option value="Restaurant">Restaurant</option>
+          </select>
+        </div>
+        <div>
+          <label className="form-label mb-1">Brand Name</label>
+          <select value={filters.brandId} onChange={(e) => setFilters((f) => ({ ...f, brandId: e.target.value }))} className="form-input">
+            <option value="">All Brands</option>
+            {brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}
+          </select>
+        </div>
+        <div>
           <label className="form-label mb-1">Report Mode</label>
           <select value={mode} onChange={(e) => setMode(e.target.value as Mode)} className="form-input">
             <option value="invoice">Invoice-wise</option>
             <option value="item">Item-wise</option>
             <option value="type">Type-wise</option>
+            <option value="amount">Amount-wise</option>
+            <option value="segment">Segment-wise</option>
           </select>
         </div>
         <div>

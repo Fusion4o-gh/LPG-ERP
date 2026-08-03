@@ -36,6 +36,8 @@ export async function POST(request: Request) {
     const context = await getRequestContext(request);
     const body = await readJson(request);
     const receiptNo = optionalStringField(body, "receiptNo") ?? (await nextDocumentNumber({ ...context, prefix: DOCUMENT_PREFIXES.securityReceipt }));
+    const chequeDate = optionalStringField(body, "chequeDate");
+    if (chequeDate && Number.isNaN(new Date(chequeDate).getTime())) throw new Error("chequeDate must be a valid date.");
     const result = await securityReceipt({
       ...context,
       receiptNo,
@@ -45,6 +47,8 @@ export async function POST(request: Request) {
       quantity: body.quantity === undefined ? undefined : positiveIntegerField(body, "quantity"),
       receiveMode: optionalStringField(body, "receiveMode"),
       chequeNo: optionalStringField(body, "chequeNo"),
+      chequeDate,
+      remarks: optionalStringField(body, "remarks"),
       amount: positiveNumberField(body, "amount"),
       transactionDate: dateField(body, "transactionDate"),
       allowClosedDayOverride: booleanField(body, "allowClosedDayOverride"),

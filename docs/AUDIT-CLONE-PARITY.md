@@ -7,9 +7,10 @@
 The local build is a **functional superset** of the reference system at the navigation and
 workflow level. Every one of the 55 reference menu screens has a local counterpart, and the
 key transaction forms carry the same fields and calculation flow. **The only blocking risk
-for go-live is the data migration path**: the reference backup has not actually been
-obtained yet (the file in Downloads is an HTML page, not a SQL dump), and the local system
-has no importer for it.
+for go-live is the data migration path**: the direct `Db_backup_2` download is an HTML page,
+while the recovered `mydb_(09-15-31_2026-07-07).zip` contains an encoded/encrypted payload.
+A read-only dump inspector and reconciliation contract now exist; write-enabled import
+remains gated on decrypting the artifact and reviewing the real table and column meanings.
 
 ---
 
@@ -65,7 +66,15 @@ Stock Report ✅ · Cash Book ✅ · Vendor Wise Receiving ✅ · General Ledger
 Customer Ledger ✅ · Sale Return Report ✅ · Purchase Return Report ✅ ·
 Customer Stock Ledger ✅ · Daily Activity Report (`/DAR`) ✅ ·
 Access Cylinders (`/Accesscylinders`) → `/reports/customer-cylinder-balances` ✅ ·
-Salewise Profit ✅ · Profit/Loss ✅ · Chart Of Account Report ✅ · Group Summary ✅
+Salewise Profit ✅ · Profit/Loss ✅ · Chart Of Account Report ✅ · Group Summary ✅ ·
+Unbalance Voucher ✅ (added from the live LPG Import Account Reports menu)
+Debtors Ageing ✅ and Creditors Ageing ✅ (added from the live LPG Import Account Reports menu)
+Closing Stock Summary ✅ (added from the live LPG Import Inventory Reports menu)
+Consumption Report ✅ and Quantitative Reconciliation ✅ (added from the live LPG Import Inventory Reports menu)
+CMR Difference ✅ and Import Cost Sheet ✅ (added from the live LPG Import Inventory Reports menu)
+Retail Sale Register ✅, Stock Transit Reconcile ✅, and Transport/Bowser Wise ✅ (added from the live LPG Import Inventory Reports menu)
+Stock Adjustment ✅, Plant Decant ✅, and Partial Sale Status ✅ (added from the live LPG Import Inventory Reports menu)
+Local Purchase Detail/Summary ✅ and Contract Purchase Sale ✅ (added from the live LPG Import Inventory Reports menu)
 
 ### Database Backup (1/1) ✅ (export side; see Gap G1/G2 for import)
 
@@ -78,8 +87,9 @@ implements all 7 KPIs and the Bank Position table.
 Bank Book, Stock by Location, Trial Balance, Balance Sheet, Vendor Ledger report,
 Voucher List, Warehouse Transfer, Physical Count, Reversals, Audit Log, RBAC roles,
 Fleet/Plants/Transporters/Vehicles/Drivers, Stock Locations, Bulk Products & bulk opening,
-Vendor Opening Balance, Appearance, Change Password, plus the not-yet-wired
-Import/Plant/Dollar modules (`PENDING_NAV`).
+Vendor Opening Balance, Appearance, Change Password, plus the remaining reference-only
+menu variants retained in `PENDING_NAV`; Plant Delivered Sale and Dollar Purchase/Sale
+are now wired into the visible navigation.
 
 ---
 
@@ -89,7 +99,7 @@ Import/Plant/Dollar modules (`PENDING_NAV`).
 |---|---|---|
 | Sale LPG (single) | customer, date, saletype, remarks, 11.8kg price, item/qty/price/gst/security, empty return, filled stock, gas return (qty/rate/total), discount, security amt, pay_mode, bank, cheque no/date | `SaleLpgForm.tsx` (incl. `11.8` auto-pricing) ✅ |
 | Complete Day Sale | customer, date, item[]/qty[]/return[] rows, total, pay_mode, bank, cheque | `BatchSaleForm.tsx` + `/api/sales/lpg/batch` ✅ |
-| Purchase Filled Cyl. | vendor, date, item/type/qty/unitcost/gst, empty return/stock, discount, net payable, **split bank+cash payment** (enter_amount_bank / enter_amount_cash with running balances) | `PurchaseFilledCylinderForm.tsx` + `SettlementPanel.tsx` (discount ✅) — **verify split-payment parity (G3)** |
+| Purchase Filled Cyl. | vendor, date, item/type/qty/unitcost/gst, empty return/stock, discount, net payable, **split bank+cash payment** (enter_amount_bank / enter_amount_cash with running balances) | `PurchaseFilledCylinderForm.tsx` + `SettlementPanel.tsx` (discount and split bank+cash settlement ✅) |
 | Cylinder Return | customer, date, item/type/qty/new_stock/gas amt/security, pay_mode/bank/cheque | `CylinderReturnForm.tsx` ✅ |
 | Cash Payment / Receipt | date, multi-line: account, particulars, amount | `MultiLinePaymentForm.tsx` ✅ |
 | Journal Voucher | date, multi-line: account, particulars, debit, credit | `JournalVoucherPage.tsx` ✅ |
@@ -98,27 +108,31 @@ Import/Plant/Dollar modules (`PENDING_NAV`).
 | Cylinder Conversion | date, from_item/from_stock/from_qty → to_item/to_stock/to_qty rows | `CylinderConversionForm.tsx` ✅ |
 | Day Closing | shows "Last Posted Date", single date input to post | `DayClosingPanel.tsx` + reopen API ✅ |
 | Item Coding | category, brand, item name, sale price, status, image | `/masters/items` + `/api/items` ✅ |
-| Customer Coding | name, email, contact person, address 1/2, country/city/area, cell, segment, phone, reg date/no, VAT, opening balance + Dr/Cr type, credit days, status | `/masters/customers` + `/api/customers` — **verify all fields incl. segment/regno/vatno/creditdays (G4)** |
+| Customer Coding | name, email, contact person, address 1/2, country/city/area, cell, segment, phone, reg date/no, VAT, opening balance + Dr/Cr type, credit days, status | `/masters/customers` + `/api/customers` — field-level coverage complete, including country, segment, registration, tax, credit days, and both addresses ✅ |
 
 ---
 
 ## 3. Gaps and risks (the actual plan)
 
-### G1 — BLOCKER: The real reference backup has not been captured
-`C:\Users\Lenovo\Downloads\Db_backup` (49 KB) is the **HTML of the backup page**, not a
-database dump. The real backup on the reference site is produced by the form at
-`/Db_backup` (POST with `from_date`, "BackUp" button) which returns the actual MySQL dump.
+### G1 — BLOCKER: The reference backup is encrypted
+`C:\Users\Lenovo\Downloads\Db_backup_2` (72 KB) is the **HTML of the backup page**, not a
+database dump. `C:\Users\Lenovo\Downloads\mydb_(09-15-31_2026-07-07).zip` contains a real
+backup-shaped `.sql` payload, but it is Base64-wrapped ciphertext rather than plain SQL.
+The inspector now rejects it explicitly and requires the reference application's decryption
+key before table mapping can begin.
 
-**Action (user):** log into the reference site, open Database Backup, press **BackUp**, and
-save the resulting `.sql` file. Verify it starts with `-- MySQL dump` / `CREATE TABLE`, not
-`<!DOCTYPE html>`. Keep a copy off-machine.
+**Action (user):** provide the reference application's backup/decryption key or a decrypted
+`.sql` export. Verify the result starts with `-- MySQL dump` / `CREATE TABLE`, not
+`<!DOCTYPE html>` or Base64 ciphertext. Keep a copy off-machine.
 
-### G2 — BLOCKER: No import path for the reference data
-The local backup module (`src/server/services/backup/database-backup.ts`) is
-**export-only** (`pg_dump` of the local Postgres). There is no ETL from the reference
-MySQL/CodeIgniter schema into the Prisma schema.
+### G2 — BLOCKER: Write-enabled import for the reference data is not yet approved
+The local backup module (`src/server/services/backup/database-backup.ts`) exports local
+Postgres backups. `scripts/import-legacy-backup.mjs` now inspects a MySQL dump and maps
+candidate business roles without writing to Postgres. A write-enabled ETL remains gated
+until the real dump is reviewed; guessing legacy columns would risk corrupting balances,
+stock, or account codes.
 
-**Action (build):** a one-time migration CLI (`scripts/import-legacy-backup.ts`):
+**Action (next build step after dump review): extend the read-only CLI into a one-time migration:**
 1. Parse the MySQL dump (or load into a scratch MySQL/MariaDB and read via connector).
 2. Map legacy tables → Prisma models:
    - customers → `Customer` (+ opening balances → `CustomerCylinderBalance`, opening JVs)
@@ -134,15 +148,16 @@ MySQL/CodeIgniter schema into the Prisma schema.
    - users → `User` (fresh passwords; legacy hashes are CodeIgniter-style)
 3. Run inside one transaction per entity group; log rejected rows to a CSV.
 
-### G3 — Verify split bank+cash settlement on Purchase Filled Cylinder
-Reference allows paying one purchase partly from bank and partly from cash in the same
-entry (with live balance display). Confirm `SettlementPanel.tsx` supports both lines at
-once; if not, add it.
+### G3 — Split bank+cash settlement on Purchase Filled Cylinder ✅
+`SettlementPanel.tsx` renders bank and cash amount inputs together for payment variants,
+calculates total paid, and shows live bank/cash balances. The purchase workflow sends
+both amounts through the existing settlement contract.
 
-### G4 — Field-by-field master-form diff
-Confirm customer form carries: segment, reg no, VAT no, credit days, address2,
-contact person, country. Same exercise for vendor and item (item image upload exists in
-reference). Add any missing columns to Prisma + forms.
+### G4 — Field-by-field master-form diff ✅ for verified data fields
+Customer and vendor forms now carry the verified reference fields: segment, registration,
+tax/VAT number, credit days, address 1/2, contact person, city/area, and country. Item
+category, brand, weight, security, status, pricing-related fields, and offline-safe image
+selection/preview are covered.
 
 ### G5 — Reconciliation gate before go-live (proves "no risk")
 After import, auto-compare against the reference site's own reports (same dates):
@@ -152,7 +167,8 @@ After import, auto-compare against the reference site's own reports (same dates)
 4. **Access Cylinders** (customer cylinder balances) matches.
 5. **Cash Book + Bank balances** match the dashboard Banks Position table.
 6. **Payables / Receivables / Expense** KPI totals match the reference dashboard.
-Ship this as `scripts/verify-migration.ts` producing a pass/fail report.
+The current `scripts/verify-legacy-migration.mjs` provides the pass/fail metric contract;
+wire it to imported local reports after the ETL mapping is approved.
 
 ### G6 — Day-closing cutover procedure
 Reference "Last Posted Date" was 2023-03-29 with FY 2020-21 selected — the legacy data
@@ -163,6 +179,10 @@ value at cutover.
 ---
 
 ## 4. Execution order
+
+### Accounting report parity gate
+
+Transactions Listing, Multiple Ledger, Combine Ledger, and Executive Summary are implemented as permission-checked service/API/UI workflows. Transactions Listing now carries user, voucher type, date-to-date/voucher-to-voucher, and voucher-range controls; Multiple/Combine Ledger carry five A/C title slots. Their final parity gate is output comparison against the live system using the same financial year, dates, and posted-voucher sample.
 
 | Phase | Work | Depends on |
 |---|---|---|

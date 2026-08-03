@@ -1,0 +1,3 @@
+"use client";
+import { ReportTableClient } from "../ReportTableClient";
+export default function AllContractSummaryPage() { return <ReportTableClient title="All Contract Summary" description="Combined import, purchase, and sale contract commitments with delivered quantities and status." endpoint="/api/reports/all-contract-summary" dataKey="rows" columns={[{ key: "contractDate", label: "Date" }, { key: "contractNo", label: "Contract" }, { key: "contractType", label: "Type" }, { key: "quantity", label: "Quantity" }, { key: "deliveredQuantity", label: "Delivered" }, { key: "amount", label: "Amount" }, { key: "status", label: "Status" }]} />; }

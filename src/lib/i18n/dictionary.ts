@@ -153,6 +153,7 @@ export const UR: Record<string, string> = {
   Date: "تاریخ",
   Generated: "تیار شدہ",
   "Invoice Language": "انوائس زبان",
+  "Print Language": "پرنٹ کی زبان",
   Vendor: "وینڈر",
   Customer: "کسٹمر",
   Account: "اکاؤنٹ",

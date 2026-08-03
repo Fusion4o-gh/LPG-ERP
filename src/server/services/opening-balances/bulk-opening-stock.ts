@@ -3,8 +3,23 @@ import { prisma } from "../../../lib/prisma.ts";
 import { writeAuditLog } from "../audit/audit-log.ts";
 import { enforcePermission } from "../rbac/enforce.ts";
 import { createBulkStockLedgerEntry } from "../inventory/bulk-stock-ledger.ts";
+import { assertOpeningBalancesUnlocked } from "./opening-lock.ts";
 
 type Context = { companyId: string; financialYearId: string; userId: string };
+
+async function assertBulkOpeningWindowOpen(tx: Prisma.TransactionClient, context: Context, productId: string, locationId: string) {
+  const movement = await tx.bulkStockLedgerEntry.findFirst({
+    where: {
+      companyId: context.companyId,
+      financialYearId: context.financialYearId,
+      productId,
+      locationId,
+      sourceType: { not: BulkStockSourceType.OPENING_STOCK },
+    },
+    select: { id: true },
+  });
+  if (movement) throw new Error("Opening bulk stock can only be entered before live bulk movement exists for this financial year.");
+}
 
 type BulkOpeningInput = {
   productId?: string;
@@ -66,8 +81,10 @@ export async function listBulkOpeningStock(context: Context) {
 export async function createBulkOpeningStock(context: Context, input: BulkOpeningInput) {
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "bulk-opening-stock", PermissionAction.CREATE);
+    await assertOpeningBalancesUnlocked(tx, context);
     const productId = required(input.productId, "productId");
     const locationId = required(input.locationId, "locationId");
+    await assertBulkOpeningWindowOpen(tx, context, productId, locationId);
     const quantity = positiveDecimal(input.quantity, "quantity");
     const valuationRate = nonNegativeDecimal(input.valuationRate);
     const transactionDate = input.transactionDate ? new Date(input.transactionDate) : new Date();
@@ -114,6 +131,7 @@ export async function createBulkOpeningStock(context: Context, input: BulkOpenin
 export async function updateBulkOpeningStock(context: Context, id: string, input: BulkOpeningInput) {
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "bulk-opening-stock", PermissionAction.UPDATE);
+    await assertOpeningBalancesUnlocked(tx, context);
     const before = await tx.bulkOpeningStock.findFirstOrThrow({ where: { id, companyId: context.companyId } });
     if (before.locked) throw new Error("Opening stock is locked and cannot be edited.");
     const quantity = positiveDecimal(input.quantity, "quantity");

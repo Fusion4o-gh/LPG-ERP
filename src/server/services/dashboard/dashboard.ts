@@ -1,4 +1,4 @@
-import { AccountType, CylinderState, PermissionAction, StockDirection, type Prisma } from "@prisma/client";
+import { AccountType, CylinderState, PermissionAction, Prisma, StockDirection } from "@prisma/client";
 import { prisma } from "../../../lib/prisma.ts";
 import { listBackupFiles } from "../backup/database-backup.ts";
 import { enforcePermission } from "../rbac/enforce.ts";
@@ -18,6 +18,18 @@ function todayUtc(): Date {
 function monthStartUtc(): Date {
   const d = new Date();
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1));
+}
+
+function selectedMonthRangeUtc(month?: number, year?: number) {
+  const now = new Date();
+  const safeYear = Number.isInteger(year) && (year as number) >= 2000 && (year as number) <= 2100 ? year as number : now.getUTCFullYear();
+  const safeMonth = Number.isInteger(month) && (month as number) >= 1 && (month as number) <= 12 ? month as number : now.getUTCMonth() + 1;
+  return {
+    year: safeYear,
+    month: safeMonth,
+    start: new Date(Date.UTC(safeYear, safeMonth - 1, 1)),
+    end: new Date(Date.UTC(safeYear, safeMonth, 0)),
+  };
 }
 
 async function computeKpis(tx: Tx, context: Context, today: Date, monthStart: Date) {
@@ -113,7 +125,123 @@ async function computeCurrentStock(tx: Tx, context: Context) {
   return [...byItem.values()].sort((a, b) => a.itemCode.localeCompare(b.itemCode));
 }
 
-async function computeSaleStats(tx: Tx, context: Context, today: Date, monthStart: Date) {
+async function computeBulkStock(tx: Tx, context: Context) {
+  const rows = await tx.bulkStockLedgerEntry.findMany({
+    where: { companyId: context.companyId, financialYearId: context.financialYearId, inTransit: false },
+    orderBy: [{ transactionDate: "asc" }, { createdAt: "asc" }],
+    select: { productId: true, locationId: true, direction: true, quantity: true, unit: true, sourceType: true, sourceId: true, createdAt: true, transactionDate: true },
+  });
+  if (rows.length === 0) return [];
+
+  const sourceIds = (sourceType: string) => [...new Set(rows.filter((row) => row.sourceType === sourceType).map((row) => row.sourceId))];
+  const [products, locations, openings, localPurchases, loadings, receivingEvents, decantings, dollarTransactions, transfers, lossGains] = await Promise.all([
+    tx.bulkProduct.findMany({
+      where: { companyId: context.companyId, id: { in: [...new Set(rows.map((row) => row.productId))] } },
+      select: { id: true, code: true, name: true, unit: true },
+    }),
+    tx.stockLocation.findMany({
+      where: { companyId: context.companyId, id: { in: [...new Set(rows.map((row) => row.locationId))] } },
+      select: { id: true, code: true, name: true },
+    }),
+    tx.bulkOpeningStock.findMany({ where: { companyId: context.companyId, financialYearId: context.financialYearId, id: { in: [...new Set([...sourceIds("OPENING_STOCK"), ...sourceIds("ADJUSTMENT")])] } }, select: { id: true, valuationRate: true } }),
+    tx.localPurchase.findMany({ where: { companyId: context.companyId, financialYearId: context.financialYearId, id: { in: sourceIds("LOCAL_PURCHASE") } }, select: { id: true, rate: true } }),
+    tx.loading.findMany({ where: { companyId: context.companyId, id: { in: sourceIds("IMPORT_ARRIVAL") } }, select: { id: true, finalRate: true } }),
+    tx.partialReceivingEvent.findMany({ where: { id: { in: sourceIds("PARTIAL_RECEIVING") } }, select: { id: true, partialReceiving: { select: { finalRate: true } } } }),
+    tx.plantDecanting.findMany({ where: { companyId: context.companyId, financialYearId: context.financialYearId, id: { in: sourceIds("DECANTING") } }, select: { id: true, rate: true } }),
+    tx.dollarTransaction.findMany({ where: { companyId: context.companyId, financialYearId: context.financialYearId, id: { in: sourceIds("DOLLAR_SALE") } }, select: { id: true, txnType: true, pkrAmount: true, quantity: true } }),
+    tx.plantTransfer.findMany({ where: { companyId: context.companyId, financialYearId: context.financialYearId, id: { in: sourceIds("PLANT_TRANSFER") } }, select: { id: true } }),
+    tx.lossGain.findMany({ where: { companyId: context.companyId, financialYearId: context.financialYearId, id: { in: sourceIds("LOSS_GAIN") } }, select: { id: true, rate: true } }),
+  ]);
+  const productById = new Map(products.map((product) => [product.id, product]));
+  const locationById = new Map(locations.map((location) => [location.id, location]));
+  const openingRateById = new Map(openings.map((row) => [row.id, new Prisma.Decimal(row.valuationRate)]));
+  const localRateById = new Map(localPurchases.map((row) => [row.id, new Prisma.Decimal(row.rate)]));
+  const loadingRateById = new Map(loadings.map((row) => [row.id, new Prisma.Decimal(row.finalRate)]));
+  const receivingRateById = new Map(receivingEvents.map((row) => [row.id, new Prisma.Decimal(row.partialReceiving.finalRate)]));
+  const decantingRateById = new Map(decantings.map((row) => [row.id, new Prisma.Decimal(row.rate)]));
+  const dollarRateById = new Map(dollarTransactions.map((row) => [row.id, row.quantity && !new Prisma.Decimal(row.quantity).isZero() ? new Prisma.Decimal(row.pkrAmount).div(row.quantity) : null]));
+  const lossGainRateById = new Map(lossGains.map((row) => [row.id, new Prisma.Decimal(row.rate)]));
+  const transferRateById = new Map<string, Prisma.Decimal>();
+  const byKey = new Map<string, { id: string; productCode: string; productName: string; locationCode: string; locationName: string; quantity: Prisma.Decimal; value: Prisma.Decimal; valuationKnown: boolean; unit: string }>();
+
+  for (const row of rows) {
+    const product = productById.get(row.productId);
+    const location = locationById.get(row.locationId);
+    const key = `${row.productId}:${row.locationId}`;
+    const current = byKey.get(key) ?? {
+      id: key,
+      productCode: product?.code ?? "",
+      productName: product?.name ?? "",
+      locationCode: location?.code ?? "",
+      locationName: location?.name ?? "",
+      quantity: new Prisma.Decimal(0),
+      value: new Prisma.Decimal(0),
+      valuationKnown: false,
+      unit: product?.unit ?? row.unit,
+    };
+    const sign = row.direction === StockDirection.IN ? 1 : -1;
+    const quantity = new Prisma.Decimal(row.quantity);
+    const averageRate = current.quantity.isZero() ? null : current.value.div(current.quantity);
+    let rate: Prisma.Decimal | null = averageRate;
+    if (row.direction === StockDirection.IN) {
+      rate = row.sourceType === "OPENING_STOCK" || row.sourceType === "ADJUSTMENT" ? openingRateById.get(row.sourceId) ?? rate
+        : row.sourceType === "LOCAL_PURCHASE" ? localRateById.get(row.sourceId) ?? rate
+          : row.sourceType === "IMPORT_ARRIVAL" ? loadingRateById.get(row.sourceId) ?? rate
+            : row.sourceType === "PARTIAL_RECEIVING" ? receivingRateById.get(row.sourceId) ?? rate
+              : row.sourceType === "DECANTING" ? decantingRateById.get(row.sourceId) ?? rate
+                : row.sourceType === "DOLLAR_SALE" ? dollarRateById.get(row.sourceId) ?? rate
+                  : row.sourceType === "PLANT_TRANSFER" ? transferRateById.get(row.sourceId) ?? rate
+                    : row.sourceType === "LOSS_GAIN" ? lossGainRateById.get(row.sourceId) ?? rate
+                      : rate;
+    }
+    if (rate) {
+      current.valuationKnown = true;
+      current.value = current.value.plus(rate.mul(quantity).mul(sign));
+    }
+    current.quantity = current.quantity.plus(quantity.mul(sign));
+    if (row.direction === StockDirection.OUT && (row.sourceType === "PLANT_TRANSFER" || row.sourceType === "DECANTING")) {
+      transferRateById.set(row.sourceId, rate ?? new Prisma.Decimal(0));
+    }
+    byKey.set(key, current);
+  }
+
+  return [...byKey.values()]
+    .filter((row) => !row.quantity.isZero())
+    .map(({ value, valuationKnown, ...row }) => ({ ...row, quantity: row.quantity.toNumber(), amount: valuationKnown ? value.toNumber() : null }))
+    .sort((a, b) => `${a.productCode}:${a.locationCode}`.localeCompare(`${b.productCode}:${b.locationCode}`));
+}
+
+async function computeInTransit(tx: Tx, context: Context) {
+  const [loadings, partialReceivings] = await Promise.all([
+    tx.loading.findMany({
+      where: { companyId: context.companyId, financialYearId: context.financialYearId, shipmentStatus: "IN_TRANSIT" },
+      orderBy: { loadingDate: "asc" },
+      select: { id: true, loadingNo: true, quantityLoaded: true, unit: true, contract: { select: { contractNo: true } } },
+    }),
+    tx.partialReceiving.findMany({
+      where: { companyId: context.companyId, financialYearId: context.financialYearId, arrivalStatus: "IN_TRANSIT" },
+      orderBy: { transactionDate: "asc" },
+      select: { id: true, documentNo: true, remainingQuantity: true, unit: true },
+    }),
+  ]);
+
+  return {
+    booked: loadings.map((loading) => ({
+      id: loading.id,
+      label: `${loading.loadingNo} · ${loading.contract.contractNo}`,
+      quantity: n(loading.quantityLoaded),
+      unit: loading.unit,
+    })),
+    unbooked: partialReceivings.map((receiving) => ({
+      id: receiving.id,
+      label: receiving.documentNo,
+      quantity: n(receiving.remainingQuantity),
+      unit: receiving.unit,
+    })),
+  };
+}
+
+async function computeSaleStats(tx: Tx, context: Context, today: Date, monthStart: Date, selectedMonth: { start: Date; end: Date; year: number; month: number }) {
   const vBase = { companyId: context.companyId, financialYearId: context.financialYearId, isPosted: true };
   const revenueFilter = { companyId: context.companyId, accountType: AccountType.REVENUE };
   const [todayAgg, monthAgg] = await Promise.all([
@@ -123,27 +251,30 @@ async function computeSaleStats(tx: Tx, context: Context, today: Date, monthStar
       _count: { id: true },
     }),
     tx.accountingVoucherLine.aggregate({
-      where: { account: revenueFilter, voucher: { ...vBase, voucherDate: { gte: monthStart } } },
+      where: { account: revenueFilter, voucher: { ...vBase, voucherDate: { gte: selectedMonth.start, lte: selectedMonth.end } } },
       _sum: { credit: true },
       _count: { id: true },
     }),
   ]);
   return {
     today: { count: todayAgg._count.id, amount: n(todayAgg._sum.credit) },
-    month: { count: monthAgg._count.id, amount: n(monthAgg._sum.credit) },
+    month: { count: monthAgg._count.id, amount: n(monthAgg._sum.credit), year: selectedMonth.year, month: selectedMonth.month },
   };
 }
 
-export async function getDashboardData(context: Context) {
+export async function getDashboardData(context: Context, period?: { month?: number; year?: number }) {
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "reports", PermissionAction.VIEW);
     const today = todayUtc();
     const monthStart = monthStartUtc();
-    const [kpis, bankPosition, currentStock, saleStats, backups] = await Promise.all([
+    const selectedMonth = selectedMonthRangeUtc(period?.month, period?.year);
+    const [kpis, bankPosition, currentStock, bulkStock, inTransit, saleStats, backups] = await Promise.all([
       computeKpis(tx, context, today, monthStart),
       computeBankPosition(tx, context),
       computeCurrentStock(tx, context),
-      computeSaleStats(tx, context, today, monthStart),
+      computeBulkStock(tx, context),
+      computeInTransit(tx, context),
+      computeSaleStats(tx, context, today, monthStart, selectedMonth),
       Promise.resolve(listBackupFiles()),
     ]);
     const lastBackupAt = backups[0]?.createdAt ?? null;
@@ -156,6 +287,8 @@ export async function getDashboardData(context: Context) {
       kpis,
       bankPosition,
       currentStock,
+      bulkStock,
+      inTransit,
       saleStats,
       backup: {
         lastBackupAt,

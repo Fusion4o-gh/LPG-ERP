@@ -294,3 +294,19 @@ test("purchase other reversal without stock still creates compensating voucher a
   assert.equal(result.stockEntries.length, 0);
   await assertReversalAudit("PurchaseOtherReversal", receiptNo);
 });
+
+test("reversal history lists audited compensating reversals", async () => {
+  const { company, financialYear, user } = await fixture();
+  const context = { companyId: company.id, financialYearId: financialYear.id, userId: user.id };
+  const originalDocumentNo = doc("REV-HISTORY-ORIGINAL");
+  const reversalNo = doc("REV-HISTORY");
+  const voucherNo = doc("RV-VOUCHER");
+  await prisma.auditLog.create({ data: { companyId: company.id, userId: user.id, action: "CREATE", entityType: "CashPaymentReversal", entityId: originalDocumentNo, after: { originalDocumentNo, reversalNo, voucherNo, reason: "history test" } } });
+
+  const rows = await reversals.listReversals(context);
+  const row = rows.find((entry) => entry.reversalNo === reversalNo);
+  assert.ok(row);
+  assert.equal(row.originalDocumentNo, originalDocumentNo);
+  assert.equal(row.kind, "CashPayment");
+  assert.equal(row.voucherNo, voucherNo);
+});

@@ -1,0 +1,5 @@
+import { getRequestContext } from "../../../../server/api/request-context.ts";
+import { ok, serviceError } from "../../../../server/api/responses.ts";
+import { getImportContractSummary, getImportContractSummaryCsv } from "../../../../server/services/reports/bulk-reports.ts";
+function csvResponse(csv: string) { return new Response(csv, { headers: { "Content-Type": "text/csv; charset=utf-8", "Content-Disposition": 'attachment; filename="taftan-contract-summary.csv"' } }); }
+export async function GET(request: Request) { try { const context = await getRequestContext(request); return new URL(request.url).searchParams.get("format") === "csv" ? csvResponse(await getImportContractSummaryCsv(context, "TAFTAN")) : ok(await getImportContractSummary(context, "TAFTAN")); } catch (error) { return serviceError(error); } }

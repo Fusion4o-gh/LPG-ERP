@@ -42,4 +42,16 @@ function runPrisma(command) {
 await ensureDatabase();
 runPrisma("npx prisma migrate deploy");
 runPrisma("node prisma/seed.js");
+
+const testPrisma = new PrismaClient({ datasources: { db: { url: testUrl } } });
+await testPrisma.dayClosing.deleteMany();
+await testPrisma.company.update({
+  where: { id: "seed-company-lpg-management-system" },
+  data: {
+    workingDays: { monday: true, tuesday: true, wednesday: true, thursday: true, friday: true, saturday: true, sunday: true },
+    workStartTime: null,
+    workEndTime: null,
+  },
+});
+await testPrisma.$disconnect();
 console.log(`Test database ready: ${databaseName(testUrl)}`);

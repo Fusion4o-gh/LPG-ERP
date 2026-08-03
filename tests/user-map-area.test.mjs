@@ -6,6 +6,9 @@ import { doc } from "./helpers/lpg-fixtures.mjs";
 
 const prisma = new PrismaClient();
 const users = await import("../src/server/services/user-management/user-management.ts");
+const areaAccess = await import("../src/server/services/user-management/area-access.ts");
+const operationalReports = await import("../src/server/services/reports/operational-reports.ts");
+const { baseFixture } = await import("./helpers/lpg-fixtures.mjs");
 
 async function fixture() {
   const suffix = doc("ma").toLowerCase();
@@ -122,4 +125,44 @@ test("user management page exposes Map Area action", async () => {
   const client = await readFile(new URL("src/app/(protected)/configuration/user-management/UserManagementClient.tsx", root), "utf8");
   assert.match(client, /Map Area/);
   assert.match(client, /map-area/);
+});
+
+test("mapped users are restricted to assigned customer and vendor areas", async () => {
+  const base = await baseFixture(prisma);
+  const suffix = doc("area-access");
+  const city = await prisma.city.create({ data: { companyId: base.company.id, name: `Access City ${suffix}` } });
+  const allowedArea = await prisma.area.create({ data: { companyId: base.company.id, cityId: city.id, name: `Allowed ${suffix}` } });
+  const deniedArea = await prisma.area.create({ data: { companyId: base.company.id, cityId: city.id, name: `Denied ${suffix}` } });
+  const adminRole = await prisma.userRole.findFirstOrThrow({ where: { userId: base.user.id }, select: { roleId: true } });
+  const mappedUser = await prisma.user.create({ data: { companyId: base.company.id, financialYearId: base.financialYear.id, name: `Mapped ${suffix}`, loginId: `mapped-${suffix}`, passwordHash: "test" } });
+  await prisma.userRole.create({ data: { userId: mappedUser.id, roleId: adminRole.roleId } });
+  await prisma.userArea.create({ data: { userId: mappedUser.id, areaId: allowedArea.id } });
+  const customerAllowed = await prisma.customer.create({ data: { companyId: base.company.id, code: `CA-${suffix}`, name: "Allowed Customer", areaId: allowedArea.id, accountId: base.seedCustomer.accountId } });
+  const customerDenied = await prisma.customer.create({ data: { companyId: base.company.id, code: `CD-${suffix}`, name: "Denied Customer", areaId: deniedArea.id, accountId: base.seedCustomer.accountId } });
+  const vendorAllowed = await prisma.vendor.create({ data: { companyId: base.company.id, code: `VA-${suffix}`, name: "Allowed Vendor", areaId: allowedArea.id, accountId: base.seedVendor.accountId } });
+  const vendorDenied = await prisma.vendor.create({ data: { companyId: base.company.id, code: `VD-${suffix}`, name: "Denied Vendor", areaId: deniedArea.id, accountId: base.seedVendor.accountId } });
+  const tx = prisma;
+  const customerFilter = await areaAccess.customerAreaFilter(tx, mappedUser.id);
+  const vendorFilter = await areaAccess.vendorAreaFilter(tx, mappedUser.id);
+  const customers = await prisma.customer.findMany({ where: { companyId: base.company.id, ...(customerFilter ?? {}) }, select: { id: true } });
+  const vendors = await prisma.vendor.findMany({ where: { companyId: base.company.id, ...(vendorFilter ?? {}) }, select: { id: true } });
+  assert.ok(customers.some((row) => row.id === customerAllowed.id));
+  assert.equal(customers.some((row) => row.id === customerDenied.id), false);
+  assert.ok(vendors.some((row) => row.id === vendorAllowed.id));
+  assert.equal(vendors.some((row) => row.id === vendorDenied.id), false);
+  await assert.rejects(areaAccess.assertCustomerAreaAccess(tx, mappedUser.id, base.company.id, customerDenied.id), /not accessible/i);
+  await assert.rejects(areaAccess.assertVendorAreaAccess(tx, mappedUser.id, base.company.id, vendorDenied.id), /not accessible/i);
+
+  await prisma.customerCylinderBalance.createMany({
+    data: [
+      { customerId: customerAllowed.id, itemId: base.seedItem.id, emptyOwed: 2 },
+      { customerId: customerDenied.id, itemId: base.seedItem.id, emptyOwed: 7 },
+    ],
+  });
+  const reportRows = await operationalReports.getCustomerCylinderBalanceReport(
+    { companyId: base.company.id, financialYearId: base.financialYear.id, userId: mappedUser.id },
+    {},
+  );
+  assert.ok(reportRows.some((row) => row.customer.id === customerAllowed.id));
+  assert.equal(reportRows.some((row) => row.customer.id === customerDenied.id), false);
 });

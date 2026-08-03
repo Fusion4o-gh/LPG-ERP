@@ -1,0 +1,3 @@
+"use client";
+import { ReportTableClient } from "../ReportTableClient";
+export default function LocalPurchaseSummaryPage() { return <ReportTableClient title="Local Purchase Summary" description="Local purchase totals grouped by vendor and product." endpoint="/api/reports/local-purchase-summary" dataKey="rows" showBulkProductFilter showVendorFilter columns={[{ key: "vendor", label: "Vendor", render: (row) => (row.vendor as { name?: string })?.name ?? "" }, { key: "product", label: "Product", render: (row) => (row.product as { name?: string })?.name ?? "" }, { key: "quantity", label: "Quantity" }, { key: "amount", label: "Amount" }, { key: "transactions", label: "Transactions" }]} />; }

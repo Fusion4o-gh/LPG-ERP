@@ -18,6 +18,9 @@ type FleetInput = {
   cell?: string;
   cnic?: string;
   licenseNo?: string;
+  licenseClass?: string;
+  licenseIssued?: string;
+  licenseExpiry?: string;
   registrationNo?: string;
   bowserCapacity?: string | number;
   capacityUnit?: string;
@@ -57,6 +60,13 @@ function decimalOrNull(value?: string | number) {
   const amount = new Prisma.Decimal(value);
   if (amount.isNegative()) throw new Error("bowserCapacity cannot be negative.");
   return amount;
+}
+
+function dateOrNull(value?: string) {
+  if (!value?.trim()) return null;
+  const date = new Date(`${value.trim()}T00:00:00.000Z`);
+  if (Number.isNaN(date.getTime())) throw new Error("license date must be a valid date.");
+  return date;
 }
 
 async function ensureCode(tx: Tx, model: "transporter" | "plant" | "stockLocation" | "bulkProduct", companyId: string, code: string, id?: string) {
@@ -132,7 +142,7 @@ export async function listDrivers(context: Context, includeAll = false) {
   const rows = await prisma.driver.findMany({
     where: { companyId: context.companyId, status: includeAll ? undefined : RecordStatus.ACTIVE },
     orderBy: { name: "asc" },
-    select: { id: true, name: true, cell: true, cnic: true, licenseNo: true, transporterId: true, status: true, transporter: { select: { name: true } } },
+    select: { id: true, name: true, cell: true, cnic: true, licenseNo: true, licenseClass: true, licenseIssued: true, licenseExpiry: true, transporterId: true, status: true, transporter: { select: { name: true } } },
     take: 500,
   });
   return rows.map((r) => ({ ...r, transporterName: r.transporter?.name ?? "" }));
@@ -148,6 +158,9 @@ export async function createDriver(context: Context, input: FleetInput) {
         cell: str(input.cell),
         cnic: str(input.cnic),
         licenseNo: str(input.licenseNo),
+        licenseClass: str(input.licenseClass),
+        licenseIssued: dateOrNull(input.licenseIssued),
+        licenseExpiry: dateOrNull(input.licenseExpiry),
         transporterId: str(input.transporterId),
         status: status(input.status),
       },
@@ -168,6 +181,9 @@ export async function updateDriver(context: Context, id: string, input: FleetInp
         cell: str(input.cell),
         cnic: str(input.cnic),
         licenseNo: str(input.licenseNo),
+        licenseClass: str(input.licenseClass),
+        licenseIssued: dateOrNull(input.licenseIssued),
+        licenseExpiry: dateOrNull(input.licenseExpiry),
         transporterId: str(input.transporterId),
         status: status(input.status),
       },

@@ -1,7 +1,7 @@
 export type FormFieldDefinition = {
   name: string;
   label: string;
-  type: "text" | "number" | "date" | "select" | "checkbox";
+  type: "text" | "number" | "date" | "select" | "checkbox" | "file";
   required?: boolean;
   min?: number;
 };

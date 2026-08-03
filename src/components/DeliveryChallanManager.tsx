@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { apiDelete, apiGet, apiPost } from "@/lib/api-client";
-import { useCompanyFormSettings, usePostSaveNavigation } from "@/lib/use-company-form-settings";
+import { todayDateInputValue, useCompanyFormSettings, usePostSaveNavigation } from "@/lib/use-company-form-settings";
 import { ApiError } from "./ApiError";
 import { PageHeader } from "./PageHeader";
 import { SubmitButton } from "./SubmitButton";
@@ -19,9 +19,7 @@ function optionLabel(row: Lookup) {
   return [row.code, row.name].filter(Boolean).join(" - ");
 }
 
-function today() {
-  return new Date().toISOString().slice(0, 10);
-}
+const today = todayDateInputValue;
 
 export function DeliveryChallanForm({ onSuccess }: { onSuccess?: () => void }) {
   const { showDefaultDate, redirectOnSamePage, defaultTransactionDate, loaded: companySettingsLoaded } = useCompanyFormSettings();

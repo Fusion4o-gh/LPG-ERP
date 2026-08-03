@@ -115,7 +115,24 @@
 | 5.13 | Daily Activity Report | `/DAR` | `/reports/daily-activity` | Partial | Compare sections vs legacy DAR | Sectional sales/purchases/vouchers/stock | |
 | 5.17 | Chart Of Account Report | `/Chart_of_account` | `/reports/chart-of-account` | Partial | Period filters; compare balances | Account period debits/credits/balance | |
 | 5.18 | Group Summary | `/Groupsummary` | `/reports/group-summary` | Partial | Group name filter (e.g. Trade Debtors) | Control group roll-up | |
-| 5.14 | Access Cylinders | `/Accesscylinders` | `/reports/customer-cylinder-balances` | Partial | Legacy has 2 sub-reports | Outstanding cylinders per customer | |
+| 5.19 | Unbalance Voucher | `/Unbalance_voucher` | `/reports/unbalanced-vouchers` | Improved | Select a date range; inspect an intentionally unbalanced test voucher | Difference, source document, CSV, and print output; also covered by day-close guard | |
+| 5.20 | Debtors Ageing | `/Ageing_report` | `/reports/debtors-ageing` | Improved | Select an as-of date; verify customer charges, receipts, credit days, and ageing buckets | FIFO allocation, unapplied credits, CSV, and print output; verify totals against customer ledgers | |
+| 5.21 | Creditors Ageing | `/Creditors_ageing_report` | `/reports/creditors-ageing` | Improved | Select an as-of date; verify vendor charges, payments, credit days, and ageing buckets | FIFO allocation, unapplied credits, CSV, and print output; verify totals against vendor ledgers | |
+| 5.22 | Closing Stock Summary | `/ClosingStockSum` | `/reports/closing-stock-summary` | Improved | Select item and date range; verify opening, receipts, issues, and closing stock by state/location | Closing = opening + received − issued; CSV and print output; verify against stock ledger | |
+| 5.23 | Consumption Report | `/Consumption_Report` | `/reports/consumption` | Improved | Select product/location and date range; verify non-transit bulk issues grouped by source | Quantity and transaction count; CSV and print output; verify against bulk stock ledger | |
+| 5.24 | Quantitative Reconciliation | `/Quantitative` | `/reports/quantitative-reconciliation` | Improved | Select product/location and date range; verify non-transit opening, receipts, issues, physical closing, and transit | Closing = non-transit opening + receipts − issues; separate in-transit balance; CSV and print output | |
+| 5.25 | CMR Difference Report | `/Cmr_report` | `/reports/cmr-difference` | Improved | Select product/import type and date range; compare loaded versus CMR quantities | Difference, status, CSV, and print output; verify against loading arrival events | |
+| 5.26 | Import Cost Sheet | `/Import_cost_report` | `/reports/import-cost-sheet` | Improved | Select product/import type and date range; inspect rates and freight | Loaded/arrived cost, freight, final rate, CSV, and print output; verify arithmetic | |
+| 5.27 | Retail Sale Register | `/Retail_sale_report` | `/reports/retail-sale-register` | Improved | Select product/customer/vehicle/transporter and date range; inspect delivered/filling sales | Transport, weights, rates, amount, CSV, and print output; verify against sale documents | |
+| 5.28 | Stock Transit Reconcile | `/Stock_intransit_reconcile_report` | `/reports/stock-transit-reconcile` | Improved | Select product and as-of date; compare ledger transit with outstanding loadings | Difference and CSV/print output; zero difference is the reconciliation target | |
+| 5.29 | Transport & Bowser Wise | `/Bowser_wise_report` | `/reports/vehicle-bowser` | Improved | Select transport filters and date range; summarize trips and quantities | Vehicle capacity, transporter, trip count, quantity, amount, CSV, and print output | |
+| 5.30 | Stock Adjustment Report | `/Stock_adjust_report` | `/reports/stock-adjustment` | Improved | Select product/location/status and date range; inspect loss/gain variances | Expected/actual/difference, financial impact, approval/P&L status, CSV, and print output | |
+| 5.31 | Plant Decant Report | `/Plant_decant_report` | `/reports/plant-decant` | Improved | Select product/source location and date range; inspect plant decants | Source/destination, transport, quantity, amount, CSV, and print output | |
+| 5.32 | Partial Sale Status Report | `/Partial_bulk_sale_report` | `/reports/partial-sale-status` | Improved | Select product/location/status and date range; inspect partial receipts | Total/received/remaining, arrival/sale status, CSV, and print output | |
+| 5.33 | Local Purchase Detail | `/LocalPurchaseDetail` | `/reports/local-purchase-detail` | Improved | Select vendor/product/location and date range; inspect local purchase documents | Contract, quantity, rate, amount, CSV, and print output | |
+| 5.34 | Local Purchase Summary | `/Local_Purchase_summary` | `/reports/local-purchase-summary` | Improved | Select vendor/product and date range; inspect grouped totals | Quantity, amount, transaction count, CSV, and print output | |
+| 5.35 | Contract Purchase Sale Report | `/Contract_purchase_sale_report` | `/reports/contract-purchase-sale` | Improved | Select vendor/customer/product and date range; inspect all contract types | Import/purchase/sale quantities, delivered values, amount, status, CSV, and print output | |
+| 5.14 | Access Cylinders | `/Accesscylinders` | `/reports/customer-cylinder-balances` | Improved | Legacy has 2 sub-reports; verify both tabs | Customer outstanding cylinders plus own-business filled/empty stock | |
 | 5.15 | Salewise Profit | `/SalewiseProfit` | `/reports/salewise-profit` | Partial | Same range; spot-check profit % | Weighted-avg cost approximation | |
 | 5.16 | Profit / Loss | `/ProfitReport` | `/reports/profit-loss` | Partial | Month range | Revenue − expense style | |
 
@@ -173,9 +190,10 @@ Run once on **both** systems with the same test data (or parallel document numbe
 | Cash/bank balance on settlement | Yes | Cash + bank preview on settlement panel |
 | Payment/receipt history screen | Implicit lists | Use voucher list |
 | Day-close cash reconciliation UI | Partial | Basic close/reopen |
-| Global search (topbar) | — | Placeholder (disabled) |
+| Global search (topbar) | — | Implemented — Ctrl/Cmd+K opens the search field; results cover customers, vendors, items, bulk products, vouchers, and supported document numbers with keyboard navigation and empty-state feedback |
 | Line entry workflow (Purchase Filled Cylinder, Sale LPG) | Single entry row + Add, then a posted-lines grid | Matches: staging row with Add, added rows show read-only with Edit/Delete |
 | 11.8 KG Price field behavior | Sets the standard filled-cylinder rate | Reference rate; explicit Apply button pushes it only into 11.8kg-item lines, never auto-overwrites a typed unit price |
+| Accounting report variants | Transactions Listing, Multiple Ledger, Combine Ledger, Executive Summary | Service/API/UI coverage added; legacy totals and filter semantics remain a UAT gate |
 
 ---
 

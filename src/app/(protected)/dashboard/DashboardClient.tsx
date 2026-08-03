@@ -35,15 +35,35 @@ type StockRow = {
   empty: number;
 };
 
+type BulkStockRow = {
+  id: string;
+  productCode: string;
+  productName: string;
+  locationCode: string;
+  locationName: string;
+  quantity: number;
+  amount: number | null;
+  unit: string;
+};
+
 type SaleStats = {
   today: { count: number; amount: number };
-  month: { count: number; amount: number };
+  month: { count: number; amount: number; year: number; month: number };
+};
+
+type TransitRow = {
+  id: string;
+  label: string;
+  quantity: number;
+  unit: string;
 };
 
 type DashboardData = {
   kpis: KpiData;
   bankPosition: BankRow[];
   currentStock: StockRow[];
+  bulkStock: BulkStockRow[];
+  inTransit: { booked: TransitRow[]; unbooked: TransitRow[] };
   saleStats: SaleStats;
   backup: {
     lastBackupAt: string | null;
@@ -147,18 +167,29 @@ function KpiIcon({ name }: { name: KpiIconName }) {
 function CollapsibleSection({
   title,
   defaultOpen = true,
+  storageKey,
   children,
 }: {
   title: string;
   defaultOpen?: boolean;
+  storageKey?: string;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  useEffect(() => {
+    if (!storageKey) return;
+    const saved = window.localStorage.getItem(`lpg-dashboard-section:${storageKey}`);
+    if (saved === "open" || saved === "closed") setOpen(saved === "open");
+  }, [storageKey]);
+  useEffect(() => {
+    if (storageKey) window.localStorage.setItem(`lpg-dashboard-section:${storageKey}`, open ? "open" : "closed");
+  }, [open, storageKey]);
   return (
     <div className="card rounded-xl overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
         className="surface-press flex w-full items-center justify-between px-4 py-3 text-left"
         style={{ background: 'linear-gradient(180deg, #f4f6f9, #e8ecf1)', borderBottom: '1px solid rgba(0,0,0,0.06)' }}
       >
@@ -205,13 +236,23 @@ export function DashboardClient() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const now = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
 
   useEffect(() => {
-    apiGet<DashboardData>("/api/dashboard")
+    const query = new URLSearchParams({ month: String(selectedMonth), year: String(selectedYear) });
+    setLoading(true);
+    apiGet<DashboardData>(`/api/dashboard?${query.toString()}`)
       .then(setData)
       .catch((err) => setError(err instanceof Error ? err.message : "Load failed."))
       .finally(() => setLoading(false));
-  }, []);
+  }, [selectedMonth, selectedYear]);
+
+  const transitSections = [
+    { key: "booked", title: "In Transit (Booked)", href: "/import/loadings" },
+    { key: "unbooked", title: "In Transit (Not Booked)", href: "/plant/partial-receiving" },
+  ] as const;
 
   if (loading) return <KpiSkeleton />;
 
@@ -264,9 +305,30 @@ export function DashboardClient() {
         </div>
       )}
 
+      {data && (data.inTransit.booked.length > 0 || data.inTransit.unbooked.length > 0) && (
+        <div className="grid items-start gap-5 xl:grid-cols-2 mb-5">
+          {transitSections.map((section) => {
+            const rows = data.inTransit[section.key];
+            return (
+              <CollapsibleSection key={section.key} title={section.title} defaultOpen storageKey={`transit:${section.key}`}>
+                <div className="divide-y divide-white/50">
+                  {rows.map((row) => (
+                    <Link key={row.id} href={section.href} className="flex items-center justify-between px-4 py-3 accent-row-hover">
+                      <span className="text-sm font-semibold text-steel-700">{row.label}</span>
+                      <span className="text-sm font-bold tabular-nums text-gas-800">{fmt(row.quantity)} {row.unit}</span>
+                    </Link>
+                  ))}
+                  {rows.length === 0 ? <p className="px-4 py-3 text-sm text-steel-400">No records in transit.</p> : null}
+                </div>
+              </CollapsibleSection>
+            );
+          })}
+        </div>
+      )}
+
       <div className="grid items-start gap-5 xl:grid-cols-2 mb-5">
         {data && data.bankPosition.length > 0 && (
-          <CollapsibleSection title="Bank Position" defaultOpen>
+          <CollapsibleSection title="Bank Position" defaultOpen storageKey="bank-position">
             <div className="max-h-[520px] overflow-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -302,13 +364,22 @@ export function DashboardClient() {
         )}
 
         {data && (
-          <CollapsibleSection title="Sale Stats" defaultOpen>
+          <CollapsibleSection title="Sale Stats" defaultOpen storageKey="sale-stats">
+            <div className="flex flex-wrap items-center gap-2 border-b border-white/50 px-4 py-3">
+              <span className="text-xs font-semibold uppercase tracking-wide text-steel-500">Sales month</span>
+              <select aria-label="Sales month" value={selectedMonth} onChange={(event) => setSelectedMonth(Number(event.target.value))} className="form-select !h-8 !w-36 !py-1 text-xs">
+                {Array.from({ length: 12 }, (_, index) => <option key={index + 1} value={index + 1}>{new Date(2000, index, 1).toLocaleString(undefined, { month: "long" })}</option>)}
+              </select>
+              <select aria-label="Sales year" value={selectedYear} onChange={(event) => setSelectedYear(Number(event.target.value))} className="form-select !h-8 !w-24 !py-1 text-xs">
+                {Array.from({ length: 7 }, (_, index) => now.getFullYear() - 3 + index).map((year) => <option key={year} value={year}>{year}</option>)}
+              </select>
+            </div>
             <div className="divide-y divide-white/50">
               {[
                 { label: "Today — Transactions", value: String(data.saleStats.today.count) },
                 { label: "Today — Amount", value: fmt(data.saleStats.today.amount) },
-                { label: "This Month — Transactions", value: String(data.saleStats.month.count) },
-                { label: "This Month — Amount", value: fmt(data.saleStats.month.amount) },
+                { label: `${new Date(2000, data.saleStats.month.month - 1, 1).toLocaleString(undefined, { month: "long" })} ${data.saleStats.month.year} — Transactions`, value: String(data.saleStats.month.count) },
+                { label: `${new Date(2000, data.saleStats.month.month - 1, 1).toLocaleString(undefined, { month: "long" })} ${data.saleStats.month.year} — Amount`, value: fmt(data.saleStats.month.amount) },
               ].map((row) => (
                 <div key={row.label} className="flex items-center justify-between px-4 py-3">
                   <p className="text-sm text-steel-500">{row.label}</p>
@@ -321,7 +392,7 @@ export function DashboardClient() {
       </div>
 
       {data && data.currentStock.length > 0 && (
-        <CollapsibleSection title="Current Stock" defaultOpen={false}>
+        <CollapsibleSection title="Current Stock" defaultOpen={false} storageKey="current-stock">
           <div className="mb-5 max-h-[520px] overflow-auto">
             <table className="w-full text-sm">
               <thead>
@@ -344,6 +415,42 @@ export function DashboardClient() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </CollapsibleSection>
+      )}
+
+      {data && data.bulkStock.length > 0 && (
+        <CollapsibleSection title="Bulk Stock Details" defaultOpen={false} storageKey="bulk-stock">
+          <div className="mb-5 max-h-[520px] overflow-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs font-bold text-steel-500 uppercase tracking-wide" style={{ background: 'linear-gradient(180deg, #f4f6f9, #e2e6ec)', borderBottom: '2px solid rgba(18,58,90,0.15)' }}>
+                  <th className="px-4 py-2.5">Product</th>
+                  <th className="px-4 py-2.5">Location</th>
+                  <th className="px-4 py-2.5 text-right">Quantity</th>
+                  <th className="px-4 py-2.5 text-right">Amount</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/50">
+                {data.bulkStock.map((row) => (
+                  <tr key={row.id} className="accent-row-hover transition-colors">
+                    <td className="px-4 py-2.5 text-steel-700">
+                      <span className="font-bold text-gas-800">{row.productCode}</span>
+                      <span className="ml-2 text-steel-400 text-xs">{row.productName}</span>
+                    </td>
+                    <td className="px-4 py-2.5 text-steel-600">
+                      <span className="font-semibold">{row.locationCode}</span>
+                      <span className="ml-2 text-steel-400 text-xs">{row.locationName}</span>
+                    </td>
+                    <td className="px-4 py-2.5 text-right tabular-nums font-bold text-gas-600">{fmt(row.quantity)} {row.unit}</td>
+                    <td className="px-4 py-2.5 text-right tabular-nums text-steel-600">{row.amount === null ? "—" : fmt(row.amount)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="px-4 pt-3 text-right">
+              <Link href="/reports/bulk-stock-ledger" className="text-sm font-semibold text-gas-700 hover:underline">Open bulk stock report →</Link>
+            </div>
           </div>
         </CollapsibleSection>
       )}

@@ -3,6 +3,7 @@ import { prisma } from "../../../lib/prisma.ts";
 import { enforcePermission } from "../rbac/enforce.ts";
 import { getLastUnitCost } from "../inventory/stock-ledger.ts";
 import { resolveKgPricingMap } from "../pricing/kg-pricing.ts";
+import { assertVendorAreaAccess } from "../user-management/area-access.ts";
 
 type Context = { companyId: string; financialYearId: string; userId: string };
 
@@ -18,6 +19,7 @@ export async function getPurchaseFilledContext(context: Context, input: { vendor
 
     let vendorBalance: { payableBalance: number } | null = null;
     if (input.vendorId) {
+      await assertVendorAreaAccess(tx, context.userId, context.companyId, input.vendorId);
       const vendor = await tx.vendor.findFirst({
         where: { id: input.vendorId, companyId: context.companyId },
         include: { account: { select: { id: true, normalBalance: true } } },

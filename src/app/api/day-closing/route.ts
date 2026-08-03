@@ -1,13 +1,15 @@
 import { fail, ok, serviceError } from "../../../server/api/responses.ts";
 import { getRequestContext } from "../../../server/api/request-context.ts";
 import { dateField, optionalPositiveNumberField, optionalStringField, readJson } from "../../../server/api/validation.ts";
-import { closeBusinessDay, getDayClosingStatus } from "../../../server/services/inventory/day-closing-operations.ts";
+import { closeBusinessDay, getDayClosingReconciliation, getDayClosingStatus } from "../../../server/services/inventory/day-closing-operations.ts";
 
 export async function GET(request: Request) {
   try {
     const context = await getRequestContext(request);
     const status = await getDayClosingStatus(context);
-    return ok({ status });
+    const date = new URL(request.url).searchParams.get("date") ?? status.nextCloseDate.toISOString().slice(0, 10);
+    const reconciliation = await getDayClosingReconciliation(context, { closedDate: date });
+    return ok({ status, reconciliation });
   } catch (error) {
     return serviceError(error);
   }

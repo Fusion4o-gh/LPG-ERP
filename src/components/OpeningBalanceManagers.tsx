@@ -7,10 +7,9 @@ import { DataTable } from "./DataTable";
 import { FormSection } from "./FormSection";
 import { PageHeader } from "./PageHeader";
 import { SuccessMessage } from "./SuccessMessage";
+import { todayDateInputValue } from "@/lib/use-company-form-settings";
 
-function today() {
-  return new Date().toISOString().slice(0, 10);
-}
+const today = todayDateInputValue;
 
 function dateValue(value: unknown) {
   return String(value ?? "").slice(0, 10);

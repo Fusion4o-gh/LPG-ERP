@@ -1,0 +1,4 @@
+"use client";
+import { ReportTableClient } from "../ReportTableClient";
+function money(value: unknown) { return Number(value ?? 0).toFixed(2); }
+export default function DollarLedgerPage() { return <ReportTableClient title="Dollar Ledger" description="Dollar purchases, sales, payments, receipts, exchange rates, and gain/loss." endpoint="/api/reports/dollar-ledger" dataKey="rows" columns={[{ key: "transactionDate", label: "Date" }, { key: "documentNo", label: "Document" }, { key: "txnType", label: "Type" }, { key: "usdAmount", label: "USD", render: (row) => money(row.usdAmount) }, { key: "exchangeRate", label: "Rate", render: (row) => money(row.exchangeRate) }, { key: "pkrAmount", label: "PKR", render: (row) => money(row.pkrAmount) }, { key: "exchangeGainLoss", label: "Gain/Loss", render: (row) => money(row.exchangeGainLoss) }, { key: "remarks", label: "Remarks" }]} />; }

@@ -5,7 +5,7 @@ import { parseReportFilters, type ReportFilters } from "./operational-reports.ts
 
 type Context = { companyId: string; financialYearId: string; userId: string };
 type Tx = Prisma.TransactionClient;
-export type SaleReportFilters = ReportFilters & { mode?: string };
+export type SaleReportFilters = ReportFilters & { mode?: string; saleType?: string; segmentType?: string; brandId?: string };
 
 function formatDate(value: Date | string | null | undefined) {
   if (!value) return "";
@@ -65,7 +65,7 @@ async function enrichSaleEntries(tx: Tx, context: Context, entries: Awaited<Retu
 
   const [customers, vouchers, auditLogs] = await Promise.all([
     customerIds.length > 0
-      ? tx.customer.findMany({ where: { id: { in: customerIds } }, select: { id: true, code: true, name: true } })
+      ? tx.customer.findMany({ where: { id: { in: customerIds } }, select: { id: true, code: true, name: true, segmentType: true } })
       : Promise.resolve([]),
     tx.accountingVoucher.findMany({
       where: { companyId: context.companyId, sourceType: "SaleLpg", sourceId: { in: sourceIds } },
@@ -94,7 +94,7 @@ async function enrichSaleEntries(tx: Tx, context: Context, entries: Awaited<Retu
 
 function buildSaleRows(
   entries: Awaited<ReturnType<typeof loadSaleEntries>>,
-  customerMap: Map<string, { id: string; code: string; name: string }>,
+  customerMap: Map<string, { id: string; code: string; name: string; segmentType: string | null }>,
   voucherMap: Map<string, Prisma.Decimal>,
   saleTypeMap: Map<string, string>,
 ) {
@@ -121,13 +121,14 @@ function buildSaleRows(
       totalQty: sale.totalQty,
       saleAmount: formatMoney(voucherMap.get(sale.issueNo)),
       saleType: saleTypeMap.get(sale.issueNo) ?? "Direct",
+      segmentType: customer?.segmentType ?? "Unsegmented",
     };
   });
 }
 
 function buildSaleRowsByItem(
   entries: Awaited<ReturnType<typeof loadSaleEntries>>,
-  customerMap: Map<string, { id: string; code: string; name: string }>,
+  customerMap: Map<string, { id: string; code: string; name: string; segmentType: string | null }>,
   itemMap: Map<string, { id: string; code: string; name: string }>,
   voucherMap: Map<string, Prisma.Decimal>,
 ) {
@@ -179,13 +180,39 @@ function buildSaleRowsByType(
   }));
 }
 
+function buildSaleRowsBySegment(rows: ReturnType<typeof buildSaleRows>) {
+  const bySegment = new Map<string, { segmentType: string; invoiceCount: number; totalQty: number; totalAmount: number }>();
+  for (const row of rows) { const current = bySegment.get(row.segmentType) ?? { segmentType: row.segmentType, invoiceCount: 0, totalQty: 0, totalAmount: 0 }; current.invoiceCount += 1; current.totalQty += Number(row.totalQty); current.totalAmount += Number(row.saleAmount); bySegment.set(row.segmentType, current); }
+  return [...bySegment.values()].map((row) => ({ segmentType: row.segmentType, invoiceCount: row.invoiceCount, totalQty: row.totalQty, saleAmount: row.totalAmount.toFixed(2) }));
+}
+
+function buildSaleRowsByAmount(rows: ReturnType<typeof buildSaleRows>) {
+  const byAmount = new Map<string, { saleAmount: string; invoiceCount: number; totalQty: number }>();
+  for (const row of rows) { const current = byAmount.get(row.saleAmount) ?? { saleAmount: row.saleAmount, invoiceCount: 0, totalQty: 0 }; current.invoiceCount += 1; current.totalQty += Number(row.totalQty); byAmount.set(row.saleAmount, current); }
+  return [...byAmount.values()].sort((a, b) => Number(b.saleAmount) - Number(a.saleAmount));
+}
+
 export async function getSaleBetweenDatesReport(context: Context, input: SaleReportFilters = {}) {
   return prisma.$transaction(async (tx) => {
     await enforcePermission(tx, context.userId, "reports", PermissionAction.VIEW);
     const filters = parseReportFilters(input);
     const mode = (input.mode ?? "invoice").toLowerCase();
-    const entries = await loadSaleEntries(tx, context, filters);
+    let entries = await loadSaleEntries(tx, context, filters);
+    if (input.brandId) {
+      const brandedItems = await tx.item.findMany({ where: { companyId: context.companyId, brandId: input.brandId }, select: { id: true } });
+      const brandedIds = new Set(brandedItems.map((item) => item.id));
+      entries = entries.filter((entry) => brandedIds.has(entry.itemId));
+    }
     const { customerMap, voucherMap, saleTypeMap } = await enrichSaleEntries(tx, context, entries);
+    const saleType = input.saleType?.trim();
+    const segmentType = input.segmentType?.trim();
+    if ((saleType && saleType !== "Both" && saleType !== "All") || (segmentType && segmentType !== "All")) {
+      entries = entries.filter((entry) => {
+        const matchesSaleType = !saleType || saleType === "Both" || saleType === "All" || saleTypeMap.get(entry.sourceId) === saleType;
+        const matchesSegment = !segmentType || segmentType === "All" || (customerMap.get(entry.customerId ?? "")?.segmentType ?? "Unsegmented") === segmentType;
+        return matchesSaleType && matchesSegment;
+      });
+    }
 
     if (mode === "item") {
       const itemIds = [...new Set(entries.map((e) => e.itemId))];
@@ -197,8 +224,12 @@ export async function getSaleBetweenDatesReport(context: Context, input: SaleRep
       return buildSaleRowsByItem(entries, customerMap, itemMap, voucherMap);
     }
 
-    const invoiceRows = buildSaleRows(entries, customerMap, voucherMap, saleTypeMap);
+    let invoiceRows = buildSaleRows(entries, customerMap, voucherMap, saleTypeMap);
+    if (saleType && saleType !== "Both" && saleType !== "All") invoiceRows = invoiceRows.filter((row) => row.saleType === saleType);
+    if (segmentType && segmentType !== "All") invoiceRows = invoiceRows.filter((row) => row.segmentType === segmentType);
     if (mode === "type") return buildSaleRowsByType(invoiceRows);
+    if (mode === "segment") return buildSaleRowsBySegment(invoiceRows);
+    if (mode === "amount") return buildSaleRowsByAmount(invoiceRows);
     return invoiceRows;
   });
 }
@@ -312,9 +343,21 @@ export async function getSaleBetweenDatesReportCsv(context: Context, input: Sale
       rows.map((r) => [r.saleType, r.invoiceCount, r.totalQty, r.saleAmount]),
     );
   }
+  if (mode === "amount") {
+    return toCsv(
+      ["Sale Amount", "Invoices", "Qty"],
+      rows.map((r) => [r.saleAmount, r.invoiceCount, r.totalQty]),
+    );
+  }
+  if (mode === "segment") {
+    return toCsv(
+      ["Segment", "Invoices", "Qty", "Amount"],
+      rows.map((r) => [r.segmentType, r.invoiceCount, r.totalQty, r.saleAmount]),
+    );
+  }
   return toCsv(
-    ["Issue No", "Date", "Customer Code", "Customer Name", "Total Qty", "Sale Amount", "Sale Type"],
-    rows.map((r) => [r.issueNo, r.transactionDate, r.customerCode, r.customerName, r.totalQty, r.saleAmount, r.saleType]),
+    ["Issue No", "Date", "Customer Code", "Customer Name", "Total Qty", "Sale Amount", "Sale Type", "Segment"],
+    rows.map((r) => [r.issueNo, r.transactionDate, r.customerCode, r.customerName, r.totalQty, r.saleAmount, r.saleType, r.segmentType]),
   );
 }
 

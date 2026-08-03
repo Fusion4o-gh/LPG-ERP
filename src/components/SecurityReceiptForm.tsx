@@ -23,8 +23,11 @@ export function SecurityReceiptForm() {
   const [customerId, setCustomerId] = useState("");
   const [itemId, setItemId] = useState("");
   const [quantity, setQuantity] = useState("1");
+  const [availableStock, setAvailableStock] = useState(0);
+  const [stockLoading, setStockLoading] = useState(false);
   const [amount, setAmount] = useState("");
   const [transactionDate, setTransactionDate] = useState("");
+  const [remarks, setRemarks] = useState("");
   const [settlement, setSettlement] = useState(emptySettlement());
   const [loading, setLoading] = useState(false);
   const [lookupLoading, setLookupLoading] = useState(true);
@@ -46,6 +49,31 @@ export function SecurityReceiptForm() {
       .catch((err: Error) => setError(err.message))
       .finally(() => setLookupLoading(false));
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    if (!itemId) {
+      setAvailableStock(0);
+      setStockLoading(false);
+      return () => {
+        active = false;
+      };
+    }
+    setStockLoading(true);
+    apiGet<{ available: number }>(`/api/stock-availability?itemId=${encodeURIComponent(itemId)}`)
+      .then((result) => {
+        if (active) setAvailableStock(Number(result.available) || 0);
+      })
+      .catch(() => {
+        if (active) setAvailableStock(0);
+      })
+      .finally(() => {
+        if (active) setStockLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [itemId]);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -69,14 +97,18 @@ export function SecurityReceiptForm() {
         receiveMode: settlement.receiveMode,
         bankId: settlement.bankId || undefined,
         chequeNo: settlement.chequeNo || undefined,
+        chequeDate: settlement.chequeDate || undefined,
+        remarks: remarks.trim() || undefined,
       });
       const receiptNo = String(result.receiptNo ?? "saved");
       setSuccess(`Saved ${receiptNo}.`);
       if (result.ids && receiptNo !== "saved") setPrintDocumentNo(receiptNo);
       setCustomerId("");
       setItemId("");
+      setAvailableStock(0);
       setQuantity("1");
       setAmount("");
+      setRemarks("");
       setTransactionDate("");
       setSettlement(emptySettlement());
     } catch (err) {
@@ -132,12 +164,21 @@ export function SecurityReceiptForm() {
             <input type="number" min="1" value={quantity} onChange={(e) => setQuantity(e.target.value)} className="form-input" />
           </div>
           <div>
+            <label className="form-label">Stock Issued</label>
+            <input type="number" value={stockLoading ? "" : availableStock} readOnly aria-readonly="true" placeholder={stockLoading ? "Loading…" : "0"} className="form-input bg-slate-50" />
+            <p className="mt-1 text-xs text-slate-500">Available filled cylinders for the selected item.</p>
+          </div>
+          <div>
             <label className="form-label">Security Amount *</label>
             <input type="number" min="0" value={amount} onChange={(e) => setAmount(e.target.value)} className="form-input" />
           </div>
           <div>
             <label className="form-label">Date *</label>
             <input type="date" value={transactionDate} onChange={(e) => setTransactionDate(e.target.value)} className="form-input" />
+          </div>
+          <div className="md:col-span-2">
+            <label className="form-label">Remarks</label>
+            <textarea value={remarks} onChange={(e) => setRemarks(e.target.value)} className="form-input min-h-20" placeholder="Optional remarks" />
           </div>
         </section>
 

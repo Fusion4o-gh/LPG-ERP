@@ -2,9 +2,9 @@ import { CylinderState, StockDirection, type Prisma } from "@prisma/client";
 
 type Tx = Prisma.TransactionClient;
 
-export async function getFilledStockByItem(
+export async function getStockByItemAndState(
   tx: Tx,
-  input: { companyId: string; financialYearId: string; itemIds: string[]; locationId?: string },
+  input: { companyId: string; financialYearId: string; itemIds: string[]; cylinderState: CylinderState; locationId?: string },
 ) {
   const map = new Map<string, number>();
   for (const itemId of input.itemIds) {
@@ -18,7 +18,7 @@ export async function getFilledStockByItem(
       companyId: input.companyId,
       financialYearId: input.financialYearId,
       itemId: { in: input.itemIds },
-      cylinderState: CylinderState.FILLED,
+      cylinderState: input.cylinderState,
       locationId: input.locationId,
     },
     _sum: { quantity: true },
@@ -29,6 +29,13 @@ export async function getFilledStockByItem(
     map.set(row.itemId, (map.get(row.itemId) ?? 0) + signed);
   }
   return map;
+}
+
+export async function getFilledStockByItem(
+  tx: Tx,
+  input: { companyId: string; financialYearId: string; itemIds: string[]; locationId?: string },
+) {
+  return getStockByItemAndState(tx, { ...input, cylinderState: CylinderState.FILLED });
 }
 
 export async function assertFilledStockAvailable(

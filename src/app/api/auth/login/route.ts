@@ -1,3 +1,4 @@
+import { AuditAction } from "@prisma/client";
 import { prisma } from "../../../../lib/prisma.ts";
 import { verifyPassword } from "../../../../server/auth/password.ts";
 import { createSession, sessionCookieValue } from "../../../../server/auth/session.ts";
@@ -37,6 +38,16 @@ export async function POST(request: Request) {
 
     clearRateLimit(rateLimitKey);
     const session = await createSession(user.id);
+    await prisma.auditLog.create({
+      data: {
+        companyId: user.companyId,
+        userId: user.id,
+        action: AuditAction.LOGIN,
+        entityType: "Authentication",
+        entityId: user.id,
+        after: { event: "login", loginId: user.loginId, financialYearId: financialYearId ?? user.financialYearId },
+      },
+    });
     const theme = isThemeId(user.uiTheme) ? user.uiTheme : DEFAULT_THEME;
     const headers = new Headers();
     headers.append("set-cookie", sessionCookieValue(session.sessionToken));

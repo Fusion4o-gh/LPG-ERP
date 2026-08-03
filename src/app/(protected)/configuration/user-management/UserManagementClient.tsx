@@ -261,6 +261,7 @@ export function UserManagementClient() {
         <DataTable
           loading={loading}
           rows={rows as unknown as Record<string, unknown>[]}
+          enableControls
           columns={[
             { key: "loginId", label: "Username" },
             { key: "name", label: "Full Name" },

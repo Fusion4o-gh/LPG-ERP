@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { apiPost } from "@/lib/api-client";
+import { todayDateInputValue } from "@/lib/use-company-form-settings";
 import { ApiError } from "./ApiError";
 import { FormSection } from "./FormSection";
 import { PageHeader } from "./PageHeader";
@@ -23,14 +24,15 @@ const reversalKinds = [
 
 export function ReversalPanel() {
   const searchParams = useSearchParams();
-  const [values, setValues] = useState({
-    kind: "sale",
-    documentNo: "",
-    reversalDate: new Date().toISOString().slice(0, 10),
+  const [values, setValues] = useState(() => ({
+    kind: searchParams.get("kind") && reversalKinds.some((option) => option.value === searchParams.get("kind")) ? searchParams.get("kind")! : "sale",
+    documentNo: searchParams.get("documentNo") ?? "",
+    reversalDate: todayDateInputValue(),
     reason: "",
     allowClosedDayOverride: false,
-  });
+  }));
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   useEffect(() => {
     const kind = searchParams.get("kind");
@@ -45,13 +47,15 @@ export function ReversalPanel() {
   async function submit(event: FormEvent) {
     event.preventDefault();
     setError("");
+    setSuccess("");
     if (!values.documentNo || !values.reversalDate) {
       setError("Document number and reversal date are required.");
       return;
     }
-    if (!window.confirm("Confirm reversal request? Phase 3D blocks unsafe deletion and only allows policy validation.")) return;
+    if (!window.confirm("Create a compensating reversal for this document? The original transaction will remain in the audit trail.")) return;
     try {
-      await apiPost("/api/reversals", values);
+      const result = await apiPost<{ reversalNo: string; voucherNo?: string | null; stockEntryCount: number }>("/api/reversals", values);
+      setSuccess(`Reversal ${result.reversalNo} posted${result.voucherNo ? ` with voucher ${result.voucherNo}` : ""}.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Reversal failed.");
     }
@@ -59,8 +63,9 @@ export function ReversalPanel() {
 
   return (
     <>
-      <PageHeader title="Transaction Reversals" description="Policy stub for safe compensating reversals. Unsafe document deletion is blocked." />
+      <PageHeader title="Transaction Reversals" description="Post a compensating entry while preserving the original transaction and audit trail." />
       <ApiError message={error} />
+      {success ? <div className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{success}</div> : null}
       <form onSubmit={submit} className="max-w-2xl space-y-4">
         <FormSection title="Reversal Request">
           <div className="grid gap-3 md:grid-cols-2">
@@ -113,7 +118,7 @@ export function ReversalPanel() {
             </label>
           </div>
         </FormSection>
-        <button className="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white">Validate Reversal Policy</button>
+        <button className="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white">Post Compensating Reversal</button>
       </form>
     </>
   );

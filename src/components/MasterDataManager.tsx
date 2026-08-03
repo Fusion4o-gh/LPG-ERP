@@ -15,11 +15,32 @@ type Field = FormFieldDefinition & {
   optionSource?: { endpoint: string; dataKey: string; valueKey?: string; labelKey?: string };
 };
 type Column = { key: string; label: string };
+type ActionLink = { label: string; hrefTemplate: string };
+
+function printDescriptor(endpoint: string, row: Record<string, unknown>) {
+  const documentNo = row.documentNo ?? row.loadingNo;
+  if (!documentNo) return null;
+  const type = endpoint === "/api/import/local-purchase" ? "local-purchase"
+    : endpoint === "/api/import/delivered-sale" ? "delivered-sale"
+      : endpoint === "/api/plant/sales" ? (row.saleType === "FILLING" ? "filling-sale" : "plant-bulk-sale")
+        : endpoint === "/api/plant/plant-transfer" ? "plant-transfer"
+          : endpoint === "/api/plant/plant-decanting" ? "plant-decanting"
+              : endpoint === "/api/plant/partial-receiving" ? "partial-receiving"
+              : endpoint === "/api/plant/partial-sales" ? "partial-plant-sale"
+              : endpoint === "/api/dollar/transactions" ? "dollar-transaction"
+                : endpoint === "/api/dollar/settlements" ? "dollar-settlement" : "";
+  return type ? { type, documentNo: String(documentNo) } : null;
+}
 
 const highRiskEndpoints = new Set(["/api/banks", "/api/items", "/api/chart-of-accounts"]);
 
 function emptyValues(fields: Field[]) {
-  return Object.fromEntries(fields.map((field) => [field.name, field.name === "status" ? "ACTIVE" : ""]));
+  return Object.fromEntries(
+    fields.map((field) => [
+      field.name,
+      field.name === "status" ? "ACTIVE" : field.required && field.options?.[0] ? field.options[0] : "",
+    ]),
+  );
 }
 
 export function MasterDataManager({
@@ -29,6 +50,7 @@ export function MasterDataManager({
   dataKey,
   fields,
   columns,
+  actionLinks = [],
 }: {
   title: string;
   description: string;
@@ -36,6 +58,7 @@ export function MasterDataManager({
   dataKey: string;
   fields: Field[];
   columns: Column[];
+  actionLinks?: ActionLink[];
 }) {
   const [rows, setRows] = useState<Record<string, unknown>[]>([]);
   const [dynamicOptions, setDynamicOptions] = useState<Record<string, Option[]>>({});
@@ -150,6 +173,29 @@ export function MasterDataManager({
                         </option>
                       ))}
                     </select>
+                  ) : field.type === "file" ? (
+                    <>
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp,image/gif"
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          if (!file) return;
+                          if (file.size > 1_000_000) {
+                            setFieldErrors((current) => ({ ...current, [field.name]: "Image must be smaller than 1 MB." }));
+                            return;
+                          }
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            setFieldErrors((current) => ({ ...current, [field.name]: "" }));
+                            setValues((current) => ({ ...current, [field.name]: String(reader.result ?? "") }));
+                          };
+                          reader.readAsDataURL(file);
+                        }}
+                        className="form-input"
+                      />
+                      {values[field.name]?.startsWith("data:image/") ? <img src={values[field.name]} alt={`${field.label} preview`} className="mt-2 h-16 w-16 rounded border border-slate-200 object-cover" /> : null}
+                    </>
                   ) : (
                     <input
                       type={field.type}
@@ -175,15 +221,26 @@ export function MasterDataManager({
         <DataTable
           rows={rows}
           loading={loading}
+          enableControls
           columns={[
             ...columns,
             {
               key: "actions",
               label: "Actions",
               render: (row) => (
-                <button type="button" onClick={() => edit(row)} className="btn-outline !px-2 !py-1 !text-xs">
-                  Edit
-                </button>
+                <div className="flex gap-1">
+                  <button type="button" onClick={() => edit(row)} className="btn-outline !px-2 !py-1 !text-xs">Edit</button>
+                  {actionLinks.map((action) => (
+                    <a
+                      key={action.label}
+                      href={action.hrefTemplate.replaceAll("[id]", encodeURIComponent(String(row.id ?? "")))}
+                      className="btn-outline !px-2 !py-1 !text-xs"
+                    >
+                      {action.label}
+                    </a>
+                  ))}
+                  {(() => { const print = printDescriptor(endpoint, row); return print ? <a href={`/documents/print/${print.type}/${encodeURIComponent(print.documentNo)}`} className="btn-outline !px-2 !py-1 !text-xs">Print</a> : null; })()}
+                </div>
               ),
             },
           ]}

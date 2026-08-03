@@ -1,0 +1,3 @@
+"use client";
+import { ReportTableClient } from "../ReportTableClient";
+export default function BulkStockLedgerPage() { return <ReportTableClient title="Bulk Stock Ledger" description="Immutable bulk stock movements by product, location, source, and transit status." endpoint="/api/reports/bulk-stock-ledger" dataKey="rows" columns={[{ key: "transactionDate", label: "Date" }, { key: "productName", label: "Product" }, { key: "locationName", label: "Location" }, { key: "direction", label: "Direction" }, { key: "quantity", label: "Quantity" }, { key: "balanceAfter", label: "Balance" }, { key: "sourceType", label: "Source" }, { key: "inTransit", label: "Transit" }]} />; }
